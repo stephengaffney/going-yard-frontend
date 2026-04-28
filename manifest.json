@@ -1,7 +1,7 @@
 {
   "name": "Going Yard & Drinking Hard",
   "short_name": "Going Yard",
-  "description": "MLB HR drinking game tracker",
+  "description": "MLB HR Drinking Game Tracker",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#0a0a0f",
