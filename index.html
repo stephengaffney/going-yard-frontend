@@ -1,0 +1,1351 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Going Yard">
+<meta name="theme-color" content="#0a0a0f">
+<title>Going Yard & Drinking Hard</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #0a0a0f;
+  --surface: #13131a;
+  --surface2: #1c1c26;
+  --border: rgba(255,255,255,0.08);
+  --text: #f0f0f0;
+  --muted: #888;
+  --accent: #e8c14a;
+
+  --frank-color: #e85d4a;
+  --scott-color: #4a9eff;
+  --tyler-color: #7cb85c;
+  --ned-color: #c97de8;
+  --ryan-color: #e87c3e;
+  --steve-color: #4acfe8;
+  --dan-color: #e84a8a;
+  --stephen-color: #e8c14a;
+
+  --alvarez-color: #e85d4a;
+  --harper-color: #4a9eff;
+  --rice-color: #7cb85c;
+  --chisholm-color: #c97de8;
+  --schwarber-color: #e87c3e;
+  --grisham-color: #4acfe8;
+  --judge-color: #e84a8a;
+  --diaz-color: #e85d4a;
+  --garcia-color: #4a9eff;
+  --volpe-color: #7cb85c;
+  --dominguez-color: #c97de8;
+  --turner-color: #e87c3e;
+  --wells-color: #4acfe8;
+  --mcmahon-color: #e84a8a;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: 'DM Sans', sans-serif;
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+
+.app { display: flex; flex-direction: column; min-height: 100vh; max-width: 480px; margin: 0 auto; }
+
+/* ── Auth Screen ── */
+.auth-screen {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem;
+  background: var(--bg);
+  position: relative;
+  overflow: hidden;
+}
+
+.auth-screen::before {
+  content: '';
+  position: absolute;
+  top: -200px; left: -200px;
+  width: 600px; height: 600px;
+  background: radial-gradient(circle, rgba(232,193,74,0.08) 0%, transparent 70%);
+  pointer-events: none;
+}
+
+.auth-logo {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 3rem;
+  color: var(--accent);
+  text-align: center;
+  line-height: 1;
+  margin-bottom: 0.5rem;
+  letter-spacing: 2px;
+}
+
+.auth-sub {
+  font-size: 0.8rem;
+  color: var(--muted);
+  text-align: center;
+  margin-bottom: 3rem;
+  letter-spacing: 3px;
+  text-transform: uppercase;
+}
+
+.auth-card {
+  width: 100%;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 2rem;
+}
+
+.auth-card h2 {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 1.5rem;
+  letter-spacing: 1px;
+  margin-bottom: 1.5rem;
+  color: var(--text);
+}
+
+.form-group {
+  margin-bottom: 1rem;
+}
+
+.form-group label {
+  display: block;
+  font-size: 0.75rem;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  margin-bottom: 0.5rem;
+}
+
+.form-group input, .form-group select {
+  width: 100%;
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 0.75rem 1rem;
+  color: var(--text);
+  font-family: 'DM Sans', sans-serif;
+  font-size: 1rem;
+  outline: none;
+  transition: border-color 0.2s;
+}
+
+.form-group input:focus, .form-group select:focus {
+  border-color: var(--accent);
+}
+
+.form-group select option { background: var(--surface2); }
+
+.btn-primary {
+  width: 100%;
+  background: var(--accent);
+  color: #0a0a0f;
+  border: none;
+  border-radius: 8px;
+  padding: 0.875rem;
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 1.2rem;
+  letter-spacing: 2px;
+  cursor: pointer;
+  margin-top: 1rem;
+  transition: opacity 0.2s, transform 0.1s;
+}
+
+.btn-primary:hover { opacity: 0.9; }
+.btn-primary:active { transform: scale(0.98); }
+.btn-primary:disabled { opacity: 0.4; cursor: not-allowed; }
+
+.auth-toggle {
+  text-align: center;
+  margin-top: 1.5rem;
+  font-size: 0.875rem;
+  color: var(--muted);
+}
+
+.auth-toggle span {
+  color: var(--accent);
+  cursor: pointer;
+  text-decoration: underline;
+}
+
+.error-msg {
+  background: rgba(232,74,74,0.1);
+  border: 1px solid rgba(232,74,74,0.3);
+  border-radius: 8px;
+  padding: 0.75rem 1rem;
+  font-size: 0.875rem;
+  color: #e84a4a;
+  margin-bottom: 1rem;
+}
+
+/* ── Nav ── */
+.nav {
+  position: fixed;
+  bottom: 0; left: 50%;
+  transform: translateX(-50%);
+  width: 100%; max-width: 480px;
+  background: var(--surface);
+  border-top: 1px solid var(--border);
+  display: flex;
+  padding: 0.5rem 0 calc(0.5rem + env(safe-area-inset-bottom));
+  z-index: 100;
+}
+
+.nav-item {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  padding: 0.5rem;
+  cursor: pointer;
+  transition: opacity 0.2s;
+  border: none;
+  background: none;
+  color: var(--muted);
+}
+
+.nav-item.active { color: var(--accent); }
+.nav-item svg { width: 22px; height: 22px; }
+.nav-item span { font-size: 0.65rem; text-transform: uppercase; letter-spacing: 1px; }
+
+/* ── Header ── */
+.header {
+  position: sticky;
+  top: 0;
+  background: var(--bg);
+  border-bottom: 1px solid var(--border);
+  padding: 1rem 1.25rem;
+  z-index: 50;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.header-title {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 1.5rem;
+  color: var(--accent);
+  letter-spacing: 2px;
+}
+
+.header-user {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.875rem;
+  color: var(--muted);
+}
+
+.avatar {
+  width: 32px; height: 32px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.75rem;
+  font-weight: 600;
+  font-family: 'Bebas Neue', sans-serif;
+  letter-spacing: 1px;
+}
+
+/* ── Feed ── */
+.feed {
+  flex: 1;
+  padding: 1rem 1rem 6rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.hr-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  overflow: hidden;
+  position: relative;
+}
+
+.hr-card-accent {
+  height: 3px;
+  width: 100%;
+}
+
+.hr-card-body { padding: 1rem 1.25rem; }
+
+.hr-card-top {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  margin-bottom: 0.75rem;
+}
+
+.hr-player {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.hr-player-name {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 1.4rem;
+  letter-spacing: 1px;
+  line-height: 1;
+}
+
+.hr-player-team {
+  font-size: 0.75rem;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.hr-badge {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 0.4rem 0.75rem;
+  border-radius: 20px;
+  font-size: 0.75rem;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.hr-badge.i-drink {
+  background: rgba(232,193,74,0.15);
+  color: var(--accent);
+  border: 1px solid rgba(232,193,74,0.3);
+}
+
+.hr-badge.you-drink {
+  background: rgba(74,159,255,0.15);
+  color: #4a9eff;
+  border: 1px solid rgba(74,159,255,0.3);
+}
+
+.hr-drink-info {
+  background: var(--surface2);
+  border-radius: 8px;
+  padding: 0.75rem 1rem;
+  margin-bottom: 0.75rem;
+  font-size: 0.875rem;
+}
+
+.hr-drink-info strong { color: var(--text); }
+
+.hr-timestamp {
+  font-size: 0.75rem;
+  color: var(--muted);
+  margin-bottom: 0.75rem;
+}
+
+.hr-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding-top: 0.75rem;
+  border-top: 1px solid var(--border);
+}
+
+.action-btn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: none;
+  border: none;
+  color: var(--muted);
+  font-family: 'DM Sans', sans-serif;
+  font-size: 0.875rem;
+  cursor: pointer;
+  padding: 0.4rem 0.75rem;
+  border-radius: 20px;
+  transition: all 0.2s;
+}
+
+.action-btn:hover { background: var(--surface2); color: var(--text); }
+.action-btn.liked { color: #e84a4a; }
+.action-btn svg { width: 16px; height: 16px; }
+
+.assign-btn {
+  margin-left: auto;
+  background: rgba(74,159,255,0.1);
+  border: 1px solid rgba(74,159,255,0.3);
+  color: #4a9eff;
+  border-radius: 8px;
+  padding: 0.4rem 0.875rem;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 0.8rem;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.assign-btn:hover { background: rgba(74,159,255,0.2); }
+
+/* ── Comments ── */
+.comments-section {
+  padding: 0 1.25rem 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.comment {
+  display: flex;
+  gap: 0.5rem;
+  align-items: flex-start;
+}
+
+.comment-body {
+  background: var(--surface2);
+  border-radius: 10px;
+  padding: 0.5rem 0.75rem;
+  flex: 1;
+}
+
+.comment-username {
+  font-size: 0.75rem;
+  font-weight: 600;
+  margin-bottom: 2px;
+}
+
+.comment-text { font-size: 0.875rem; color: var(--text); }
+
+.comment-input-row {
+  display: flex;
+  gap: 0.5rem;
+  padding: 0.75rem 1.25rem 1rem;
+  border-top: 1px solid var(--border);
+}
+
+.comment-input {
+  flex: 1;
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  padding: 0.5rem 1rem;
+  color: var(--text);
+  font-family: 'DM Sans', sans-serif;
+  font-size: 0.875rem;
+  outline: none;
+}
+
+.comment-input:focus { border-color: var(--accent); }
+
+.send-btn {
+  background: var(--accent);
+  border: none;
+  border-radius: 50%;
+  width: 36px; height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+.send-btn svg { width: 16px; height: 16px; }
+
+/* ── Leaderboard ── */
+.leaderboard-screen {
+  flex: 1;
+  padding: 1rem 1rem 6rem;
+}
+
+.section-title {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 1.2rem;
+  letter-spacing: 2px;
+  color: var(--muted);
+  text-transform: uppercase;
+  margin-bottom: 0.75rem;
+  padding: 0 0.25rem;
+}
+
+.lb-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  overflow: hidden;
+  margin-bottom: 1.5rem;
+}
+
+.lb-row {
+  display: flex;
+  align-items: center;
+  padding: 0.875rem 1rem;
+  border-bottom: 1px solid var(--border);
+  gap: 0.75rem;
+}
+
+.lb-row:last-child { border-bottom: none; }
+
+.lb-rank {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 1.2rem;
+  color: var(--muted);
+  width: 24px;
+  text-align: center;
+}
+
+.lb-rank.gold { color: var(--accent); }
+.lb-rank.silver { color: #aaa; }
+.lb-rank.bronze { color: #cd7f32; }
+
+.lb-name { flex: 1; font-size: 0.9rem; font-weight: 500; }
+.lb-sub { font-size: 0.75rem; color: var(--muted); margin-top: 1px; }
+
+.lb-stat {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 1.4rem;
+  min-width: 36px;
+  text-align: right;
+}
+
+.lb-label {
+  font-size: 0.65rem;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  text-align: right;
+}
+
+/* ── Drink Log ── */
+.log-screen {
+  flex: 1;
+  padding: 1rem 1rem 6rem;
+}
+
+.log-table {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+.log-header {
+  display: grid;
+  grid-template-columns: 80px 1fr 1fr 70px;
+  padding: 0.75rem 1rem;
+  background: var(--surface2);
+  font-size: 0.65rem;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  border-bottom: 1px solid var(--border);
+}
+
+.log-row {
+  display: grid;
+  grid-template-columns: 80px 1fr 1fr 70px;
+  padding: 0.875rem 1rem;
+  border-bottom: 1px solid var(--border);
+  font-size: 0.8rem;
+  align-items: center;
+}
+
+.log-row:last-child { border-bottom: none; }
+
+.log-type-badge {
+  font-size: 0.65rem;
+  padding: 2px 8px;
+  border-radius: 10px;
+  text-align: center;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.log-type-badge.i-drink {
+  background: rgba(232,193,74,0.15);
+  color: var(--accent);
+}
+
+.log-type-badge.you-drink {
+  background: rgba(74,159,255,0.15);
+  color: #4a9eff;
+}
+
+/* ── Assign Modal ── */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.7);
+  z-index: 200;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+}
+
+.modal {
+  width: 100%; max-width: 480px;
+  background: var(--surface);
+  border-radius: 24px 24px 0 0;
+  padding: 1.5rem 1.5rem calc(1.5rem + env(safe-area-inset-bottom));
+  border-top: 1px solid var(--border);
+}
+
+.modal-handle {
+  width: 40px; height: 4px;
+  background: var(--border);
+  border-radius: 2px;
+  margin: 0 auto 1.5rem;
+}
+
+.modal h3 {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 1.5rem;
+  letter-spacing: 1px;
+  margin-bottom: 1.5rem;
+}
+
+.user-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 0.75rem;
+  margin-bottom: 1.5rem;
+}
+
+.user-option {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.75rem 0.5rem;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  cursor: pointer;
+  transition: all 0.2s;
+  background: var(--surface2);
+}
+
+.user-option:hover { border-color: var(--accent); }
+.user-option.selected { border-color: var(--accent); background: rgba(232,193,74,0.1); }
+
+.user-option span {
+  font-size: 0.7rem;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.msg-input {
+  width: 100%;
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 0.75rem 1rem;
+  color: var(--text);
+  font-family: 'DM Sans', sans-serif;
+  font-size: 0.9rem;
+  outline: none;
+  margin-bottom: 1rem;
+  resize: none;
+  height: 80px;
+}
+
+.msg-input:focus { border-color: var(--accent); }
+
+.modal-actions { display: flex; gap: 0.75rem; }
+
+.btn-cancel {
+  flex: 1;
+  background: none;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 0.75rem;
+  color: var(--muted);
+  font-family: 'DM Sans', sans-serif;
+  font-size: 0.9rem;
+  cursor: pointer;
+}
+
+.btn-confirm {
+  flex: 2;
+  background: var(--accent);
+  border: none;
+  border-radius: 8px;
+  padding: 0.75rem;
+  color: #0a0a0f;
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 1.1rem;
+  letter-spacing: 1px;
+  cursor: pointer;
+}
+
+.btn-confirm:disabled { opacity: 0.4; cursor: not-allowed; }
+
+/* ── Empty state ── */
+.empty {
+  text-align: center;
+  padding: 4rem 2rem;
+  color: var(--muted);
+}
+
+.empty-icon {
+  font-size: 3rem;
+  margin-bottom: 1rem;
+  opacity: 0.4;
+}
+
+/* ── Loading ── */
+.loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 3rem;
+}
+
+.spinner {
+  width: 32px; height: 32px;
+  border: 2px solid var(--border);
+  border-top-color: var(--accent);
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin { to { transform: rotate(360deg); } }
+
+.toast {
+  position: fixed;
+  bottom: 90px; left: 50%;
+  transform: translateX(-50%);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  padding: 0.75rem 1.5rem;
+  font-size: 0.875rem;
+  z-index: 300;
+  animation: fadeInUp 0.3s ease, fadeOut 0.3s ease 2.7s forwards;
+  white-space: nowrap;
+}
+
+@keyframes fadeInUp {
+  from { opacity: 0; transform: translateX(-50%) translateY(10px); }
+  to { opacity: 1; transform: translateX(-50%) translateY(0); }
+}
+
+@keyframes fadeOut {
+  to { opacity: 0; }
+}
+</style>
+</head>
+<body>
+<div id="root"></div>
+
+<script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+<script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+
+<script>
+const { useState, useEffect, useCallback, useRef } = React;
+const { createClient } = supabase;
+
+const SUPABASE_URL = 'https://rhqyfjikjkwrzzhttuwq.supabase.co';
+const SUPABASE_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJocXlmamlramt3cnp6aHR0dXdxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzczMzE5MzAsImV4cCI6MjA5MjkwNzkzMH0.kzofUjBbRc8WK83KuTM-ZByNPQzLsNMTFAhLpaRw1ZY';
+const BACKEND = 'https://hr-game-production-140c.up.railway.app';
+const GROUP_PASSWORD = 'goingyard2026';
+
+const sb = createClient(SUPABASE_URL, SUPABASE_ANON);
+
+const USER_COLORS = {
+  frank: '#e85d4a', scott: '#4a9eff', tyler: '#7cb85c',
+  ned: '#c97de8', ryan: '#e87c3e', steve: '#4acfe8',
+  dan: '#e84a8a', stephen: '#e8c14a',
+};
+
+const PLAYER_COLORS = {
+  Alvarez: '#e85d4a', Harper: '#4a9eff', Rice: '#7cb85c',
+  Chisholm: '#c97de8', Schwarber: '#e87c3e', Grisham: '#4acfe8',
+  Judge: '#e84a8a', Diaz: '#e85d4a', Garcia: '#4a9eff',
+  Volpe: '#7cb85c', Dominguez: '#c97de8', Turner: '#e87c3e',
+  Wells: '#4acfe8', McMahon: '#e84a8a',
+};
+
+const MATCHUPS = {
+  frank: { i_drink: 'Diaz', you_drink: 'Alvarez' },
+  scott: { i_drink: 'Garcia', you_drink: 'Harper' },
+  tyler: { i_drink: 'Volpe', you_drink: 'Rice' },
+  ned: { i_drink: 'Dominguez', you_drink: 'Chisholm' },
+  ryan: { i_drink: 'Turner', you_drink: 'Schwarber' },
+  steve: { i_drink: 'Wells', you_drink: 'Grisham' },
+  dan: { i_drink: 'McMahon', you_drink: 'Judge' },
+  stephen: {},
+};
+
+const ALL_USERS = ['frank', 'scott', 'tyler', 'ned', 'ryan', 'steve', 'dan', 'stephen'];
+
+function Avatar({ name, size = 32, color }) {
+  const c = color || USER_COLORS[name?.toLowerCase()] || '#888';
+  const initials = name ? name.slice(0, 2).toUpperCase() : '??';
+  return React.createElement('div', {
+    className: 'avatar',
+    style: {
+      width: size, height: size,
+      background: c + '22',
+      border: `1.5px solid ${c}`,
+      color: c,
+      fontSize: size * 0.35,
+    }
+  }, initials);
+}
+
+function Toast({ msg }) {
+  return React.createElement('div', { className: 'toast' }, msg);
+}
+
+function useToast() {
+  const [toast, setToast] = useState(null);
+  const show = (msg) => {
+    setToast(msg);
+    setTimeout(() => setToast(null), 3000);
+  };
+  return [toast, show];
+}
+
+/* ── Auth Screen ── */
+function AuthScreen({ onAuth }) {
+  const [mode, setMode] = useState('login');
+  const [username, setUsername] = useState('');
+  const [displayName, setDisplayName] = useState('');
+  const [password, setPassword] = useState('');
+  const [groupPass, setGroupPass] = useState('');
+  const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false);
+
+  const handle = async () => {
+    setError(''); setLoading(true);
+    try {
+      if (mode === 'register') {
+        if (groupPass !== GROUP_PASSWORD) {
+          setError('Incorrect group password. Ask Stephen for the group password.');
+          setLoading(false); return;
+        }
+        const email = `${username.toLowerCase()}@gyard.app`;
+        const { data, error: signUpErr } = await sb.auth.signUp({ email, password });
+        if (signUpErr) throw signUpErr;
+        if (data.user) {
+          await sb.from('profiles').insert({
+            id: data.user.id,
+            username: username.toLowerCase(),
+            display_name: displayName || username,
+            color: USER_COLORS[username.toLowerCase()] || '#888',
+            group_joined: true,
+          });
+          onAuth(data.user, username.toLowerCase());
+        }
+      } else {
+        const email = `${username.toLowerCase()}@gyard.app`;
+        const { data, error: signInErr } = await sb.auth.signInWithPassword({ email, password });
+        if (signInErr) throw signInErr;
+        onAuth(data.user, username.toLowerCase());
+      }
+    } catch (e) {
+      setError(e.message || 'Something went wrong');
+    }
+    setLoading(false);
+  };
+
+  return React.createElement('div', { className: 'auth-screen' },
+    React.createElement('div', { className: 'auth-logo' }, 'Going Yard'),
+    React.createElement('div', { className: 'auth-sub' }, '& Drinking Hard'),
+    React.createElement('div', { className: 'auth-card' },
+      React.createElement('h2', null, mode === 'login' ? 'Sign In' : 'Join the Game'),
+      error && React.createElement('div', { className: 'error-msg' }, error),
+      React.createElement('div', { className: 'form-group' },
+        React.createElement('label', null, 'Your Name'),
+        React.createElement('select', {
+          value: username,
+          onChange: e => setUsername(e.target.value)
+        },
+          React.createElement('option', { value: '' }, 'Select your name...'),
+          ALL_USERS.map(u => React.createElement('option', { key: u, value: u },
+            u.charAt(0).toUpperCase() + u.slice(1)
+          ))
+        )
+      ),
+      mode === 'register' && React.createElement('div', { className: 'form-group' },
+        React.createElement('label', null, 'Display Name'),
+        React.createElement('input', {
+          type: 'text',
+          placeholder: 'How your name appears',
+          value: displayName,
+          onChange: e => setDisplayName(e.target.value)
+        })
+      ),
+      React.createElement('div', { className: 'form-group' },
+        React.createElement('label', null, 'Password'),
+        React.createElement('input', {
+          type: 'password',
+          placeholder: '••••••••',
+          value: password,
+          onChange: e => setPassword(e.target.value),
+          onKeyDown: e => e.key === 'Enter' && handle()
+        })
+      ),
+      mode === 'register' && React.createElement('div', { className: 'form-group' },
+        React.createElement('label', null, 'Group Password'),
+        React.createElement('input', {
+          type: 'password',
+          placeholder: 'Ask Stephen for this',
+          value: groupPass,
+          onChange: e => setGroupPass(e.target.value)
+        })
+      ),
+      React.createElement('button', {
+        className: 'btn-primary',
+        onClick: handle,
+        disabled: loading || !username || !password
+      }, loading ? 'Loading...' : mode === 'login' ? 'Sign In' : 'Join'),
+      React.createElement('div', { className: 'auth-toggle' },
+        mode === 'login'
+          ? React.createElement('span', null, "New here? ", React.createElement('span', { onClick: () => setMode('register') }, 'Create account'))
+          : React.createElement('span', null, "Have an account? ", React.createElement('span', { onClick: () => setMode('login') }, 'Sign in'))
+      )
+    )
+  );
+}
+
+/* ── Assign Modal ── */
+function AssignModal({ event, currentUser, onClose, onAssigned, showToast }) {
+  const [assignee, setAssignee] = useState('');
+  const [msg, setMsg] = useState('');
+  const [loading, setLoading] = useState(false);
+
+  const assignableUsers = ALL_USERS.filter(u => u !== currentUser);
+
+  const submit = async () => {
+    if (!assignee) return;
+    setLoading(true);
+    try {
+      const { data: { session } } = await sb.auth.getSession();
+      const res = await fetch(`${BACKEND}/assign`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${session.access_token}`
+        },
+        body: JSON.stringify({ hr_event_id: event.id, assignee, message: msg })
+      });
+      if (!res.ok) {
+        const err = await res.json();
+        showToast(err.error || 'Failed to assign');
+      } else {
+        showToast(`Drink assigned to ${assignee.charAt(0).toUpperCase() + assignee.slice(1)}!`);
+        onAssigned();
+        onClose();
+      }
+    } catch (e) {
+      showToast('Network error');
+    }
+    setLoading(false);
+  };
+
+  return React.createElement('div', { className: 'modal-overlay', onClick: e => e.target === e.currentTarget && onClose() },
+    React.createElement('div', { className: 'modal' },
+      React.createElement('div', { className: 'modal-handle' }),
+      React.createElement('h3', null, 'Assign the Drink'),
+      React.createElement('div', { className: 'user-grid' },
+        assignableUsers.map(u => React.createElement('div', {
+          key: u,
+          className: `user-option ${assignee === u ? 'selected' : ''}`,
+          onClick: () => setAssignee(u)
+        },
+          React.createElement(Avatar, { name: u, size: 36 }),
+          React.createElement('span', null, u.charAt(0).toUpperCase() + u.slice(1))
+        ))
+      ),
+      React.createElement('textarea', {
+        className: 'msg-input',
+        placeholder: 'Add a message (optional)...',
+        value: msg,
+        onChange: e => setMsg(e.target.value)
+      }),
+      React.createElement('div', { className: 'modal-actions' },
+        React.createElement('button', { className: 'btn-cancel', onClick: onClose }, 'Cancel'),
+        React.createElement('button', {
+          className: 'btn-confirm',
+          onClick: submit,
+          disabled: !assignee || loading
+        }, loading ? 'Assigning...' : 'Assign Drink')
+      )
+    )
+  );
+}
+
+/* ── HR Card ── */
+function HRCard({ event, currentUser, onAssigned, showToast }) {
+  const [likes, setLikes] = useState([]);
+  const [comments, setComments] = useState([]);
+  const [showComments, setShowComments] = useState(false);
+  const [commentText, setCommentText] = useState('');
+  const [showAssign, setShowAssign] = useState(false);
+  const [assignment, setAssignment] = useState(null);
+
+  const playerColor = PLAYER_COLORS[event.player_key] || '#888';
+  const drinkerColor = USER_COLORS[event.drinker] || '#888';
+  const userLiked = likes.some(l => l.username === currentUser);
+
+  useEffect(() => {
+    loadData();
+    const chan = sb.channel(`hr-${event.id}`)
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'likes' }, loadData)
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'comments' }, loadData)
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'drink_assignments' }, loadData)
+      .subscribe();
+    return () => sb.removeChannel(chan);
+  }, [event.id]);
+
+  const loadData = async () => {
+    const [l, c, a] = await Promise.all([
+      sb.from('likes').select('*').eq('target_type', 'hr_event').eq('target_id', event.id),
+      sb.from('comments').select('*').eq('hr_event_id', event.id).order('created_at'),
+      sb.from('drink_assignments').select('*').eq('hr_event_id', event.id).maybeSingle(),
+    ]);
+    if (l.data) setLikes(l.data);
+    if (c.data) setComments(c.data);
+    if (a.data) setAssignment(a.data);
+  };
+
+  const toggleLike = async () => {
+    const { data: { session } } = await sb.auth.getSession();
+    await fetch(`${BACKEND}/likes`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${session.access_token}` },
+      body: JSON.stringify({ target_type: 'hr_event', target_id: event.id })
+    });
+    loadData();
+  };
+
+  const addComment = async () => {
+    if (!commentText.trim()) return;
+    const { data: { session } } = await sb.auth.getSession();
+    await fetch(`${BACKEND}/comments`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${session.access_token}` },
+      body: JSON.stringify({ hr_event_id: event.id, body: commentText.trim() })
+    });
+    setCommentText('');
+    loadData();
+  };
+
+  const canAssign = event.drink_type === 'you_drink' && event.drinker === currentUser && !assignment;
+  const timestamp = new Date(event.created_at).toLocaleString('en-US', {
+    month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit', hour12: true
+  });
+
+  return React.createElement('div', { className: 'hr-card' },
+    React.createElement('div', { className: 'hr-card-accent', style: { background: playerColor } }),
+    React.createElement('div', { className: 'hr-card-body' },
+      React.createElement('div', { className: 'hr-card-top' },
+        React.createElement('div', { className: 'hr-player' },
+          React.createElement('div', { className: 'hr-player-name', style: { color: playerColor } }, event.full_name),
+          React.createElement('div', { className: 'hr-player-team' }, `${event.team} • ${event.old_hrs} → ${event.new_hrs} HR`)
+        ),
+        React.createElement('div', { className: `hr-badge ${event.drink_type === 'i_drink' ? 'i-drink' : 'you-drink'}` },
+          event.drink_type === 'i_drink' ? '🍺 Drink Up' : '🎯 Assign'
+        )
+      ),
+      React.createElement('div', { className: 'hr-drink-info' },
+        event.drink_type === 'i_drink'
+          ? React.createElement('span', null,
+              React.createElement('strong', { style: { color: drinkerColor } },
+                event.drinker.charAt(0).toUpperCase() + event.drinker.slice(1)
+              ),
+              ' drinks for ', React.createElement('strong', { style: { color: playerColor } }, event.full_name), '\'s homer'
+            )
+          : assignment
+            ? React.createElement('span', null,
+                React.createElement('strong', { style: { color: drinkerColor } },
+                  event.drinker.charAt(0).toUpperCase() + event.drinker.slice(1)
+                ),
+                ' assigned to ',
+                React.createElement('strong', { style: { color: USER_COLORS[assignment.assignee] || '#888' } },
+                  assignment.assignee.charAt(0).toUpperCase() + assignment.assignee.slice(1)
+                ),
+                assignment.message ? ` — "${assignment.message}"` : ''
+              )
+            : React.createElement('span', null,
+                React.createElement('strong', { style: { color: drinkerColor } },
+                  event.drinker.charAt(0).toUpperCase() + event.drinker.slice(1)
+                ),
+                ' must assign a drink for ', React.createElement('strong', { style: { color: playerColor } }, event.full_name), '\'s homer'
+              )
+      ),
+      React.createElement('div', { className: 'hr-timestamp' }, timestamp),
+      React.createElement('div', { className: 'hr-actions' },
+        React.createElement('button', { className: `action-btn ${userLiked ? 'liked' : ''}`, onClick: toggleLike },
+          React.createElement('svg', { viewBox: '0 0 24 24', fill: userLiked ? 'currentColor' : 'none', stroke: 'currentColor', strokeWidth: 2 },
+            React.createElement('path', { d: 'M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z' })
+          ),
+          likes.length > 0 && likes.length
+        ),
+        React.createElement('button', { className: 'action-btn', onClick: () => setShowComments(!showComments) },
+          React.createElement('svg', { viewBox: '0 0 24 24', fill: 'none', stroke: 'currentColor', strokeWidth: 2 },
+            React.createElement('path', { d: 'M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z' })
+          ),
+          comments.length > 0 && comments.length
+        ),
+        canAssign && React.createElement('button', { className: 'assign-btn', onClick: () => setShowAssign(true) }, 'Assign Drink')
+      )
+    ),
+    showComments && React.createElement('div', null,
+      comments.length > 0 && React.createElement('div', { className: 'comments-section' },
+        comments.map(c => React.createElement('div', { key: c.id, className: 'comment' },
+          React.createElement(Avatar, { name: c.username, size: 28 }),
+          React.createElement('div', { className: 'comment-body' },
+            React.createElement('div', { className: 'comment-username', style: { color: USER_COLORS[c.username] || '#888' } },
+              c.username.charAt(0).toUpperCase() + c.username.slice(1)
+            ),
+            React.createElement('div', { className: 'comment-text' }, c.body)
+          )
+        ))
+      ),
+      React.createElement('div', { className: 'comment-input-row' },
+        React.createElement('input', {
+          className: 'comment-input',
+          placeholder: 'Add a comment...',
+          value: commentText,
+          onChange: e => setCommentText(e.target.value),
+          onKeyDown: e => e.key === 'Enter' && addComment()
+        }),
+        React.createElement('button', { className: 'send-btn', onClick: addComment },
+          React.createElement('svg', { viewBox: '0 0 24 24', fill: 'none', stroke: '#0a0a0f', strokeWidth: 2.5 },
+            React.createElement('line', { x1: '22', y1: '2', x2: '11', y2: '13' }),
+            React.createElement('polygon', { points: '22 2 15 22 11 13 2 9 22 2' })
+          )
+        )
+      )
+    ),
+    showAssign && React.createElement(AssignModal, {
+      event,
+      currentUser,
+      onClose: () => setShowAssign(false),
+      onAssigned: () => { loadData(); onAssigned && onAssigned(); },
+      showToast
+    })
+  );
+}
+
+/* ── Feed Screen ── */
+function FeedScreen({ currentUser, showToast }) {
+  const [events, setEvents] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    loadEvents();
+    const chan = sb.channel('feed')
+      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'hr_events' }, () => loadEvents())
+      .subscribe();
+    return () => sb.removeChannel(chan);
+  }, []);
+
+  const loadEvents = async () => {
+    const { data } = await sb.from('hr_events').select('*').order('created_at', { ascending: false }).limit(50);
+    if (data) setEvents(data);
+    setLoading(false);
+  };
+
+  if (loading) return React.createElement('div', { className: 'loading' }, React.createElement('div', { className: 'spinner' }));
+
+  if (!events.length) return React.createElement('div', { className: 'empty' },
+    React.createElement('div', { className: 'empty-icon' }, '⚾'),
+    React.createElement('p', null, 'No homers yet. Stay tuned.')
+  );
+
+  return React.createElement('div', { className: 'feed' },
+    events.map(e => React.createElement(HRCard, { key: e.id, event: e, currentUser, onAssigned: loadEvents, showToast }))
+  );
+}
+
+/* ── Leaderboard Screen ── */
+function LeaderboardScreen() {
+  const [hrTotals, setHrTotals] = useState([]);
+  const [drinkTotals, setDrinkTotals] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const load = async () => {
+      const [hr, dl] = await Promise.all([
+        sb.from('hr_totals').select('*'),
+        sb.from('leaderboard').select('*'),
+      ]);
+      if (hr.data) setHrTotals(hr.data.sort((a, b) => b.current_hrs - a.current_hrs));
+      if (dl.data) setDrinkTotals(dl.data.sort((a, b) => b.total_drinks - a.total_drinks));
+      setLoading(false);
+    };
+    load();
+  }, []);
+
+  const rankClass = (i) => i === 0 ? 'gold' : i === 1 ? 'silver' : i === 2 ? 'bronze' : '';
+
+  if (loading) return React.createElement('div', { className: 'loading' }, React.createElement('div', { className: 'spinner' }));
+
+  return React.createElement('div', { className: 'leaderboard-screen' },
+    React.createElement('div', { className: 'section-title' }, 'MLB Home Runs'),
+    React.createElement('div', { className: 'lb-card' },
+      hrTotals.map((p, i) => React.createElement('div', { key: p.player_key, className: 'lb-row' },
+        React.createElement('div', { className: `lb-rank ${rankClass(i)}` }, i + 1),
+        React.createElement(Avatar, { name: p.player_key, size: 36, color: PLAYER_COLORS[p.player_key] }),
+        React.createElement('div', { style: { flex: 1 } },
+          React.createElement('div', { className: 'lb-name', style: { color: PLAYER_COLORS[p.player_key] } }, p.full_name),
+          React.createElement('div', { className: 'lb-sub' }, p.team)
+        ),
+        React.createElement('div', { style: { textAlign: 'right' } },
+          React.createElement('div', { className: 'lb-stat', style: { color: PLAYER_COLORS[p.player_key] } }, p.current_hrs),
+          React.createElement('div', { className: 'lb-label' }, 'HRs')
+        )
+      ))
+    ),
+    React.createElement('div', { className: 'section-title' }, 'Drink Leaderboard'),
+    React.createElement('div', { className: 'lb-card' },
+      drinkTotals.length === 0
+        ? React.createElement('div', { style: { padding: '2rem', textAlign: 'center', color: 'var(--muted)' } }, 'No drinks logged yet')
+        : drinkTotals.map((u, i) => React.createElement('div', { key: u.username, className: 'lb-row' },
+            React.createElement('div', { className: `lb-rank ${rankClass(i)}` }, i + 1),
+            React.createElement(Avatar, { name: u.username, size: 36 }),
+            React.createElement('div', { style: { flex: 1 } },
+              React.createElement('div', { className: 'lb-name', style: { color: USER_COLORS[u.username] } },
+                u.username.charAt(0).toUpperCase() + u.username.slice(1)
+              ),
+              React.createElement('div', { className: 'lb-sub' }, `${u.drinks_received || 0} received · ${u.drinks_assigned || 0} assigned`)
+            ),
+            React.createElement('div', { style: { textAlign: 'right' } },
+              React.createElement('div', { className: 'lb-stat', style: { color: USER_COLORS[u.username] } }, u.total_drinks),
+              React.createElement('div', { className: 'lb-label' }, 'Total')
+            )
+          ))
+    )
+  );
+}
+
+/* ── Log Screen ── */
+function LogScreen() {
+  const [logs, setLogs] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const load = async () => {
+      const { data } = await sb.from('drink_log').select('*').order('assigned_at', { ascending: false });
+      if (data) setLogs(data);
+      setLoading(false);
+    };
+    load();
+  }, []);
+
+  if (loading) return React.createElement('div', { className: 'loading' }, React.createElement('div', { className: 'spinner' }));
+
+  return React.createElement('div', { className: 'log-screen' },
+    React.createElement('div', { className: 'section-title' }, 'Drink Log'),
+    React.createElement('div', { className: 'log-table' },
+      React.createElement('div', { className: 'log-header' },
+        React.createElement('div', null, 'Date'),
+        React.createElement('div', null, 'User'),
+        React.createElement('div', null, 'Player'),
+        React.createElement('div', null, 'Type')
+      ),
+      logs.length === 0
+        ? React.createElement('div', { style: { padding: '2rem', textAlign: 'center', color: 'var(--muted)' } }, 'No drinks logged yet')
+        : logs.map(l => React.createElement('div', { key: l.id, className: 'log-row' },
+            React.createElement('div', { style: { color: 'var(--muted)', fontSize: '0.75rem' } },
+              new Date(l.assigned_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
+            ),
+            React.createElement('div', { style: { color: USER_COLORS[l.username] || '#888', fontWeight: 500 } },
+              l.given_to
+                ? `${l.username.charAt(0).toUpperCase() + l.username.slice(1)} → ${l.given_to.charAt(0).toUpperCase() + l.given_to.slice(1)}`
+                : l.username.charAt(0).toUpperCase() + l.username.slice(1)
+            ),
+            React.createElement('div', { style: { fontSize: '0.8rem', color: 'var(--muted)' } }, l.mlb_player),
+            React.createElement('div', null,
+              React.createElement('span', { className: `log-type-badge ${l.drink_type === 'i_drink' ? 'i-drink' : 'you-drink'}` },
+                l.drink_type === 'i_drink' ? 'Drink' : 'Assign'
+              )
+            )
+          ))
+    )
+  );
+}
+
+/* ── Main App ── */
+function App() {
+  const [user, setUser] = useState(null);
+  const [username, setUsername] = useState('');
+  const [tab, setTab] = useState('feed');
+  const [toast, showToast] = useToast();
+  const [authChecked, setAuthChecked] = useState(false);
+
+  useEffect(() => {
+    sb.auth.getSession().then(({ data: { session } }) => {
+      if (session?.user) {
+        setUser(session.user);
+        sb.from('profiles').select('username').eq('id', session.user.id).single()
+          .then(({ data }) => { if (data) setUsername(data.username); });
+      }
+      setAuthChecked(true);
+    });
+
+    const { data: { subscription } } = sb.auth.onAuthStateChange((_event, session) => {
+      if (!session) { setUser(null); setUsername(''); }
+    });
+
+    return () => subscription.unsubscribe();
+  }, []);
+
+  const onAuth = (u, uname) => { setUser(u); setUsername(uname); };
+  const onSignOut = async () => { await sb.auth.signOut(); setUser(null); setUsername(''); };
+
+  if (!authChecked) return React.createElement('div', { className: 'loading', style: { minHeight: '100vh' } },
+    React.createElement('div', { className: 'spinner' })
+  );
+
+  if (!user) return React.createElement(AuthScreen, { onAuth });
+
+  const NavIcon = ({ id, label, path }) => React.createElement('button', {
+    className: `nav-item ${tab === id ? 'active' : ''}`,
+    onClick: () => setTab(id)
+  },
+    React.createElement('svg', { viewBox: '0 0 24 24', fill: tab === id ? 'currentColor' : 'none', stroke: 'currentColor', strokeWidth: 1.5 },
+      React.createElement('path', { d: path })
+    ),
+    React.createElement('span', null, label)
+  );
+
+  return React.createElement('div', { className: 'app' },
+    React.createElement('div', { className: 'header' },
+      React.createElement('div', { className: 'header-title' }, 'Going Yard'),
+      React.createElement('div', { className: 'header-user' },
+        React.createElement('span', { style: { color: USER_COLORS[username] } },
+          username.charAt(0).toUpperCase() + username.slice(1)
+        ),
+        React.createElement(Avatar, { name: username, size: 32 }),
+        React.createElement('button', {
+          onClick: onSignOut,
+          style: { background: 'none', border: 'none', color: 'var(--muted)', cursor: 'pointer', fontSize: '0.75rem' }
+        }, 'Out')
+      )
+    ),
+    tab === 'feed' && React.createElement(FeedScreen, { currentUser: username, showToast }),
+    tab === 'board' && React.createElement(LeaderboardScreen),
+    tab === 'log' && React.createElement(LogScreen),
+    React.createElement('nav', { className: 'nav' },
+      React.createElement(NavIcon, { id: 'feed', label: 'Feed', path: 'M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z M9 22V12h6v10' }),
+      React.createElement(NavIcon, { id: 'board', label: 'Leaders', path: 'M18 20V10 M12 20V4 M6 20v-6' }),
+      React.createElement(NavIcon, { id: 'log', label: 'Log', path: 'M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2 M9 5a2 2 0 0 0 2 2h2a2 2 0 0 0 2-2 M9 5a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2 M12 12h.01 M12 16h.01' })
+    ),
+    toast && React.createElement(Toast, { msg: toast })
+  );
+}
+
+ReactDOM.createRoot(document.getElementById('root')).render(React.createElement(App));
+</script>
+</body>
+</html>
