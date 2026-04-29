@@ -816,6 +816,7 @@ function useToast() {
 function AuthScreen({ onAuth }) {
   const [mode, setMode] = useState('login');
   const [username, setUsername] = useState('');
+  const [email, setEmail] = useState('');
   const [displayName, setDisplayName] = useState('');
   const [password, setPassword] = useState('');
   const [groupPass, setGroupPass] = useState('');
@@ -830,8 +831,11 @@ function AuthScreen({ onAuth }) {
           setError('Incorrect group password. Ask Stephen for the group password.');
           setLoading(false); return;
         }
-        const email = `${username.toLowerCase()}@gyard.app`;
-        const { data, error: signUpErr } = await sb.auth.signUp({ email, password });
+        if (!email.trim() || !email.includes('@')) {
+          setError('Please enter a valid email address.');
+          setLoading(false); return;
+        }
+        const { data, error: signUpErr } = await sb.auth.signUp({ email: email.trim(), password });
         if (signUpErr) throw signUpErr;
         if (data.user) {
           await sb.from('profiles').insert({
@@ -844,8 +848,11 @@ function AuthScreen({ onAuth }) {
           onAuth(data.user, username.toLowerCase());
         }
       } else {
-        const email = `${username.toLowerCase()}@gyard.app`;
-        const { data, error: signInErr } = await sb.auth.signInWithPassword({ email, password });
+        if (!email.trim() || !email.includes('@')) {
+          setError('Please enter your email address.');
+          setLoading(false); return;
+        }
+        const { data, error: signInErr } = await sb.auth.signInWithPassword({ email: email.trim(), password });
         if (signInErr) throw signInErr;
         onAuth(data.user, username.toLowerCase());
       }
@@ -883,6 +890,15 @@ function AuthScreen({ onAuth }) {
         })
       ),
       React.createElement('div', { className: 'form-group' },
+        React.createElement('label', null, 'Your Email'),
+        React.createElement('input', {
+          type: 'email',
+          placeholder: 'your@email.com',
+          value: email,
+          onChange: e => setEmail(e.target.value)
+        })
+      ),
+      React.createElement('div', { className: 'form-group' },
         React.createElement('label', null, 'Password'),
         React.createElement('input', {
           type: 'password',
@@ -904,7 +920,7 @@ function AuthScreen({ onAuth }) {
       React.createElement('button', {
         className: 'btn-primary',
         onClick: handle,
-        disabled: loading || !username || !password
+        disabled: loading || !username || !password || !email
       }, loading ? 'Loading...' : mode === 'login' ? 'Sign In' : 'Join'),
       React.createElement('div', { className: 'auth-toggle' },
         mode === 'login'
@@ -1279,6 +1295,7 @@ function LogScreen() {
 function App() {
   const [user, setUser] = useState(null);
   const [username, setUsername] = useState('');
+  const [email, setEmail] = useState('');
   const [tab, setTab] = useState('feed');
   const [toast, showToast] = useToast();
   const [authChecked, setAuthChecked] = useState(false);
