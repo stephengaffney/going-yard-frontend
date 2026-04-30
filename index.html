@@ -760,7 +760,7 @@ const sb = createClient(SUPABASE_URL, SUPABASE_ANON);
 const USER_COLORS = {
   frank: '#e85d4a', scott: '#4a9eff', tyler: '#7cb85c',
   ned: '#c97de8', ryan: '#e87c3e', steve: '#4acfe8',
-  dan: '#e84a8a', stephen: '#e8c14a',
+  dan: '#e84a8a',
 };
 
 const PLAYER_COLORS = {
@@ -779,10 +779,9 @@ const MATCHUPS = {
   ryan: { i_drink: 'Turner', you_drink: 'Schwarber' },
   steve: { i_drink: 'Wells', you_drink: 'Grisham' },
   dan: { i_drink: 'McMahon', you_drink: 'Judge' },
-  stephen: {},
 };
 
-const ALL_USERS = ['frank', 'scott', 'tyler', 'ned', 'ryan', 'steve', 'dan', 'stephen'];
+const ALL_USERS = ['frank', 'scott', 'tyler', 'ned', 'ryan', 'steve', 'dan'];
 
 function Avatar({ name, size = 32, color }) {
   const c = color || USER_COLORS[name?.toLowerCase()] || '#888';
