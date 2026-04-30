@@ -1187,16 +1187,34 @@ function FeedScreen({ currentUser, showToast }) {
 function LeaderboardScreen() {
   const [hrTotals, setHrTotals] = useState([]);
   const [drinkTotals, setDrinkTotals] = useState([]);
+  const [drinkLB, setDrinkLB] = useState([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const load = async () => {
-      const [hr, dl] = await Promise.all([
+      const [hr, dl, idrink, assigned] = await Promise.all([
         sb.from('hr_totals').select('*'),
         sb.from('leaderboard').select('*'),
+        // i_drink events per user
+        sb.from('hr_events').select('drinker').eq('drink_type', 'i_drink'),
+        // you_drink assignments where user is assignee
+        sb.from('drink_assignments').select('assignee'),
       ]);
+
       if (hr.data) setHrTotals(hr.data.sort((a, b) => b.current_hrs - a.current_hrs));
       if (dl.data) setDrinkTotals(dl.data.sort((a, b) => b.total_drinks - a.total_drinks));
+
+      // Compute drink leaderboard: i_drink count + times assigned to
+      const counts = {};
+      ALL_USERS.forEach(u => counts[u] = 0);
+      if (idrink.data) idrink.data.forEach(e => { if (counts[e.drinker] !== undefined) counts[e.drinker]++; });
+      if (assigned.data) assigned.data.forEach(a => { if (counts[a.assignee] !== undefined) counts[a.assignee]++; });
+
+      const lb = Object.entries(counts)
+        .map(([username, count]) => ({ username, count }))
+        .sort((a, b) => b.count - a.count);
+      setDrinkLB(lb);
+
       setLoading(false);
     };
     load();
@@ -1207,6 +1225,25 @@ function LeaderboardScreen() {
   if (loading) return React.createElement('div', { className: 'loading' }, React.createElement('div', { className: 'spinner' }));
 
   return React.createElement('div', { className: 'leaderboard-screen' },
+    React.createElement('div', { className: 'section-title' }, 'Drink Leaderboard'),
+    React.createElement('div', { className: 'lb-card' },
+      drinkLB.every(u => u.count === 0)
+        ? React.createElement('div', { style: { padding: '2rem', textAlign: 'center', color: 'var(--muted)' } }, 'No drinks logged yet')
+        : drinkLB.map((u, i) => React.createElement('div', { key: u.username, className: 'lb-row' },
+            React.createElement('div', { className: `lb-rank ${rankClass(i)}` }, i + 1),
+            React.createElement(Avatar, { name: u.username, size: 36 }),
+            React.createElement('div', { style: { flex: 1 } },
+              React.createElement('div', { className: 'lb-name', style: { color: USER_COLORS[u.username] } },
+                u.username.charAt(0).toUpperCase() + u.username.slice(1)
+              ),
+              React.createElement('div', { className: 'lb-sub' }, 'drinks consumed')
+            ),
+            React.createElement('div', { style: { textAlign: 'right' } },
+              React.createElement('div', { className: 'lb-stat', style: { color: USER_COLORS[u.username] } }, u.count),
+              React.createElement('div', { className: 'lb-label' }, 'Drinks')
+            )
+          ))
+    ),
     React.createElement('div', { className: 'section-title' }, 'MLB Home Runs'),
     React.createElement('div', { className: 'lb-card' },
       hrTotals.map((p, i) => React.createElement('div', { key: p.player_key, className: 'lb-row' },
@@ -1222,7 +1259,7 @@ function LeaderboardScreen() {
         )
       ))
     ),
-    React.createElement('div', { className: 'section-title' }, 'Drink Leaderboard'),
+    React.createElement('div', { className: 'section-title' }, 'Combined Leaderboard'),
     React.createElement('div', { className: 'lb-card' },
       drinkTotals.length === 0
         ? React.createElement('div', { style: { padding: '2rem', textAlign: 'center', color: 'var(--muted)' } }, 'No drinks logged yet')
