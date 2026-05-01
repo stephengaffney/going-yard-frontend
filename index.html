@@ -785,6 +785,20 @@ const MATCHUPS = {
 
 const ALL_USERS = ['frank', 'scott', 'tyler', 'ned', 'ryan', 'steve', 'dan'];
 
+const TEAM_LOGOS = {
+  HOU: 'https://www.mlbstatic.com/team-logos/117.svg',
+  PHI: 'https://www.mlbstatic.com/team-logos/143.svg',
+  NYY: 'https://www.mlbstatic.com/team-logos/147.svg',
+};
+
+const HR_SLOGANS = [
+  "Gone! See ya!", "That ball is OUTTA HERE!", "No doubt about it — GONE!", "He got ALL of that one!", "That one left the zip code!", "He tattooed that baseball!", "DEEP to center — it is GONE!", "Dinger!", "Absolute Tank!", "See ya, ball!"
+];
+
+function randomSlogan() {
+  return HR_SLOGANS[Math.floor(Math.random() * HR_SLOGANS.length)];
+}
+
 function Avatar({ name, size = 32, color }) {
   const c = color || USER_COLORS[name?.toLowerCase()] || '#888';
   const initials = name ? name.slice(0, 2).toUpperCase() : '??';
@@ -1067,7 +1081,14 @@ function HRCard({ event, currentUser, onAssigned, showToast }) {
     React.createElement('div', { className: 'hr-card-body' },
       React.createElement('div', { className: 'hr-card-top' },
         React.createElement('div', { className: 'hr-player' },
-          React.createElement('div', { className: 'hr-player-name', style: { color: playerColor } }, event.full_name),
+          React.createElement('div', { style: { display: 'flex', alignItems: 'center', gap: '8px' } },
+            TEAM_LOGOS[event.team] && React.createElement('img', {
+              src: TEAM_LOGOS[event.team],
+              alt: event.team,
+              style: { width: 28, height: 28, objectFit: 'contain', flexShrink: 0 }
+            }),
+            React.createElement('div', { className: 'hr-player-name', style: { color: playerColor } }, event.full_name)
+          ),
           React.createElement('div', { className: 'hr-player-team' }, `${event.team} • ${event.old_hrs} → ${event.new_hrs} HR`)
         ),
         React.createElement('div', { className: `hr-badge ${event.drink_type === 'i_drink' ? 'i-drink' : 'you-drink'}` },
@@ -1075,6 +1096,9 @@ function HRCard({ event, currentUser, onAssigned, showToast }) {
         )
       ),
       React.createElement('div', { className: 'hr-drink-info' },
+        React.createElement('div', { style: { fontSize: '0.75rem', color: 'var(--accent)', fontStyle: 'italic', marginBottom: '6px' } },
+          event.slogan || ''
+        ),
         event.drink_type === 'i_drink'
           ? React.createElement('span', null,
               React.createElement('strong', { style: { color: drinkerColor } },
@@ -1099,7 +1123,7 @@ function HRCard({ event, currentUser, onAssigned, showToast }) {
                 ),
                 ' must assign a drink for ', React.createElement('strong', { style: { color: playerColor } }, event.full_name), '\'s homer'
               )
-      ),
+      )
       React.createElement('div', { className: 'hr-timestamp' }, timestamp),
       React.createElement('div', { className: 'hr-actions' },
         React.createElement('button', { className: `action-btn ${userLiked ? 'liked' : ''}`, onClick: toggleLike },
