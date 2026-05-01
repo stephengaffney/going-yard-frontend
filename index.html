@@ -1339,11 +1339,19 @@ function LogScreen() {
             React.createElement('div', { style: { color: 'var(--muted)', fontSize: '0.75rem' } },
               new Date(l.assigned_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
             ),
-            React.createElement('div', { style: { color: USER_COLORS[l.username] || '#888', fontWeight: 500 } },
-              l.given_to
-                ? `${l.username.charAt(0).toUpperCase() + l.username.slice(1)} → ${l.given_to.charAt(0).toUpperCase() + l.given_to.slice(1)}`
-                : l.username.charAt(0).toUpperCase() + l.username.slice(1)
-            ),
+            l.given_to
+              ? React.createElement('div', { style: { fontWeight: 500, display: 'flex', alignItems: 'center', gap: '4px', flexWrap: 'wrap' } },
+                  React.createElement('span', { style: { color: USER_COLORS[l.username] || '#888' } },
+                    l.username.charAt(0).toUpperCase() + l.username.slice(1)
+                  ),
+                  React.createElement('span', { style: { color: USER_COLORS[l.username] || '#888' } }, ' → '),
+                  React.createElement('span', { style: { color: USER_COLORS[l.given_to] || '#888' } },
+                    l.given_to.charAt(0).toUpperCase() + l.given_to.slice(1)
+                  )
+                )
+              : React.createElement('div', { style: { color: USER_COLORS[l.username] || '#888', fontWeight: 500 } },
+                  l.username.charAt(0).toUpperCase() + l.username.slice(1)
+                ),
             React.createElement('div', { style: { fontSize: '0.8rem', color: 'var(--muted)' } }, l.mlb_player),
             React.createElement('div', null,
               React.createElement('span', { className: `log-type-badge ${l.drink_type === 'i_drink' ? 'i-drink' : 'you-drink'}` },
