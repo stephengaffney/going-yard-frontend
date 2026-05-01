@@ -30,21 +30,6 @@
   --steve-color: #4acfe8;
   --dan-color: #e84a8a;
   --stephen-color: #e8c14a;
-
-  --alvarez-color: #e85d4a;
-  --harper-color: #4a9eff;
-  --rice-color: #7cb85c;
-  --chisholm-color: #c97de8;
-  --schwarber-color: #e87c3e;
-  --grisham-color: #4acfe8;
-  --judge-color: #e84a8a;
-  --diaz-color: #e85d4a;
-  --garcia-color: #4a9eff;
-  --volpe-color: #7cb85c;
-  --dominguez-color: #c97de8;
-  --turner-color: #e87c3e;
-  --wells-color: #4acfe8;
-  --mcmahon-color: #e84a8a;
 }
 
 * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -116,9 +101,7 @@ body {
   color: var(--text);
 }
 
-.form-group {
-  margin-bottom: 1rem;
-}
+.form-group { margin-bottom: 1rem; }
 
 .form-group label {
   display: block;
@@ -142,10 +125,7 @@ body {
   transition: border-color 0.2s;
 }
 
-.form-group input:focus, .form-group select:focus {
-  border-color: var(--accent);
-}
-
+.form-group input:focus, .form-group select:focus { border-color: var(--accent); }
 .form-group select option { background: var(--surface2); }
 
 .btn-primary {
@@ -174,11 +154,7 @@ body {
   color: var(--muted);
 }
 
-.auth-toggle span {
-  color: var(--accent);
-  cursor: pointer;
-  text-decoration: underline;
-}
+.auth-toggle span { color: var(--accent); cursor: pointer; text-decoration: underline; }
 
 .error-msg {
   background: rgba(232,74,74,0.1);
@@ -270,19 +246,39 @@ body {
   gap: 1rem;
 }
 
+/* ── HR Card status variants ── */
 .hr-card {
   background: var(--surface);
   border: 1px solid var(--border);
   border-radius: 16px;
   overflow: hidden;
   position: relative;
+  transition: border-color 0.3s;
 }
 
-.hr-card-accent {
-  height: 3px;
-  width: 100%;
+/* Awaiting approval — gold pulse */
+.hr-card.awaiting-approval {
+  border-color: rgba(232,193,74,0.6);
+  animation: pulse-yellow 2.2s ease-in-out infinite;
 }
 
+/* Late — red pulse */
+.hr-card.late {
+  border-color: rgba(232,74,74,0.7);
+  animation: pulse-red 1.6s ease-in-out infinite;
+}
+
+@keyframes pulse-yellow {
+  0%, 100% { box-shadow: 0 0 0 0   rgba(232,193,74,0.35); }
+  50%       { box-shadow: 0 0 0 8px rgba(232,193,74,0); }
+}
+
+@keyframes pulse-red {
+  0%, 100% { box-shadow: 0 0 0 0   rgba(232,74,74,0.45); }
+  50%       { box-shadow: 0 0 0 10px rgba(232,74,74,0); }
+}
+
+.hr-card-accent { height: 3px; width: 100%; }
 .hr-card-body { padding: 1rem 1.25rem; }
 
 .hr-card-top {
@@ -292,11 +288,7 @@ body {
   margin-bottom: 0.75rem;
 }
 
-.hr-player {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-}
+.hr-player { display: flex; flex-direction: column; gap: 2px; }
 
 .hr-player-name {
   font-family: 'Bebas Neue', sans-serif;
@@ -352,12 +344,60 @@ body {
   margin-bottom: 0.75rem;
 }
 
+/* ── Drink status badge ── */
+.drink-status-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.drink-status-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 0.7rem;
+  font-weight: 600;
+  padding: 4px 10px;
+  border-radius: 20px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  white-space: nowrap;
+}
+
+.drink-status-badge.pending {
+  background: rgba(136,136,136,0.12);
+  color: #999;
+  border: 1px solid rgba(136,136,136,0.25);
+}
+
+.drink-status-badge.awaiting {
+  background: rgba(232,193,74,0.12);
+  color: var(--accent);
+  border: 1px solid rgba(232,193,74,0.4);
+}
+
+.drink-status-badge.completed {
+  background: rgba(124,184,92,0.12);
+  color: #7cb85c;
+  border: 1px solid rgba(124,184,92,0.35);
+}
+
+.drink-status-badge.late {
+  background: rgba(232,74,74,0.12);
+  color: #e84a4a;
+  border: 1px solid rgba(232,74,74,0.45);
+}
+
+/* ── Actions row ── */
 .hr-actions {
   display: flex;
   align-items: center;
-  gap: 0.75rem;
+  gap: 0.5rem;
   padding-top: 0.75rem;
   border-top: 1px solid var(--border);
+  flex-wrap: wrap;
 }
 
 .action-btn {
@@ -394,6 +434,21 @@ body {
 
 .assign-btn:hover { background: rgba(74,159,255,0.2); }
 
+.approve-btn {
+  background: rgba(124,184,92,0.1);
+  border: 1px solid rgba(124,184,92,0.35);
+  color: #7cb85c;
+  border-radius: 8px;
+  padding: 0.4rem 0.875rem;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 0.8rem;
+  cursor: pointer;
+  transition: all 0.2s;
+  margin-left: auto;
+}
+
+.approve-btn:hover { background: rgba(124,184,92,0.2); }
+
 /* ── Comments ── */
 .comments-section {
   padding: 0 1.25rem 1rem;
@@ -402,11 +457,7 @@ body {
   gap: 0.5rem;
 }
 
-.comment {
-  display: flex;
-  gap: 0.5rem;
-  align-items: flex-start;
-}
+.comment { display: flex; gap: 0.5rem; align-items: flex-start; }
 
 .comment-body {
   background: var(--surface2);
@@ -415,12 +466,7 @@ body {
   flex: 1;
 }
 
-.comment-username {
-  font-size: 0.75rem;
-  font-weight: 600;
-  margin-bottom: 2px;
-}
-
+.comment-username { font-size: 0.75rem; font-weight: 600; margin-bottom: 2px; }
 .comment-text { font-size: 0.875rem; color: var(--text); }
 
 .comment-input-row {
@@ -459,10 +505,7 @@ body {
 .send-btn svg { width: 16px; height: 16px; }
 
 /* ── Leaderboard ── */
-.leaderboard-screen {
-  flex: 1;
-  padding: 1rem 1rem 6rem;
-}
+.leaderboard-screen { flex: 1; padding: 1rem 1rem 6rem; }
 
 .section-title {
   font-family: 'Bebas Neue', sans-serif;
@@ -514,6 +557,13 @@ body {
   text-align: right;
 }
 
+.lb-stat-group {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 2px;
+}
+
 .lb-label {
   font-size: 0.65rem;
   color: var(--muted);
@@ -522,11 +572,20 @@ body {
   text-align: right;
 }
 
-/* ── Drink Log ── */
-.log-screen {
-  flex: 1;
-  padding: 1rem 1rem 6rem;
+.late-badge {
+  font-size: 0.65rem;
+  padding: 2px 7px;
+  border-radius: 10px;
+  background: rgba(232,74,74,0.15);
+  color: #e84a4a;
+  border: 1px solid rgba(232,74,74,0.35);
+  font-weight: 600;
+  letter-spacing: 0.5px;
+  white-space: nowrap;
 }
+
+/* ── Log Screen ── */
+.log-screen { flex: 1; padding: 1rem 1rem 6rem; }
 
 .log-table {
   background: var(--surface);
@@ -537,7 +596,7 @@ body {
 
 .log-header {
   display: grid;
-  grid-template-columns: 80px 1fr 1fr 70px;
+  grid-template-columns: 72px 1fr 1fr 68px;
   padding: 0.75rem 1rem;
   background: var(--surface2);
   font-size: 0.65rem;
@@ -547,35 +606,36 @@ body {
   border-bottom: 1px solid var(--border);
 }
 
+/* Log rows get a left-border color based on status */
 .log-row {
   display: grid;
-  grid-template-columns: 80px 1fr 1fr 70px;
+  grid-template-columns: 72px 1fr 1fr 68px;
   padding: 0.875rem 1rem;
   border-bottom: 1px solid var(--border);
   font-size: 0.8rem;
   align-items: center;
+  border-left: 3px solid transparent;
+  transition: border-color 0.2s;
 }
 
 .log-row:last-child { border-bottom: none; }
+.log-row.status-late { border-left-color: #e84a4a; }
+.log-row.status-awaiting { border-left-color: var(--accent); }
+.log-row.status-completed { border-left-color: #7cb85c; }
+.log-row.status-pending { border-left-color: rgba(136,136,136,0.3); }
 
-.log-type-badge {
-  font-size: 0.65rem;
-  padding: 2px 8px;
-  border-radius: 10px;
-  text-align: center;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
+.log-status-dot {
+  width: 7px; height: 7px;
+  border-radius: 50%;
+  display: inline-block;
+  margin-right: 4px;
+  flex-shrink: 0;
 }
 
-.log-type-badge.i-drink {
-  background: rgba(232,193,74,0.15);
-  color: var(--accent);
-}
-
-.log-type-badge.you-drink {
-  background: rgba(74,159,255,0.15);
-  color: #4a9eff;
-}
+.log-status-dot.pending   { background: #666; }
+.log-status-dot.awaiting  { background: var(--accent); }
+.log-status-dot.completed { background: #7cb85c; }
+.log-status-dot.late      { background: #e84a4a; }
 
 /* ── Assign Modal ── */
 .modal-overlay {
@@ -632,13 +692,7 @@ body {
 
 .user-option:hover { border-color: var(--accent); }
 .user-option.selected { border-color: var(--accent); background: rgba(232,193,74,0.1); }
-
-.user-option span {
-  font-size: 0.7rem;
-  color: var(--muted);
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-}
+.user-option span { font-size: 0.7rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.5px; }
 
 .msg-input {
   width: 100%;
@@ -656,7 +710,6 @@ body {
 }
 
 .msg-input:focus { border-color: var(--accent); }
-
 .modal-actions { display: flex; gap: 0.75rem; }
 
 .btn-cancel {
@@ -686,26 +739,11 @@ body {
 
 .btn-confirm:disabled { opacity: 0.4; cursor: not-allowed; }
 
-/* ── Empty state ── */
-.empty {
-  text-align: center;
-  padding: 4rem 2rem;
-  color: var(--muted);
-}
+/* ── Empty / loading ── */
+.empty { text-align: center; padding: 4rem 2rem; color: var(--muted); }
+.empty-icon { font-size: 3rem; margin-bottom: 1rem; opacity: 0.4; }
 
-.empty-icon {
-  font-size: 3rem;
-  margin-bottom: 1rem;
-  opacity: 0.4;
-}
-
-/* ── Loading ── */
-.loading {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 3rem;
-}
+.loading { display: flex; align-items: center; justify-content: center; padding: 3rem; }
 
 .spinner {
   width: 32px; height: 32px;
@@ -717,113 +755,7 @@ body {
 
 @keyframes spin { to { transform: rotate(360deg); } }
 
-.hr-card.late {
-  border-color: #ff4444;
-  animation: pulse-late 2s ease-in-out infinite;
-}
-@keyframes pulse-late {
-  0%, 100% { box-shadow: 0 0 0 2px rgba(255,68,68,0.4); }
-  50%       { box-shadow: 0 0 0 6px rgba(255,68,68,0.1); }
-}
-.drink-status {
-  display: inline-flex; align-items: center; gap: 4px;
-  font-size: 0.7rem; padding: 3px 8px; border-radius: 10px;
-  text-transform: uppercase; letter-spacing: 0.5px; font-weight: 600; white-space: nowrap;
-}
-.drink-status.pending   { background: rgba(232,193,74,0.15); color: var(--accent); border: 1px solid rgba(232,193,74,0.3); }
-.drink-status.completed { background: rgba(124,184,92,0.15); color: #7cb85c;       border: 1px solid rgba(124,184,92,0.3); }
-.drink-status.late      { background: rgba(255,68,68,0.15);  color: #ff4444;       border: 1px solid rgba(255,68,68,0.4); }
-.approve-btn {
-  background: rgba(124,184,92,0.1); border: 1px solid rgba(124,184,92,0.3);
-  color: #7cb85c; border-radius: 8px; padding: 0.4rem 0.875rem;
-  font-family: 'DM Sans', sans-serif; font-size: 0.8rem; cursor: pointer; transition: all 0.2s;
-}
-.approve-btn:hover { background: rgba(124,184,92,0.2); }
-/* ── Drink Status ── */
-.status-badge {
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-  font-size: 0.7rem;
-  padding: 3px 8px;
-  border-radius: 10px;
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-  margin-left: auto;
-}
-
-.status-badge.pending {
-  background: rgba(136,136,136,0.15);
-  color: #888;
-}
-
-.status-badge.awaiting {
-  background: rgba(232,193,74,0.15);
-  color: var(--accent);
-  border: 1px solid rgba(232,193,74,0.4);
-}
-
-.status-badge.completed {
-  background: rgba(124,184,92,0.15);
-  color: #7cb85c;
-  border: 1px solid rgba(124,184,92,0.4);
-}
-
-.status-badge.late {
-  background: rgba(232,74,74,0.15);
-  color: #e84a4a;
-  border: 1px solid rgba(232,74,74,0.5);
-}
-
-@keyframes pulse-yellow {
-  0%, 100% { box-shadow: 0 0 0 0 rgba(232,193,74,0.4); }
-  50% { box-shadow: 0 0 0 6px rgba(232,193,74,0); }
-}
-
-@keyframes pulse-red {
-  0%, 100% { box-shadow: 0 0 0 0 rgba(232,74,74,0.5); }
-  50% { box-shadow: 0 0 0 8px rgba(232,74,74,0); }
-}
-
-.hr-card.awaiting-approval {
-  border-color: rgba(232,193,74,0.5);
-  animation: pulse-yellow 2s ease infinite;
-}
-
-.hr-card.late {
-  border-color: rgba(232,74,74,0.6);
-  animation: pulse-red 1.5s ease infinite;
-}
-
-.approve-btn {
-  background: rgba(124,184,92,0.1);
-  border: 1px solid rgba(124,184,92,0.4);
-  color: #7cb85c;
-  border-radius: 8px;
-  padding: 0.4rem 0.875rem;
-  font-family: "DM Sans", sans-serif;
-  font-size: 0.8rem;
-  cursor: pointer;
-  transition: all 0.2s;
-}
-
-.approve-btn:hover { background: rgba(124,184,92,0.2); }
-
-.drunk-btn {
-  background: rgba(232,193,74,0.1);
-  border: 1px solid rgba(232,193,74,0.4);
-  color: var(--accent);
-  border-radius: 8px;
-  padding: 0.4rem 0.875rem;
-  font-family: "DM Sans", sans-serif;
-  font-size: 0.8rem;
-  cursor: pointer;
-  transition: all 0.2s;
-}
-
-.drunk-btn:hover { background: rgba(232,193,74,0.2); }
-
+/* ── Toast ── */
 .toast {
   position: fixed;
   bottom: 90px; left: 50%;
@@ -840,12 +772,10 @@ body {
 
 @keyframes fadeInUp {
   from { opacity: 0; transform: translateX(-50%) translateY(10px); }
-  to { opacity: 1; transform: translateX(-50%) translateY(0); }
+  to   { opacity: 1; transform: translateX(-50%) translateY(0); }
 }
 
-@keyframes fadeOut {
-  to { opacity: 0; }
-}
+@keyframes fadeOut { to { opacity: 0; } }
 </style>
 </head>
 <body>
@@ -859,17 +789,17 @@ body {
 const { useState, useEffect, useCallback, useRef } = React;
 const { createClient } = supabase;
 
-const SUPABASE_URL = 'https://rhqyfjikjkwrzzhttuwq.supabase.co';
+const SUPABASE_URL  = 'https://rhqyfjikjkwrzzhttuwq.supabase.co';
 const SUPABASE_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJocXlmamlramt3cnp6aHR0dXdxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzczMzE5MzAsImV4cCI6MjA5MjkwNzkzMH0.kzofUjBbRc8WK83KuTM-ZByNPQzLsNMTFAhLpaRw1ZY';
-const BACKEND = 'https://hr-game-production-140c.up.railway.app';
+const BACKEND       = 'https://hr-game-production-140c.up.railway.app';
 const GROUP_PASSWORD = 'goingyard2026';
+const LATE_HOURS     = 24; // hours before a drink is late
 
 const sb = createClient(SUPABASE_URL, SUPABASE_ANON);
 
 const USER_COLORS = {
   frank: '#e85d4a', scott: '#4a9eff', tyler: '#7cb85c',
-  ned: '#c97de8', ryan: '#e87c3e', steve: '#4acfe8',
-  dan: '#e84a8a',
+  ned: '#c97de8', ryan: '#e87c3e', steve: '#4acfe8', dan: '#e84a8a',
 };
 
 const PLAYER_COLORS = {
@@ -880,16 +810,6 @@ const PLAYER_COLORS = {
   Wells: '#4acfe8', McMahon: '#e84a8a',
 };
 
-const MATCHUPS = {
-  frank: { i_drink: 'Diaz', you_drink: 'Alvarez' },
-  scott: { i_drink: 'Garcia', you_drink: 'Harper' },
-  tyler: { i_drink: 'Volpe', you_drink: 'Rice' },
-  ned: { i_drink: 'Dominguez', you_drink: 'Chisholm' },
-  ryan: { i_drink: 'Turner', you_drink: 'Schwarber' },
-  steve: { i_drink: 'Wells', you_drink: 'Grisham' },
-  dan: { i_drink: 'McMahon', you_drink: 'Judge' },
-};
-
 const ALL_USERS = ['frank', 'scott', 'tyler', 'ned', 'ryan', 'steve', 'dan'];
 
 const TEAM_LOGOS = {
@@ -898,13 +818,67 @@ const TEAM_LOGOS = {
   NYY: 'https://www.mlbstatic.com/team-logos/147.svg',
 };
 
-const HR_SLOGANS = [
-  "Gone! See ya!", "That ball is OUTTA HERE!", "No doubt about it — GONE!", "He got ALL of that one!", "That one left the zip code!", "He tattooed that baseball!", "DEEP to center — it is GONE!", "Dinger!", "Absolute Tank!", "See ya, ball!"
-];
+// ── Helpers ──────────────────────────────────────────────────────────────
 
-function randomSlogan() {
-  return HR_SLOGANS[Math.floor(Math.random() * HR_SLOGANS.length)];
+/**
+ * Compute the effective drink status for a drink_log row.
+ *
+ * Rules (applied client-side so the feed is always fresh even if the
+ * backend late-sweep hasn't run yet):
+ *
+ *  completed          → always show completed, never override
+ *  pending/awaiting   → if event_date > 24h ago → late
+ *  pending            → still waiting (i_drink not yet approved,
+ *                        or you_drink not yet assigned)
+ *  awaiting_approval  → assigned but approval pending
+ */
+function computeStatus(drinkLog) {
+  if (!drinkLog) return 'pending';
+  const s = drinkLog.status || 'pending';
+  if (s === 'completed') return 'completed';
+  if (s === 'late') return 'late';
+
+  // Check age using event_date (drink_log has no created_at column).
+  // Treat noon on the event date as the start of the 24-hour window.
+  if (drinkLog.event_date) {
+    const eventNoon = new Date(drinkLog.event_date + 'T12:00:00');
+    const ageHours  = (Date.now() - eventNoon.getTime()) / 36e5;
+    if (ageHours > LATE_HOURS) return 'late';
+  }
+
+  return s; // 'pending' or 'awaiting_approval'
 }
+
+/**
+ * For a you_drink event:
+ *   - assigner = event.drinker (the person who must assign)
+ *   - actual drinker = drink_log.given_to (the person who must drink)
+ *
+ * For an i_drink event:
+ *   - actual drinker = event.drinker
+ *
+ * canApprove = currentUser is NOT the actual drinker AND drink is not yet completed.
+ */
+function canUserApprove(event, drinkLog, currentUser) {
+  if (!drinkLog) return false;
+  const status = computeStatus(drinkLog);
+  if (status === 'completed') return false;
+
+  const actualDrinker = (
+    event.drink_type === 'you_drink'
+      ? (drinkLog.given_to || null)
+      : event.drinker
+  );
+
+  // For you_drink, we can only approve once it's been assigned (given_to set)
+  if (event.drink_type === 'you_drink' && !drinkLog.given_to) return false;
+
+  return actualDrinker && currentUser.toLowerCase() !== actualDrinker.toLowerCase();
+}
+
+function cap(s) { return s ? s.charAt(0).toUpperCase() + s.slice(1) : ''; }
+
+// ── Components ────────────────────────────────────────────────────────────
 
 function Avatar({ name, size = 32, color }) {
   const c = color || USER_COLORS[name?.toLowerCase()] || '#888';
@@ -934,16 +908,32 @@ function useToast() {
   return [toast, show];
 }
 
-/* ── Auth Screen ── */
+// ── DrinkStatusBadge ──────────────────────────────────────────────────────
+
+function DrinkStatusBadge({ status, approvedBy }) {
+  const cfg = {
+    pending:            { cls: 'pending',   icon: '⏳', label: 'Pending' },
+    awaiting_approval:  { cls: 'awaiting',  icon: '👀', label: 'Awaiting Approval' },
+    completed:          { cls: 'completed', icon: '✅', label: approvedBy ? `${cap(approvedBy)} approved` : 'Completed' },
+    late:               { cls: 'late',      icon: '🔴', label: 'Late!' },
+  }[status] || { cls: 'pending', icon: '⏳', label: 'Pending' };
+
+  return React.createElement('span', { className: `drink-status-badge ${cfg.cls}` },
+    cfg.icon, ' ', cfg.label
+  );
+}
+
+// ── Auth Screen ───────────────────────────────────────────────────────────
+
 function AuthScreen({ onAuth }) {
-  const [mode, setMode] = useState('login');
-  const [username, setUsername] = useState('');
-  const [email, setEmail] = useState('');
+  const [mode, setMode]           = useState('login');
+  const [username, setUsername]   = useState('');
+  const [email, setEmail]         = useState('');
   const [displayName, setDisplayName] = useState('');
-  const [password, setPassword] = useState('');
+  const [password, setPassword]   = useState('');
   const [groupPass, setGroupPass] = useState('');
-  const [error, setError] = useState('');
-  const [loading, setLoading] = useState(false);
+  const [error, setError]         = useState('');
+  const [loading, setLoading]     = useState(false);
 
   const handle = async () => {
     setError(''); setLoading(true);
@@ -994,51 +984,38 @@ function AuthScreen({ onAuth }) {
       error && React.createElement('div', { className: 'error-msg' }, error),
       React.createElement('div', { className: 'form-group' },
         React.createElement('label', null, 'Your Name'),
-        React.createElement('select', {
-          value: username,
-          onChange: e => setUsername(e.target.value)
-        },
+        React.createElement('select', { value: username, onChange: e => setUsername(e.target.value) },
           React.createElement('option', { value: '' }, 'Select your name...'),
-          ALL_USERS.map(u => React.createElement('option', { key: u, value: u },
-            u.charAt(0).toUpperCase() + u.slice(1)
-          ))
+          ALL_USERS.map(u => React.createElement('option', { key: u, value: u }, cap(u)))
         )
       ),
       mode === 'register' && React.createElement('div', { className: 'form-group' },
         React.createElement('label', null, 'Display Name'),
         React.createElement('input', {
-          type: 'text',
-          placeholder: 'How your name appears',
-          value: displayName,
-          onChange: e => setDisplayName(e.target.value)
+          type: 'text', placeholder: 'How your name appears',
+          value: displayName, onChange: e => setDisplayName(e.target.value)
         })
       ),
       React.createElement('div', { className: 'form-group' },
         React.createElement('label', null, 'Your Email'),
         React.createElement('input', {
-          type: 'email',
-          placeholder: 'your@email.com',
-          value: email,
-          onChange: e => setEmail(e.target.value)
+          type: 'email', placeholder: 'your@email.com',
+          value: email, onChange: e => setEmail(e.target.value)
         })
       ),
       React.createElement('div', { className: 'form-group' },
         React.createElement('label', null, 'Password'),
         React.createElement('input', {
-          type: 'password',
-          placeholder: '••••••••',
-          value: password,
-          onChange: e => setPassword(e.target.value),
+          type: 'password', placeholder: '••••••••',
+          value: password, onChange: e => setPassword(e.target.value),
           onKeyDown: e => e.key === 'Enter' && handle()
         })
       ),
       mode === 'register' && React.createElement('div', { className: 'form-group' },
         React.createElement('label', null, 'Group Password'),
         React.createElement('input', {
-          type: 'password',
-          placeholder: 'Ask Stephen for this',
-          value: groupPass,
-          onChange: e => setGroupPass(e.target.value)
+          type: 'password', placeholder: 'Ask Stephen for this',
+          value: groupPass, onChange: e => setGroupPass(e.target.value)
         })
       ),
       React.createElement('button', {
@@ -1055,11 +1032,12 @@ function AuthScreen({ onAuth }) {
   );
 }
 
-/* ── Assign Modal ── */
+// ── Assign Modal ──────────────────────────────────────────────────────────
+
 function AssignModal({ event, currentUser, onClose, onAssigned, showToast }) {
   const [assignee, setAssignee] = useState('');
-  const [msg, setMsg] = useState('');
-  const [loading, setLoading] = useState(false);
+  const [msg, setMsg]           = useState('');
+  const [loading, setLoading]   = useState(false);
 
   const assignableUsers = ALL_USERS.filter(u => u !== currentUser);
 
@@ -1070,17 +1048,14 @@ function AssignModal({ event, currentUser, onClose, onAssigned, showToast }) {
       const { data: { session } } = await sb.auth.getSession();
       const res = await fetch(`${BACKEND}/assign`, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${session.access_token}`
-        },
+        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${session.access_token}` },
         body: JSON.stringify({ hr_event_id: event.id, assignee, message: msg })
       });
       if (!res.ok) {
         const err = await res.json();
         showToast(err.error || 'Failed to assign');
       } else {
-        showToast(`Drink assigned to ${assignee.charAt(0).toUpperCase() + assignee.slice(1)}!`);
+        showToast(`Drink assigned to ${cap(assignee)}!`);
         onAssigned();
         onClose();
       }
@@ -1101,40 +1076,52 @@ function AssignModal({ event, currentUser, onClose, onAssigned, showToast }) {
           onClick: () => setAssignee(u)
         },
           React.createElement(Avatar, { name: u, size: 36 }),
-          React.createElement('span', null, u.charAt(0).toUpperCase() + u.slice(1))
+          React.createElement('span', null, cap(u))
         ))
       ),
       React.createElement('textarea', {
         className: 'msg-input',
         placeholder: 'Add a message (optional)...',
-        value: msg,
-        onChange: e => setMsg(e.target.value)
+        value: msg, onChange: e => setMsg(e.target.value)
       }),
       React.createElement('div', { className: 'modal-actions' },
         React.createElement('button', { className: 'btn-cancel', onClick: onClose }, 'Cancel'),
         React.createElement('button', {
-          className: 'btn-confirm',
-          onClick: submit,
-          disabled: !assignee || loading
+          className: 'btn-confirm', onClick: submit, disabled: !assignee || loading
         }, loading ? 'Assigning...' : 'Assign Drink')
       )
     )
   );
 }
 
-/* ── HR Card ── */
+// ── HR Card ───────────────────────────────────────────────────────────────
+
 function HRCard({ event, currentUser, onAssigned, showToast }) {
-  const [likes, setLikes] = useState([]);
-  const [comments, setComments] = useState([]);
+  const [likes, setLikes]           = useState([]);
+  const [comments, setComments]     = useState([]);
   const [showComments, setShowComments] = useState(true);
-  const [commentText, setCommentText] = useState('');
+  const [commentText, setCommentText]   = useState('');
   const [showAssign, setShowAssign] = useState(false);
   const [assignment, setAssignment] = useState(null);
-  const [drinkLog, setDrinkLog] = useState(null);
+  const [drinkLog, setDrinkLog]     = useState(null);
 
-  const playerColor = PLAYER_COLORS[event.player_key] || '#888';
+  const playerColor  = PLAYER_COLORS[event.player_key] || '#888';
   const drinkerColor = USER_COLORS[event.drinker] || '#888';
-  const userLiked = likes.some(l => l.username === currentUser);
+  const userLiked    = likes.some(l => l.username === currentUser);
+
+  // Compute derived status client-side
+  const status       = computeStatus(drinkLog);
+  const canApprove   = canUserApprove(event, drinkLog, currentUser);
+  const canAssign    = event.drink_type === 'you_drink'
+                        && event.drinker === currentUser
+                        && !assignment;
+
+  // Card outline class
+  const cardClass = status === 'late'
+    ? 'hr-card late'
+    : status === 'awaiting_approval'
+      ? 'hr-card awaiting-approval'
+      : 'hr-card';
 
   useEffect(() => {
     loadData();
@@ -1142,6 +1129,7 @@ function HRCard({ event, currentUser, onAssigned, showToast }) {
       .on('postgres_changes', { event: '*', schema: 'public', table: 'likes' }, loadData)
       .on('postgres_changes', { event: '*', schema: 'public', table: 'comments' }, loadData)
       .on('postgres_changes', { event: '*', schema: 'public', table: 'drink_assignments' }, loadData)
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'drink_log' }, loadData)
       .subscribe();
     return () => sb.removeChannel(chan);
   }, [event.id]);
@@ -1155,8 +1143,8 @@ function HRCard({ event, currentUser, onAssigned, showToast }) {
     ]);
     if (l.data) setLikes(l.data);
     if (c.data) setComments(c.data);
-    if (a.data) setAssignment(a.data);
-    if (dl.data) setDrinkLog(dl.data);
+    if (a.data !== undefined) setAssignment(a.data);
+    if (dl.data !== undefined) setDrinkLog(dl.data);
   };
 
   const toggleLike = async () => {
@@ -1181,11 +1169,6 @@ function HRCard({ event, currentUser, onAssigned, showToast }) {
     loadData();
   };
 
-  const canAssign  = event.drink_type === 'you_drink' && event.drinker === currentUser && !assignment;
-  const drinkStatus = drinkLog?.status || 'pending';
-  const isLate      = drinkStatus === 'late';
-  const canApprove  = drinkLog && drinkStatus !== 'completed' && currentUser !== event.drinker;
-
   const approveDrink = async () => {
     if (!drinkLog) return;
     const { data: { session } } = await sb.auth.getSession();
@@ -1194,22 +1177,56 @@ function HRCard({ event, currentUser, onAssigned, showToast }) {
       headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${session.access_token}` },
       body: JSON.stringify({ drink_log_id: drinkLog.id })
     });
-    if (res.ok) { showToast('Drink approved! 🍺'); loadData(); }
-    else { const e = await res.json(); showToast(e.error || 'Failed to approve'); }
+    if (res.ok) {
+      showToast('Drink approved! 🍺');
+      loadData();
+    } else {
+      const err = await res.json();
+      showToast(err.error || 'Failed to approve');
+    }
   };
+
   const timestamp = new Date(event.created_at).toLocaleString('en-US', {
     month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit', hour12: true
   });
 
-  return React.createElement('div', { className: `hr-card ${isLate ? 'late' : ''}` },
+  // Build the drink info line
+  const drinkInfoLine = () => {
+    if (event.drink_type === 'i_drink') {
+      return React.createElement('span', null,
+        React.createElement('strong', { style: { color: drinkerColor } }, cap(event.drinker)),
+        ' drinks for ',
+        React.createElement('strong', { style: { color: playerColor } }, event.full_name),
+        "'s homer"
+      );
+    }
+    if (assignment) {
+      const assigneeColor = USER_COLORS[assignment.assignee] || '#888';
+      return React.createElement('span', null,
+        React.createElement('strong', { style: { color: drinkerColor } }, cap(event.drinker)),
+        ' assigned to ',
+        React.createElement('strong', { style: { color: assigneeColor } }, cap(assignment.assignee)),
+        assignment.message ? ` — "${assignment.message}"` : ''
+      );
+    }
+    return React.createElement('span', null,
+      React.createElement('strong', { style: { color: drinkerColor } }, cap(event.drinker)),
+      ' must assign a drink for ',
+      React.createElement('strong', { style: { color: playerColor } }, event.full_name),
+      "'s homer"
+    );
+  };
+
+  return React.createElement('div', { className: cardClass },
     React.createElement('div', { className: 'hr-card-accent', style: { background: playerColor } }),
     React.createElement('div', { className: 'hr-card-body' },
+
+      // Top row: player name + drink type badge
       React.createElement('div', { className: 'hr-card-top' },
         React.createElement('div', { className: 'hr-player' },
           React.createElement('div', { style: { display: 'flex', alignItems: 'center', gap: '8px' } },
             TEAM_LOGOS[event.team] && React.createElement('img', {
-              src: TEAM_LOGOS[event.team],
-              alt: event.team,
+              src: TEAM_LOGOS[event.team], alt: event.team,
               style: { width: 28, height: 28, objectFit: 'contain', flexShrink: 0 }
             }),
             React.createElement('div', { className: 'hr-player-name', style: { color: playerColor } }, event.full_name)
@@ -1220,66 +1237,60 @@ function HRCard({ event, currentUser, onAssigned, showToast }) {
           event.drink_type === 'i_drink' ? '🍺 Drink Up' : '🎯 Assign'
         )
       ),
+
+      // Drink info box
       React.createElement('div', { className: 'hr-drink-info' },
         React.createElement('div', { style: { fontSize: '0.75rem', color: 'var(--accent)', fontStyle: 'italic', marginBottom: '6px' } },
           event.slogan || ''
         ),
-        event.drink_type === 'i_drink'
-          ? React.createElement('span', null,
-              React.createElement('strong', { style: { color: drinkerColor } },
-                event.drinker.charAt(0).toUpperCase() + event.drinker.slice(1)
-              ),
-              ' drinks for ', React.createElement('strong', { style: { color: playerColor } }, event.full_name), '\'s homer'
-            )
-          : assignment
-            ? React.createElement('span', null,
-                React.createElement('strong', { style: { color: drinkerColor } },
-                  event.drinker.charAt(0).toUpperCase() + event.drinker.slice(1)
-                ),
-                ' assigned to ',
-                React.createElement('strong', { style: { color: USER_COLORS[assignment.assignee] || '#888' } },
-                  assignment.assignee.charAt(0).toUpperCase() + assignment.assignee.slice(1)
-                ),
-                assignment.message ? ` — "${assignment.message}"` : ''
-              )
-            : React.createElement('span', null,
-                React.createElement('strong', { style: { color: drinkerColor } },
-                  event.drinker.charAt(0).toUpperCase() + event.drinker.slice(1)
-                ),
-                ' must assign a drink for ', React.createElement('strong', { style: { color: playerColor } }, event.full_name), '\'s homer'
-              )
+        drinkInfoLine()
       ),
+
+      // Drink status badge row
+      React.createElement('div', { className: 'drink-status-row' },
+        React.createElement(DrinkStatusBadge, {
+          status,
+          approvedBy: drinkLog?.approved_by
+        }),
+        // Hint text for pending you_drink awaiting assignment
+        event.drink_type === 'you_drink' && !assignment && status !== 'late' &&
+          React.createElement('span', { style: { fontSize: '0.7rem', color: 'var(--muted)' } },
+            '— not yet assigned'
+          )
+      ),
+
       React.createElement('div', { className: 'hr-timestamp' }, timestamp),
+
+      // Actions row
       React.createElement('div', { className: 'hr-actions' },
-        React.createElement('span', { className: `drink-status ${drinkStatus}` },
-          drinkStatus === 'completed'
-            ? `✅ ${(drinkLog?.approved_by || '').charAt(0).toUpperCase() + (drinkLog?.approved_by || '').slice(1)} approved`
-            : drinkStatus === 'late' ? '🔴 Late' : '⏳ Pending'
-        ),
+        // Like
         React.createElement('button', { className: `action-btn ${userLiked ? 'liked' : ''}`, onClick: toggleLike },
           React.createElement('svg', { viewBox: '0 0 24 24', fill: userLiked ? 'currentColor' : 'none', stroke: 'currentColor', strokeWidth: 2 },
             React.createElement('path', { d: 'M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z' })
           ),
           likes.length > 0 && likes.length
         ),
+        // Comments toggle
         React.createElement('button', { className: 'action-btn', onClick: () => setShowComments(!showComments) },
           React.createElement('svg', { viewBox: '0 0 24 24', fill: 'none', stroke: 'currentColor', strokeWidth: 2 },
             React.createElement('path', { d: 'M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z' })
           ),
           comments.length > 0 && comments.length
         ),
-        canAssign  && React.createElement('button', { className: 'assign-btn', onClick: () => setShowAssign(true) }, 'Assign Drink'),
-        canApprove && React.createElement('button', { className: 'approve-btn', onClick: approveDrink }, '✅ Approve Drink')
+        // Assign button (only for you_drink assigner if not yet assigned)
+        canAssign && React.createElement('button', { className: 'assign-btn', onClick: () => setShowAssign(true) }, 'Assign Drink'),
+        // Approve button (anyone except the actual drinker, once drink is ready to approve)
+        canApprove && React.createElement('button', { className: 'approve-btn', onClick: approveDrink }, '✅ I Saw Them Drink')
       )
     ),
+
+    // Comments section
     showComments && React.createElement('div', null,
       comments.length > 0 && React.createElement('div', { className: 'comments-section' },
         comments.map(c => React.createElement('div', { key: c.id, className: 'comment' },
           React.createElement(Avatar, { name: c.username, size: 28 }),
           React.createElement('div', { className: 'comment-body' },
-            React.createElement('div', { className: 'comment-username', style: { color: USER_COLORS[c.username] || '#888' } },
-              c.username.charAt(0).toUpperCase() + c.username.slice(1)
-            ),
+            React.createElement('div', { className: 'comment-username', style: { color: USER_COLORS[c.username] || '#888' } }, cap(c.username)),
             React.createElement('div', { className: 'comment-text' }, c.body)
           )
         ))
@@ -1300,9 +1311,9 @@ function HRCard({ event, currentUser, onAssigned, showToast }) {
         )
       )
     ),
+
     showAssign && React.createElement(AssignModal, {
-      event,
-      currentUser,
+      event, currentUser,
       onClose: () => setShowAssign(false),
       onAssigned: () => { loadData(); onAssigned && onAssigned(); },
       showToast
@@ -1310,7 +1321,8 @@ function HRCard({ event, currentUser, onAssigned, showToast }) {
   );
 }
 
-/* ── Feed Screen ── */
+// ── Feed Screen ───────────────────────────────────────────────────────────
+
 function FeedScreen({ currentUser, showToast }) {
   const [events, setEvents] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -1318,7 +1330,7 @@ function FeedScreen({ currentUser, showToast }) {
   useEffect(() => {
     loadEvents();
     const chan = sb.channel('feed')
-      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'hr_events' }, () => loadEvents())
+      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'hr_events' }, loadEvents)
       .subscribe();
     return () => sb.removeChannel(chan);
   }, []);
@@ -1341,36 +1353,46 @@ function FeedScreen({ currentUser, showToast }) {
   );
 }
 
-/* ── Leaderboard Screen ── */
+// ── Leaderboard Screen ────────────────────────────────────────────────────
+
 function LeaderboardScreen() {
-  const [hrTotals, setHrTotals] = useState([]);
+  const [hrTotals, setHrTotals]     = useState([]);
   const [drinkTotals, setDrinkTotals] = useState([]);
-  const [drinkLB, setDrinkLB] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const [drinkLB, setDrinkLB]       = useState([]);
+  const [loading, setLoading]       = useState(true);
 
   useEffect(() => {
     const load = async () => {
-      const [hr, dl, idrink, assigned] = await Promise.all([
+      const [hr, dl, allDrinkLogs] = await Promise.all([
         sb.from('hr_totals').select('*'),
         sb.from('leaderboard').select('*'),
-        // i_drink events per user
-        sb.from('hr_events').select('drinker').eq('drink_type', 'i_drink'),
-        // you_drink assignments where user is assignee
-        sb.from('drink_assignments').select('assignee'),
+        sb.from('drink_log').select('*'),
       ]);
 
       if (hr.data) setHrTotals(hr.data.sort((a, b) => b.current_hrs - a.current_hrs));
       if (dl.data) setDrinkTotals(dl.data.sort((a, b) => b.total_drinks - a.total_drinks));
 
-      // Compute drink leaderboard: i_drink count + times assigned to
+      // Build drink leaderboard from drink_log directly so we can count late drinks
       const counts = {};
-      ALL_USERS.forEach(u => counts[u] = 0);
-      if (idrink.data) idrink.data.forEach(e => { if (counts[e.drinker] !== undefined) counts[e.drinker]++; });
-      if (assigned.data) assigned.data.forEach(a => { if (counts[a.assignee] !== undefined) counts[a.assignee]++; });
+      ALL_USERS.forEach(u => { counts[u] = { drinks: 0, late: 0 }; });
+
+      if (allDrinkLogs.data) {
+        allDrinkLogs.data.forEach(log => {
+          // Who actually drank?
+          const drinker = (log.drink_type === 'you_drink' ? log.given_to : log.username) || log.username;
+          const key = drinker.toLowerCase();
+          if (counts[key] === undefined) return;
+
+          counts[key].drinks++;
+
+          const status = computeStatus(log);
+          if (status === 'late') counts[key].late++;
+        });
+      }
 
       const lb = Object.entries(counts)
-        .map(([username, count]) => ({ username, count }))
-        .sort((a, b) => b.count - a.count);
+        .map(([username, { drinks, late }]) => ({ username, drinks, late }))
+        .sort((a, b) => b.drinks - a.drinks);
       setDrinkLB(lb);
 
       setLoading(false);
@@ -1383,25 +1405,28 @@ function LeaderboardScreen() {
   if (loading) return React.createElement('div', { className: 'loading' }, React.createElement('div', { className: 'spinner' }));
 
   return React.createElement('div', { className: 'leaderboard-screen' },
+
+    // Drink Leaderboard
     React.createElement('div', { className: 'section-title' }, 'Drink Leaderboard'),
     React.createElement('div', { className: 'lb-card' },
-      drinkLB.every(u => u.count === 0)
+      drinkLB.every(u => u.drinks === 0)
         ? React.createElement('div', { style: { padding: '2rem', textAlign: 'center', color: 'var(--muted)' } }, 'No drinks logged yet')
         : drinkLB.map((u, i) => React.createElement('div', { key: u.username, className: 'lb-row' },
             React.createElement('div', { className: `lb-rank ${rankClass(i)}` }, i + 1),
             React.createElement(Avatar, { name: u.username, size: 36 }),
             React.createElement('div', { style: { flex: 1 } },
-              React.createElement('div', { className: 'lb-name', style: { color: USER_COLORS[u.username] } },
-                u.username.charAt(0).toUpperCase() + u.username.slice(1)
-              ),
+              React.createElement('div', { className: 'lb-name', style: { color: USER_COLORS[u.username] } }, cap(u.username)),
               React.createElement('div', { className: 'lb-sub' }, 'drinks consumed')
             ),
-            React.createElement('div', { style: { textAlign: 'right' } },
-              React.createElement('div', { className: 'lb-stat', style: { color: USER_COLORS[u.username] } }, u.count),
-              React.createElement('div', { className: 'lb-label' }, 'Drinks')
+            React.createElement('div', { className: 'lb-stat-group' },
+              React.createElement('div', { className: 'lb-stat', style: { color: USER_COLORS[u.username] } }, u.drinks),
+              React.createElement('div', { className: 'lb-label' }, 'Drinks'),
+              u.late > 0 && React.createElement('div', { className: 'late-badge' }, `${u.late} late`)
             )
           ))
     ),
+
+    // MLB HR Leaderboard
     React.createElement('div', { className: 'section-title' }, 'MLB Home Runs'),
     React.createElement('div', { className: 'lb-card' },
       hrTotals.map((p, i) => React.createElement('div', { key: p.player_key, className: 'lb-row' },
@@ -1411,12 +1436,14 @@ function LeaderboardScreen() {
           React.createElement('div', { className: 'lb-name', style: { color: PLAYER_COLORS[p.player_key] } }, p.full_name),
           React.createElement('div', { className: 'lb-sub' }, p.team)
         ),
-        React.createElement('div', { style: { textAlign: 'right' } },
+        React.createElement('div', { className: 'lb-stat-group' },
           React.createElement('div', { className: 'lb-stat', style: { color: PLAYER_COLORS[p.player_key] } }, p.current_hrs),
           React.createElement('div', { className: 'lb-label' }, 'HRs')
         )
       ))
     ),
+
+    // Combined leaderboard
     React.createElement('div', { className: 'section-title' }, 'Combined Leaderboard'),
     React.createElement('div', { className: 'lb-card' },
       drinkTotals.length === 0
@@ -1425,12 +1452,10 @@ function LeaderboardScreen() {
             React.createElement('div', { className: `lb-rank ${rankClass(i)}` }, i + 1),
             React.createElement(Avatar, { name: u.username, size: 36 }),
             React.createElement('div', { style: { flex: 1 } },
-              React.createElement('div', { className: 'lb-name', style: { color: USER_COLORS[u.username] } },
-                u.username.charAt(0).toUpperCase() + u.username.slice(1)
-              ),
+              React.createElement('div', { className: 'lb-name', style: { color: USER_COLORS[u.username] } }, cap(u.username)),
               React.createElement('div', { className: 'lb-sub' }, `${u.drinks_received || 0} received · ${u.drinks_assigned || 0} assigned`)
             ),
-            React.createElement('div', { style: { textAlign: 'right' } },
+            React.createElement('div', { className: 'lb-stat-group' },
               React.createElement('div', { className: 'lb-stat', style: { color: USER_COLORS[u.username] } }, u.total_drinks),
               React.createElement('div', { className: 'lb-label' }, 'Total')
             )
@@ -1439,14 +1464,19 @@ function LeaderboardScreen() {
   );
 }
 
-/* ── Log Screen ── */
+// ── Log Screen ────────────────────────────────────────────────────────────
+
 function LogScreen() {
-  const [logs, setLogs] = useState([]);
+  const [logs, setLogs]     = useState([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const load = async () => {
-      const { data } = await sb.from('drink_log').select('*').order('assigned_at', { ascending: false });
+      // Fetch drink_log joined with hr_events so we get the event's created_at for display date
+      const { data } = await sb
+        .from('drink_log')
+        .select('*, hr_events(created_at)')
+        .order('created_at', { ascending: false });
       if (data) setLogs(data);
       setLoading(false);
     };
@@ -1460,47 +1490,64 @@ function LogScreen() {
     React.createElement('div', { className: 'log-table' },
       React.createElement('div', { className: 'log-header' },
         React.createElement('div', null, 'Date'),
-        React.createElement('div', null, 'User'),
+        React.createElement('div', null, 'Drinker'),
         React.createElement('div', null, 'Player'),
-        React.createElement('div', null, 'Type')
+        React.createElement('div', null, 'Status')
       ),
       logs.length === 0
         ? React.createElement('div', { style: { padding: '2rem', textAlign: 'center', color: 'var(--muted)' } }, 'No drinks logged yet')
-        : logs.map(l => React.createElement('div', { key: l.id, className: 'log-row' },
-            React.createElement('div', { style: { color: 'var(--muted)', fontSize: '0.75rem' } },
-              new Date(l.assigned_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
-            ),
-            l.given_to
-              ? React.createElement('div', { style: { fontWeight: 500, display: 'flex', alignItems: 'center', gap: '4px', flexWrap: 'wrap' } },
-                  React.createElement('span', { style: { color: USER_COLORS[l.username] || '#888' } },
-                    l.username.charAt(0).toUpperCase() + l.username.slice(1)
-                  ),
-                  React.createElement('span', { style: { color: USER_COLORS[l.username] || '#888' } }, ' → '),
-                  React.createElement('span', { style: { color: USER_COLORS[l.given_to] || '#888' } },
-                    l.given_to.charAt(0).toUpperCase() + l.given_to.slice(1)
-                  )
+        : logs.map(l => {
+            const status = computeStatus(l);
+            // Use the HR event's date for display (not the log insert date)
+            const displayDate = l.hr_events?.created_at
+              ? new Date(l.hr_events.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
+              : (l.event_date
+                  ? new Date(l.event_date + 'T12:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
+                  : '—');
+
+            // Actual drinker (for you_drink it's the assignee)
+            const actualDrinker = l.drink_type === 'you_drink' && l.given_to ? l.given_to : l.username;
+
+            return React.createElement('div', { key: l.id, className: `log-row status-${status}` },
+              React.createElement('div', { style: { color: 'var(--muted)', fontSize: '0.75rem' } }, displayDate),
+              React.createElement('div', { style: { fontWeight: 500 } },
+                l.drink_type === 'you_drink' && l.given_to
+                  ? React.createElement('span', null,
+                      React.createElement('span', { style: { color: USER_COLORS[l.username] || '#888', fontSize: '0.75rem' } }, cap(l.username)),
+                      React.createElement('span', { style: { color: 'var(--muted)' } }, ' → '),
+                      React.createElement('span', { style: { color: USER_COLORS[l.given_to] || '#888' } }, cap(l.given_to))
+                    )
+                  : React.createElement('span', { style: { color: USER_COLORS[l.username] || '#888' } }, cap(l.username))
+              ),
+              React.createElement('div', { style: { fontSize: '0.78rem', color: 'var(--muted)' } }, l.mlb_player),
+              React.createElement('div', { style: { display: 'flex', alignItems: 'center', gap: '4px' } },
+                React.createElement('span', { className: `log-status-dot ${status}` }),
+                React.createElement('span', { style: {
+                  fontSize: '0.7rem',
+                  color: status === 'late' ? '#e84a4a'
+                       : status === 'completed' ? '#7cb85c'
+                       : status === 'awaiting_approval' ? 'var(--accent)'
+                       : '#888'
+                } },
+                  status === 'late' ? 'Late'
+                  : status === 'completed' ? (l.approved_by ? `✓ ${cap(l.approved_by)}` : 'Done')
+                  : status === 'awaiting_approval' ? 'Pending ✓'
+                  : 'Pending'
                 )
-              : React.createElement('div', { style: { color: USER_COLORS[l.username] || '#888', fontWeight: 500 } },
-                  l.username.charAt(0).toUpperCase() + l.username.slice(1)
-                ),
-            React.createElement('div', { style: { fontSize: '0.8rem', color: 'var(--muted)' } }, l.mlb_player),
-            React.createElement('div', null,
-              React.createElement('span', { className: `log-type-badge ${l.drink_type === 'i_drink' ? 'i-drink' : 'you-drink'}` },
-                l.drink_type === 'i_drink' ? 'Drink' : 'Assign'
               )
-            )
-          ))
+            );
+          })
     )
   );
 }
 
-/* ── Main App ── */
+// ── Main App ──────────────────────────────────────────────────────────────
+
 function App() {
-  const [user, setUser] = useState(null);
-  const [username, setUsername] = useState('');
-  const [email, setEmail] = useState('');
-  const [tab, setTab] = useState('feed');
-  const [toast, showToast] = useToast();
+  const [user, setUser]           = useState(null);
+  const [username, setUsername]   = useState('');
+  const [tab, setTab]             = useState('feed');
+  const [toast, showToast]        = useToast();
   const [authChecked, setAuthChecked] = useState(false);
 
   useEffect(() => {
@@ -1543,9 +1590,7 @@ function App() {
     React.createElement('div', { className: 'header' },
       React.createElement('div', { className: 'header-title' }, 'Going Yard'),
       React.createElement('div', { className: 'header-user' },
-        React.createElement('span', { style: { color: USER_COLORS[username] } },
-          username.charAt(0).toUpperCase() + username.slice(1)
-        ),
+        React.createElement('span', { style: { color: USER_COLORS[username] } }, cap(username)),
         React.createElement(Avatar, { name: username, size: 32 }),
         React.createElement('button', {
           onClick: onSignOut,
@@ -1553,13 +1598,13 @@ function App() {
         }, 'Out')
       )
     ),
-    tab === 'feed' && React.createElement(FeedScreen, { currentUser: username, showToast }),
+    tab === 'feed'  && React.createElement(FeedScreen, { currentUser: username, showToast }),
     tab === 'board' && React.createElement(LeaderboardScreen),
-    tab === 'log' && React.createElement(LogScreen),
+    tab === 'log'   && React.createElement(LogScreen),
     React.createElement('nav', { className: 'nav' },
-      React.createElement(NavIcon, { id: 'feed', label: 'Feed', path: 'M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z M9 22V12h6v10' }),
+      React.createElement(NavIcon, { id: 'feed',  label: 'Feed',    path: 'M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z M9 22V12h6v10' }),
       React.createElement(NavIcon, { id: 'board', label: 'Leaders', path: 'M18 20V10 M12 20V4 M6 20v-6' }),
-      React.createElement(NavIcon, { id: 'log', label: 'Log', path: 'M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2 M9 5a2 2 0 0 0 2 2h2a2 2 0 0 0 2-2 M9 5a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2 M12 12h.01 M12 16h.01' })
+      React.createElement(NavIcon, { id: 'log',   label: 'Log',     path: 'M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2 M9 5a2 2 0 0 0 2 2h2a2 2 0 0 0 2-2 M9 5a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2 M12 12h.01 M12 16h.01' })
     ),
     toast && React.createElement(Toast, { msg: toast })
   );
@@ -1567,52 +1612,32 @@ function App() {
 
 ReactDOM.createRoot(document.getElementById('root')).render(React.createElement(App));
 
-// Register service worker and set up push notifications
+// ── Service Worker + Push ─────────────────────────────────────────────────
+
 async function registerPush(accessToken) {
-  if (!('serviceWorker' in navigator) || !('PushManager' in window)) {
-    console.log('Push not supported');
-    return;
-  }
+  if (!('serviceWorker' in navigator) || !('PushManager' in window)) return;
   try {
     const reg = await navigator.serviceWorker.register('/sw.js');
-    console.log('SW registered');
-
     const permission = await Notification.requestPermission();
-    if (permission !== 'granted') {
-      console.log('Notification permission denied');
-      return;
-    }
+    if (permission !== 'granted') return;
 
-    // Get VAPID public key from backend
-    const keyRes = await fetch('https://hr-game-production-140c.up.railway.app/push/vapid-public-key');
+    const keyRes = await fetch(`${BACKEND}/push/vapid-public-key`);
     const { key } = await keyRes.json();
+    const vapidKey = Uint8Array.from(atob(key.replace(/-/g,'+').replace(/_/g,'/')), c => c.charCodeAt(0));
 
-    // Convert VAPID key to Uint8Array
-    const vapidKey = Uint8Array.from(atob(key.replace(/-/g, '+').replace(/_/g, '/')), c => c.charCodeAt(0));
+    const sub = await reg.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: vapidKey });
 
-    const sub = await reg.pushManager.subscribe({
-      userVisibleOnly: true,
-      applicationServerKey: vapidKey
-    });
-
-    // Send subscription to backend
-    await fetch('https://hr-game-production-140c.up.railway.app/push/subscribe', {
+    await fetch(`${BACKEND}/push/subscribe`, {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${accessToken}`
-      },
+      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${accessToken}` },
       body: JSON.stringify(sub.toJSON())
     });
-    console.log('Push subscription registered');
   } catch (e) {
     console.error('Push registration failed:', e);
   }
 }
 
-// Expose registerPush globally so the app can call it after login
 window.registerPush = registerPush;
-
 </script>
 </body>
 </html>
