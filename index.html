@@ -1001,7 +1001,7 @@ function DrinkStatusBadge({ status, approvedBy }) {
   const cfg = {
     pending:            { cls: 'pending',   icon: '⏳', label: 'Pending' },
     awaiting_approval:  { cls: 'awaiting',  icon: '👀', label: 'Awaiting Approval' },
-    completed:          { cls: 'completed', icon: '✅', label: approvedBy ? `${cap(approvedBy)} approved` : 'Completed' },
+    completed:          { cls: 'completed', icon: '✅', label: 'Completed' },
     late:               { cls: 'late',      icon: '🔴', label: 'Late!' },
   }[status] || { cls: 'pending', icon: '⏳', label: 'Pending' };
 
