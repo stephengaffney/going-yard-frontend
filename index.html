@@ -282,6 +282,12 @@ body {
   animation: pulse-red 1.6s ease-in-out infinite;
 }
 
+/* Completed late — orange static border, no pulse (done but tardy) */
+.hr-card.completed-late {
+  border-color: rgba(232,140,74,0.55);
+  box-shadow: 0 0 0 1px rgba(232,140,74,0.2);
+}
+
 @keyframes pulse-yellow {
   0%, 100% { box-shadow: 0 0 0 0   rgba(232,193,74,0.35); }
   50%       { box-shadow: 0 0 0 8px rgba(232,193,74,0); }
@@ -1323,11 +1329,21 @@ function computeStatus(drinkLog) {
   if (s === 'completed_late') return 'completed_late';
   if (s === 'late') return 'late';
 
-  // Check age using event_date (drink_log has no created_at column).
-  // Treat noon on the event date as the start of the 24-hour window.
-  if (drinkLog.event_date) {
-    const eventNoon = new Date(drinkLog.event_date + 'T12:00:00');
-    const ageHours  = (Date.now() - eventNoon.getTime()) / 36e5;
+  // Use the precise timestamp for the clock start:
+  // - awaiting_approval (assigned you_drink): clock starts at assigned_at
+  // - pending i_drink or unassigned you_drink: clock starts at hr_triggered_at
+  // - fallback: noon on event_date
+  let clockStart = null;
+  if (s === 'awaiting_approval' && drinkLog.assigned_at) {
+    clockStart = new Date(drinkLog.assigned_at);
+  } else if (drinkLog.hr_triggered_at) {
+    clockStart = new Date(drinkLog.hr_triggered_at);
+  } else if (drinkLog.event_date) {
+    clockStart = new Date(drinkLog.event_date + 'T12:00:00');
+  }
+
+  if (clockStart) {
+    const ageHours = (Date.now() - clockStart.getTime()) / 36e5;
     if (ageHours > LATE_HOURS) return 'late';
   }
 
@@ -1433,6 +1449,13 @@ function AuthScreen({ onAuth }) {
           setError('Please enter a valid email address.');
           setLoading(false); return;
         }
+        // Check username is not already taken
+        const { data: existingProfile } = await sb.from('profiles').select('id').eq('username', username.toLowerCase()).maybeSingle();
+        if (existingProfile) {
+          setError(`"${cap(username)}" is already registered. Pick your name from the list and use your existing account.`);
+          setLoading(false); return;
+        }
+
         const { data, error: signUpErr } = await sb.auth.signUp({ email: email.trim(), password });
         if (signUpErr) throw signUpErr;
         if (data.user) {
@@ -1841,9 +1864,11 @@ function HRCard({ event, currentUser, onAssigned, showToast, videosEnabled, onNa
   // Card outline class
   const cardClass = status === 'late'
     ? 'hr-card late'
-    : status === 'awaiting_approval'
-      ? 'hr-card awaiting-approval'
-      : 'hr-card';
+    : status === 'completed_late'
+      ? 'hr-card completed-late'
+      : status === 'awaiting_approval'
+        ? 'hr-card awaiting-approval'
+        : 'hr-card';
 
   useEffect(() => {
     loadData();
