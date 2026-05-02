@@ -211,10 +211,24 @@ body {
 }
 
 .header-title {
+  display: flex;
+  flex-direction: column;
+  line-height: 1;
+  gap: 1px;
+}
+
+.header-title-main {
   font-family: 'Bebas Neue', sans-serif;
   font-size: 1.5rem;
   color: var(--accent);
   letter-spacing: 2px;
+}
+
+.header-title-sub {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 0.7rem;
+  color: #555;
+  letter-spacing: 3px;
 }
 
 .header-user {
@@ -2614,7 +2628,10 @@ function App() {
 
   return React.createElement('div', { className: 'app' },
     React.createElement('div', { className: 'header' },
-      React.createElement('div', { className: 'header-title' }, 'Going Yard'),
+      React.createElement('div', { className: 'header-title' },
+        React.createElement('div', { className: 'header-title-main' }, 'Going Yard'),
+        React.createElement('div', { className: 'header-title-sub' }, '& Drinking Hard')
+      ),
       React.createElement('div', { className: 'header-user' },
         username === 'steve' && React.createElement('button', {
           className: `video-toggle ${videosEnabled ? 'on' : 'off'}`,
