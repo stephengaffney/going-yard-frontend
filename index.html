@@ -390,6 +390,12 @@ body {
   border: 1px solid rgba(232,74,74,0.45);
 }
 
+.drink-status-badge.completed-late {
+  background: rgba(232,140,74,0.12);
+  color: #e88c4a;
+  border: 1px solid rgba(232,140,74,0.45);
+}
+
 /* ── Actions row ── */
 .hr-actions {
   display: flex;
@@ -619,7 +625,8 @@ body {
 }
 
 .log-row:last-child { border-bottom: none; }
-.log-row.status-late { border-left-color: #e84a4a; }
+.log-row.status-late           { border-left-color: #e84a4a; }
+.log-row.status-completed_late { border-left-color: #e88c4a; }
 .log-row.status-awaiting { border-left-color: var(--accent); }
 .log-row.status-completed { border-left-color: #7cb85c; }
 .log-row.status-pending { border-left-color: rgba(136,136,136,0.3); }
@@ -635,7 +642,8 @@ body {
 .log-status-dot.pending   { background: #666; }
 .log-status-dot.awaiting  { background: var(--accent); }
 .log-status-dot.completed { background: #7cb85c; }
-.log-status-dot.late      { background: #e84a4a; }
+.log-status-dot.late           { background: #e84a4a; }
+.log-status-dot.completed_late { background: #e88c4a; }
 
 /* ── Assign Modal ── */
 .modal-overlay {
@@ -928,6 +936,12 @@ body {
   background: rgba(124,184,92,0.12);
   border-color: #7cb85c;
   color: #7cb85c;
+}
+
+.filter-chip.active-orange {
+  background: rgba(232,140,74,0.12);
+  border-color: #e88c4a;
+  color: #e88c4a;
 }
 
 .filter-divider {
@@ -1239,6 +1253,7 @@ function computeStatus(drinkLog) {
   if (!drinkLog) return 'pending';
   const s = drinkLog.status || 'pending';
   if (s === 'completed') return 'completed';
+  if (s === 'completed_late') return 'completed_late';
   if (s === 'late') return 'late';
 
   // Check age using event_date (drink_log has no created_at column).
@@ -1317,8 +1332,9 @@ function DrinkStatusBadge({ status, approvedBy }) {
   const cfg = {
     pending:            { cls: 'pending',   icon: '⏳', label: 'Pending' },
     awaiting_approval:  { cls: 'awaiting',  icon: '👀', label: 'Awaiting Approval' },
-    completed:          { cls: 'completed', icon: '✅', label: 'Completed' },
-    late:               { cls: 'late',      icon: '🔴', label: 'Late!' },
+    completed:          { cls: 'completed',      icon: '✅', label: 'Completed' },
+    completed_late:     { cls: 'completed-late', icon: '⚠️', label: 'Completed Late' },
+    late:               { cls: 'late',           icon: '🔴', label: 'Late!' },
   }[status] || { cls: 'pending', icon: '⏳', label: 'Pending' };
 
   return React.createElement('span', { className: `drink-status-badge ${cfg.cls}` },
@@ -1737,7 +1753,7 @@ function HRCard({ event, currentUser, onAssigned, showToast, videosEnabled, onNa
   // and for you_drink it must already be assigned to me
   const canUploadVideo = !chugVideo
     && currentUser === actualDrinker
-    && !['completed', 'done'].includes(status)
+    && !['completed', 'done', 'completed_late'].includes(status)
     && (event.drink_type === 'i_drink' || (event.drink_type === 'you_drink' && drinkLog?.given_to));
   // Show view video link if video exists
   const hasVideo = !!chugVideo;
@@ -1974,10 +1990,11 @@ function HRCard({ event, currentUser, onAssigned, showToast, videosEnabled, onNa
 
 function SearchFilterBar({ search, onSearch, filters, onFilter, dateOptions }) {
   const statusFilters = [
-    { key: 'pending',            label: 'Pending',   cls: 'active' },
-    { key: 'awaiting_approval',  label: 'Awaiting',  cls: 'active' },
-    { key: 'completed',          label: 'Done',       cls: 'active-green' },
-    { key: 'late',               label: 'Late',       cls: 'active-red' },
+    { key: 'pending',           label: 'Pending',       cls: 'active' },
+    { key: 'awaiting_approval', label: 'Awaiting',      cls: 'active' },
+    { key: 'completed',         label: 'Done',          cls: 'active-green' },
+    { key: 'completed_late',    label: 'Done (Late)',   cls: 'active-orange' },
+    { key: 'late',              label: 'Late',          cls: 'active-red' },
   ];
   const typeFilters = [
     { key: 'i_drink',   label: 'I Drink',  cls: 'active' },
@@ -2328,7 +2345,7 @@ function LogScreen({ currentUser, videosEnabled, onNavigateVideos }) {
             ...l,
             _hasVideo:  videoSet.has(l.hr_event_id),
             _isMyDrink: actualDrinker === currentUser && !videoSet.has(l.hr_event_id)
-                          && !['completed', 'done'].includes(computeStatus(l))
+                          && !['completed', 'done', 'completed_late'].includes(computeStatus(l))
                           && (l.drink_type === 'i_drink' || (l.drink_type === 'you_drink' && l.given_to)),
           };
         });
@@ -2390,10 +2407,14 @@ function LogScreen({ currentUser, videosEnabled, onNavigateVideos }) {
             fontSize: '0.7rem',
             color: status === 'late' ? '#e84a4a'
                  : status === 'completed' ? '#7cb85c'
+                 : status === 'completed_late' ? '#e88c4a'
                  : status === 'awaiting_approval' ? 'var(--accent)'
                  : '#888'
           } },
-            status === 'late' ? 'Late' : status === 'completed' ? 'Done' : 'Pending'
+            status === 'late' ? 'Late'
+            : status === 'completed' ? 'Done'
+            : status === 'completed_late' ? 'Done (Late)'
+            : 'Pending'
           )
         ),
         videosEnabled && l._hasVideo && React.createElement('button', { className: 'log-video-link', onClick: onNavigateVideos },
