@@ -755,6 +755,82 @@ body {
 
 @keyframes spin { to { transform: rotate(360deg); } }
 
+/* ── I Drink Progress Board ── */
+.progress-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  overflow: hidden;
+  margin-bottom: 1.5rem;
+}
+
+.progress-row {
+  padding: 0.875rem 1rem;
+  border-bottom: 1px solid var(--border);
+}
+
+.progress-row:last-child { border-bottom: none; }
+
+.progress-header {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-bottom: 0.5rem;
+}
+
+.progress-names {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+
+.progress-user {
+  font-size: 0.875rem;
+  font-weight: 500;
+}
+
+.progress-player {
+  font-size: 0.75rem;
+  color: var(--muted);
+}
+
+.progress-count {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 1.3rem;
+  min-width: 48px;
+  text-align: right;
+  line-height: 1;
+}
+
+.progress-count span {
+  font-size: 0.7rem;
+  color: var(--muted);
+  font-family: 'DM Sans', sans-serif;
+}
+
+.progress-bar-track {
+  height: 8px;
+  background: var(--surface2);
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.progress-bar-fill {
+  height: 100%;
+  border-radius: 4px;
+  transition: width 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+}
+
+.progress-bar-fill::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.15) 50%, transparent 100%);
+  border-radius: 4px;
+}
+
 /* ── Toast ── */
 .toast {
   position: fixed;
@@ -811,6 +887,17 @@ const PLAYER_COLORS = {
 };
 
 const ALL_USERS = ['frank', 'scott', 'tyler', 'ned', 'ryan', 'steve', 'dan'];
+
+// Maps each user to their I Drink player (the player they drink for when they hit a HR)
+const I_DRINK_MATCHUP = {
+  frank: { player: 'Diaz',      fullName: 'Yanier Diaz' },
+  scott: { player: 'Garcia',    fullName: 'Adolis Garcia' },
+  tyler: { player: 'Volpe',     fullName: 'Anthony Volpe' },
+  ned:   { player: 'Dominguez', fullName: 'Jasson Dominguez' },
+  ryan:  { player: 'Turner',    fullName: 'Trea Turner' },
+  steve: { player: 'Wells',     fullName: 'Austin Wells' },
+  dan:   { player: 'McMahon',   fullName: 'Ryan McMahon' },
+};
 
 const TEAM_LOGOS = {
   HOU: 'https://www.mlbstatic.com/team-logos/117.svg',
@@ -1356,10 +1443,11 @@ function FeedScreen({ currentUser, showToast }) {
 // ── Leaderboard Screen ────────────────────────────────────────────────────
 
 function LeaderboardScreen() {
-  const [hrTotals, setHrTotals]     = useState([]);
+  const [hrTotals, setHrTotals]       = useState([]);
   const [drinkTotals, setDrinkTotals] = useState([]);
-  const [drinkLB, setDrinkLB]       = useState([]);
-  const [loading, setLoading]       = useState(true);
+  const [drinkLB, setDrinkLB]         = useState([]);
+  const [iDrinkHRs, setIDrinkHRs]     = useState({}); // player_key → current_hrs
+  const [loading, setLoading]         = useState(true);
 
   useEffect(() => {
     const load = async () => {
@@ -1369,7 +1457,13 @@ function LeaderboardScreen() {
         sb.from('drink_log').select('*'),
       ]);
 
-      if (hr.data) setHrTotals(hr.data.sort((a, b) => b.current_hrs - a.current_hrs));
+      if (hr.data) {
+        setHrTotals(hr.data.sort((a, b) => b.current_hrs - a.current_hrs));
+        // Build a map of player_key → current_hrs for the progress bars
+        const hrMap = {};
+        hr.data.forEach(p => { hrMap[p.player_key] = p.current_hrs || 0; });
+        setIDrinkHRs(hrMap);
+      }
       if (dl.data) setDrinkTotals(dl.data.sort((a, b) => b.total_drinks - a.total_drinks));
 
       // Build drink leaderboard from drink_log directly so we can count late drinks
@@ -1378,13 +1472,10 @@ function LeaderboardScreen() {
 
       if (allDrinkLogs.data) {
         allDrinkLogs.data.forEach(log => {
-          // Who actually drank?
           const drinker = (log.drink_type === 'you_drink' ? log.given_to : log.username) || log.username;
           const key = drinker.toLowerCase();
           if (counts[key] === undefined) return;
-
           counts[key].drinks++;
-
           const status = computeStatus(log);
           if (status === 'late') counts[key].late++;
         });
@@ -1424,6 +1515,40 @@ function LeaderboardScreen() {
               u.late > 0 && React.createElement('div', { className: 'late-badge' }, `${u.late} late`)
             )
           ))
+    ),
+
+    // I Drink Progress Board
+    React.createElement('div', { className: 'section-title' }, 'My Player Progress'),
+    React.createElement('div', { className: 'progress-card' },
+      ALL_USERS.map(user => {
+        const matchup = I_DRINK_MATCHUP[user];
+        const hrs     = iDrinkHRs[matchup.player] || 0;
+        const pct     = Math.min((hrs / 20) * 100, 100);
+        const color   = USER_COLORS[user] || '#888';
+        const playerColor = PLAYER_COLORS[matchup.player] || '#888';
+        return React.createElement('div', { key: user, className: 'progress-row' },
+          React.createElement('div', { className: 'progress-header' },
+            React.createElement(Avatar, { name: user, size: 34 }),
+            React.createElement('div', { className: 'progress-names' },
+              React.createElement('div', { className: 'progress-user', style: { color } }, cap(user)),
+              React.createElement('div', { className: 'progress-player', style: { color: playerColor } }, matchup.fullName)
+            ),
+            React.createElement('div', { className: 'progress-count', style: { color: playerColor } },
+              hrs,
+              React.createElement('span', null, ' / 20')
+            )
+          ),
+          React.createElement('div', { className: 'progress-bar-track' },
+            React.createElement('div', {
+              className: 'progress-bar-fill',
+              style: {
+                width: `${pct}%`,
+                background: `linear-gradient(90deg, ${color}99, ${playerColor})`,
+              }
+            })
+          )
+        );
+      })
     ),
 
     // MLB HR Leaderboard
@@ -1472,11 +1597,13 @@ function LogScreen() {
 
   useEffect(() => {
     const load = async () => {
-      // Fetch drink_log joined with hr_events so we get the event's created_at for display date
-      const { data } = await sb
+      // Join hr_events to get created_at for display date matching the Feed tab.
+      // Order by event_date desc (drink_log has no created_at column).
+      const { data, error } = await sb
         .from('drink_log')
         .select('*, hr_events(created_at)')
-        .order('created_at', { ascending: false });
+        .order('event_date', { ascending: false });
+      if (error) console.error('[LOG] fetch error:', error);
       if (data) setLogs(data);
       setLoading(false);
     };
