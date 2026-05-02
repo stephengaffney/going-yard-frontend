@@ -24,10 +24,10 @@ self.addEventListener('push', e => {
   const data = e.data ? e.data.json() : {};
   e.waitUntil(
     self.registration.showNotification(data.title || 'Going Yard', {
-      body: data.body || '',
-      icon: '/icon-192.png',
-      badge: '/icon-192.png',
-      data: data.data || {},
+      body:    data.body || '',
+      icon:    '/icon-192.png',
+      badge:   '/icon-192.png',
+      data:    data.data || {},
       vibrate: [200, 100, 200],
     })
   );
@@ -35,5 +35,36 @@ self.addEventListener('push', e => {
 
 self.addEventListener('notificationclick', e => {
   e.notification.close();
-  e.waitUntil(clients.openWindow('/'));
+
+  const data      = e.notification.data || {};
+  const type      = data.type || '';
+  const eventId   = data.hr_event_id;
+  const videoId   = data.video_id;
+
+  // Build deep link URL based on notification type
+  let url = '/';
+
+  if (type === 'video' && videoId) {
+    // Video upload → open Chugs tab scrolled to that video
+    url = `/?tab=videos&video=${videoId}`;
+  } else if (eventId) {
+    // Everything else with an hr_event_id → open Feed scrolled to that card
+    url = `/?event=${eventId}`;
+  }
+
+  e.waitUntil(
+    clients.matchAll({ type: 'window', includeUncontrolled: true }).then(windowClients => {
+      // If the app is already open, focus it and navigate
+      for (const client of windowClients) {
+        if (client.url.startsWith(self.location.origin) && 'focus' in client) {
+          client.navigate(url);
+          return client.focus();
+        }
+      }
+      // Otherwise open a new window
+      if (clients.openWindow) {
+        return clients.openWindow(url);
+      }
+    })
+  );
 });

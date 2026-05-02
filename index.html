@@ -1199,6 +1199,19 @@ body {
 .video-toggle.on  .toggle-pip { background: #7cb85c; }
 .video-toggle.off .toggle-pip { background: #e84a4a; }
 
+/* ── Deep link highlight flash ── */
+@keyframes highlight-flash {
+  0%   { box-shadow: 0 0 0 0   rgba(232,193,74,0); border-color: var(--border); }
+  20%  { box-shadow: 0 0 0 8px rgba(232,193,74,0.5); border-color: rgba(232,193,74,0.9); }
+  60%  { box-shadow: 0 0 0 8px rgba(232,193,74,0.3); border-color: rgba(232,193,74,0.7); }
+  100% { box-shadow: 0 0 0 0   rgba(232,193,74,0); border-color: var(--border); }
+}
+
+.hr-card.highlight,
+.video-card.highlight {
+  animation: highlight-flash 1.8s ease-out forwards !important;
+}
+
 /* ── Toast ── */
 .toast {
   position: fixed;
@@ -1378,6 +1391,21 @@ function canUserApprove(event, drinkLog, currentUser) {
 }
 
 function cap(s) { return s ? s.charAt(0).toUpperCase() + s.slice(1) : ''; }
+
+// Parse deep-link params from URL e.g. /?event=42&tab=feed
+function getDeepLink() {
+  const params = new URLSearchParams(window.location.search);
+  return {
+    eventId: params.get('event') ? parseInt(params.get('event')) : null,
+    tab:     params.get('tab') || null,
+    videoId: params.get('video') ? parseInt(params.get('video')) : null,
+  };
+}
+
+// Clear the URL params without reloading the page
+function clearDeepLink() {
+  window.history.replaceState({}, '', '/');
+}
 
 // ── Components ────────────────────────────────────────────────────────────
 
@@ -1673,13 +1701,25 @@ function UploadModal({ event, drinkLog, currentUser, onClose, onUploaded, showTo
 
       showToast('Chug video uploaded! 🍺');
 
-      // Notify all other users via backend
+      // Notify all other users via backend, passing video_id for deep link
       try {
         const { data: { session } } = await sb.auth.getSession();
+        // Fetch the newly inserted video's id for the deep link
+        const { data: videoRow } = await sb
+          .from('chug_videos')
+          .select('id')
+          .eq('hr_event_id', event.id)
+          .order('created_at', { ascending: false })
+          .limit(1)
+          .single();
         await fetch(`${BACKEND}/videos/notify`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${session.access_token}` },
-          body: JSON.stringify({ hr_event_id: event.id, player_name: event.full_name })
+          body: JSON.stringify({
+            hr_event_id: event.id,
+            player_name: event.full_name,
+            video_id:    videoRow?.id || null,
+          })
         });
       } catch (e) {
         console.error('Video notify failed:', e);
@@ -1748,10 +1788,11 @@ function UploadModal({ event, drinkLog, currentUser, onClose, onUploaded, showTo
 
 // ── Videos Screen ─────────────────────────────────────────────────────────
 
-function VideosScreen({ currentUser }) {
+function VideosScreen({ currentUser, deepLinkVideoId, onDeepLinkHandled }) {
   const [videos, setVideos]     = useState([]);
   const [loading, setLoading]   = useState(true);
   const [userFilter, setUserFilter] = useState(null);
+  const [highlightVideoId, setHighlightVideoId] = useState(deepLinkVideoId || null);
 
   useEffect(() => {
     load();
@@ -1765,6 +1806,16 @@ function VideosScreen({ currentUser }) {
     if (error) console.error('[VIDEOS]', error);
     if (data) setVideos(data);
     setLoading(false);
+
+    if (deepLinkVideoId) {
+      setTimeout(() => {
+        const el = document.getElementById(`video-card-${deepLinkVideoId}`);
+        if (el) {
+          el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          setTimeout(() => { setHighlightVideoId(null); onDeepLinkHandled && onDeepLinkHandled(); }, 2000);
+        }
+      }, 400);
+    }
   };
 
   const filtered = userFilter
@@ -1798,7 +1849,7 @@ function VideosScreen({ currentUser }) {
             const color      = USER_COLORS[v.actual_drinker] || '#888';
             const playerColor = PLAYER_COLORS[v.player_key] || '#888';
             const timeAgo    = new Date(v.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit', hour12: true });
-            return React.createElement('div', { key: v.id, className: 'video-card' },
+            return React.createElement('div', { key: v.id, id: `video-card-${v.id}`, className: `video-card${highlightVideoId === v.id ? ' highlight' : ''}` },
               React.createElement('div', { className: 'video-card-header' },
                 React.createElement(Avatar, { name: v.actual_drinker, size: 36, color }),
                 React.createElement('div', { className: 'video-card-meta' },
@@ -1826,7 +1877,7 @@ function VideosScreen({ currentUser }) {
 
 // ── HR Card ───────────────────────────────────────────────────────────────
 
-function HRCard({ event, currentUser, onAssigned, showToast, videosEnabled, onNavigateVideos }) {
+function HRCard({ event, currentUser, onAssigned, showToast, videosEnabled, onNavigateVideos, highlight }) {
   const [likes, setLikes]           = useState([]);
   const [comments, setComments]     = useState([]);
   const [showComments, setShowComments] = useState(true);
@@ -1862,13 +1913,14 @@ function HRCard({ event, currentUser, onAssigned, showToast, videosEnabled, onNa
   const hasVideo = !!chugVideo;
 
   // Card outline class
-  const cardClass = status === 'late'
+  const baseClass = status === 'late'
     ? 'hr-card late'
     : status === 'completed_late'
       ? 'hr-card completed-late'
       : status === 'awaiting_approval'
         ? 'hr-card awaiting-approval'
         : 'hr-card';
+  const cardClass = highlight ? baseClass + ' highlight' : baseClass;
 
   useEffect(() => {
     loadData();
@@ -1983,7 +2035,7 @@ function HRCard({ event, currentUser, onAssigned, showToast, videosEnabled, onNa
     );
   };
 
-  return React.createElement('div', { className: cardClass },
+  return React.createElement('div', { className: cardClass, id: `hr-card-${event.id}` },
     React.createElement('div', { className: 'hr-card-accent', style: { background: playerColor } }),
     React.createElement('div', { className: 'hr-card-body' },
 
@@ -2176,11 +2228,12 @@ function SearchFilterBar({ search, onSearch, filters, onFilter, dateOptions }) {
 
 // ── Feed Screen ───────────────────────────────────────────────────────────
 
-function FeedScreen({ currentUser, showToast, videosEnabled, onNavigateVideos }) {
+function FeedScreen({ currentUser, showToast, videosEnabled, onNavigateVideos, deepLinkEventId, onDeepLinkHandled }) {
   const [events, setEvents]   = useState([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch]   = useState('');
   const [filters, setFilters] = useState({});
+  const [highlightId, setHighlightId] = useState(deepLinkEventId || null);
   // Cache of drink_log rows keyed by hr_event_id for filtering by status
   const [drinkLogs, setDrinkLogs] = useState({});
 
@@ -2204,6 +2257,18 @@ function FeedScreen({ currentUser, showToast, videosEnabled, onNavigateVideos })
       setDrinkLogs(map);
     }
     setLoading(false);
+
+    // Scroll to and highlight deep-linked card after data loads
+    if (deepLinkEventId) {
+      setTimeout(() => {
+        const el = document.getElementById(`hr-card-${deepLinkEventId}`);
+        if (el) {
+          el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          setHighlightId(deepLinkEventId);
+          setTimeout(() => { setHighlightId(null); onDeepLinkHandled && onDeepLinkHandled(); }, 2000);
+        }
+      }, 400);
+    }
   };
 
   // Unique dates for the date dropdown
@@ -2248,7 +2313,7 @@ function FeedScreen({ currentUser, showToast, videosEnabled, onNavigateVideos })
       : filtered.length === 0
         ? React.createElement('div', { className: 'no-results' }, 'No events match your search.')
         : React.createElement('div', { className: 'feed' },
-            filtered.map(e => React.createElement(HRCard, { key: e.id, event: e, currentUser, onAssigned: loadEvents, showToast, videosEnabled, onNavigateVideos }))
+            filtered.map(e => React.createElement(HRCard, { key: e.id, event: e, currentUser, onAssigned: loadEvents, showToast, videosEnabled, onNavigateVideos, highlight: highlightId === e.id }))
           )
   );
 }
@@ -2586,8 +2651,17 @@ function App() {
   const [toast, showToast]            = useToast();
   const [authChecked, setAuthChecked] = useState(false);
   const [videosEnabled, setVideosEnabled] = useState(false);
+  const [deepLink, setDeepLink]           = useState(() => getDeepLink());
 
   useEffect(() => {
+    // Handle deep link on first load
+    const dl = getDeepLink();
+    if (dl.tab === 'videos' || dl.videoId) {
+      setTab('videos');
+    } else if (dl.eventId || dl.tab === 'feed') {
+      setTab('feed');
+    }
+
     // Load feature flags from app_settings
     sb.from('app_settings').select('key, value').then(({ data }) => {
       if (data) {
@@ -2674,10 +2748,10 @@ function App() {
         }, 'Out')
       )
     ),
-    tab === 'feed'   && React.createElement(FeedScreen, { currentUser: username, showToast, videosEnabled, onNavigateVideos: videosEnabled ? () => setTab('videos') : null }),
+    tab === 'feed'   && React.createElement(FeedScreen, { currentUser: username, showToast, videosEnabled, onNavigateVideos: videosEnabled ? () => setTab('videos') : null, deepLinkEventId: deepLink.eventId, onDeepLinkHandled: () => { setDeepLink({}); clearDeepLink(); } }),
     tab === 'board'  && React.createElement(LeaderboardScreen),
     tab === 'log'    && React.createElement(LogScreen, { currentUser: username, videosEnabled, onNavigateVideos: videosEnabled ? () => setTab('videos') : null }),
-    tab === 'videos' && videosEnabled && React.createElement(VideosScreen, { currentUser: username }),
+    tab === 'videos' && videosEnabled && React.createElement(VideosScreen, { currentUser: username, deepLinkVideoId: deepLink.videoId, onDeepLinkHandled: () => { setDeepLink({}); clearDeepLink(); } }),
     React.createElement('nav', { className: 'nav' },
       React.createElement(NavIcon, { id: 'feed',   label: 'Feed',    path: 'M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z M9 22V12h6v10' }),
       React.createElement(NavIcon, { id: 'board',  label: 'Leaders', path: 'M18 20V10 M12 20V4 M6 20v-6' }),
