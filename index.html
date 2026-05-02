@@ -2084,7 +2084,7 @@ function FeedScreen({ currentUser, showToast, videosEnabled, onNavigateVideos })
     new Date(e.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
   ))];
 
-  const anyStatusFilter = ['pending','awaiting_approval','completed','late'].some(k => filters[k]);
+  const anyStatusFilter = ['pending','awaiting_approval','completed','completed_late','late'].some(k => filters[k]);
   const anyTypeFilter   = ['i_drink','you_drink'].some(k => filters[k]);
 
   const filtered = events.filter(e => {
@@ -2362,7 +2362,7 @@ function LogScreen({ currentUser, videosEnabled, onNavigateVideos }) {
     return raw ? new Date(raw).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) : null;
   }).filter(Boolean))];
 
-  const anyStatusFilter = ['pending','awaiting_approval','completed','late'].some(k => filters[k]);
+  const anyStatusFilter = ['pending','awaiting_approval','completed','completed_late','late'].some(k => filters[k]);
   const anyTypeFilter   = ['i_drink','you_drink'].some(k => filters[k]);
 
   const filtered = logs.filter(l => {
