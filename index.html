@@ -510,6 +510,29 @@ body {
 
 .send-btn svg { width: 16px; height: 16px; }
 
+.comment-delete-btn {
+  background: none;
+  border: none;
+  color: transparent;
+  cursor: pointer;
+  padding: 2px 4px;
+  border-radius: 4px;
+  line-height: 1;
+  font-size: 0.7rem;
+  transition: color 0.15s;
+  flex-shrink: 0;
+  align-self: flex-start;
+  margin-top: 2px;
+}
+
+.comment:hover .comment-delete-btn {
+  color: #555;
+}
+
+.comment-delete-btn:hover {
+  color: #e84a4a !important;
+}
+
 /* ── Leaderboard ── */
 .leaderboard-screen { flex: 1; padding: 1rem 1rem 6rem; }
 
@@ -1834,6 +1857,15 @@ function HRCard({ event, currentUser, onAssigned, showToast, videosEnabled, onNa
     }
   };
 
+  const deleteComment = async (commentId) => {
+    const { data: { session } } = await sb.auth.getSession();
+    await fetch(`${BACKEND}/comments/${commentId}`, {
+      method: 'DELETE',
+      headers: { 'Authorization': `Bearer ${session.access_token}` },
+    });
+    loadData();
+  };
+
   const approveDrink = async () => {
     if (!drinkLog) return;
     const { data: { session } } = await sb.auth.getSession();
@@ -1971,7 +2003,12 @@ function HRCard({ event, currentUser, onAssigned, showToast, videosEnabled, onNa
           React.createElement('div', { className: 'comment-body' },
             React.createElement('div', { className: 'comment-username', style: { color: USER_COLORS[c.username] || '#888' } }, cap(c.username)),
             React.createElement('div', { className: 'comment-text' }, c.body)
-          )
+          ),
+          c.username === currentUser && React.createElement('button', {
+            className: 'comment-delete-btn',
+            title: 'Delete comment',
+            onClick: () => deleteComment(c.id)
+          }, '✕')
         ))
       ),
       React.createElement('div', { className: 'comment-input-row' },
