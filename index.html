@@ -1733,7 +1733,11 @@ function HRCard({ event, currentUser, onAssigned, showToast, videosEnabled, onNa
   const actualDrinker = event.drink_type === 'you_drink' && drinkLog?.given_to
     ? drinkLog.given_to : event.drinker;
   // Show upload button only if: it's the drinker's card and no video yet
-  const canUploadVideo = !chugVideo && currentUser === actualDrinker
+  // Only show record link if: no video yet, it's my drink, drink is not completed,
+  // and for you_drink it must already be assigned to me
+  const canUploadVideo = !chugVideo
+    && currentUser === actualDrinker
+    && !['completed', 'done'].includes(status)
     && (event.drink_type === 'i_drink' || (event.drink_type === 'you_drink' && drinkLog?.given_to));
   // Show view video link if video exists
   const hasVideo = !!chugVideo;
@@ -2324,6 +2328,7 @@ function LogScreen({ currentUser, videosEnabled, onNavigateVideos }) {
             ...l,
             _hasVideo:  videoSet.has(l.hr_event_id),
             _isMyDrink: actualDrinker === currentUser && !videoSet.has(l.hr_event_id)
+                          && !['completed', 'done'].includes(computeStatus(l))
                           && (l.drink_type === 'i_drink' || (l.drink_type === 'you_drink' && l.given_to)),
           };
         });
