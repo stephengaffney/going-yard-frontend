@@ -1149,6 +1149,36 @@ body {
   text-underline-offset: 2px;
 }
 
+/* ── Admin video toggle ── */
+.video-toggle {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: none;
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  padding: 3px 10px 3px 6px;
+  cursor: pointer;
+  font-size: 0.7rem;
+  color: var(--muted);
+  font-family: 'DM Sans', sans-serif;
+  transition: all 0.2s;
+  white-space: nowrap;
+}
+
+.video-toggle:hover { border-color: var(--accent); color: var(--text); }
+.video-toggle.on { border-color: #7cb85c; color: #7cb85c; background: rgba(124,184,92,0.08); }
+.video-toggle.off { border-color: #e84a4a; color: #e84a4a; background: rgba(232,74,74,0.08); }
+
+.toggle-pip {
+  width: 8px; height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.video-toggle.on  .toggle-pip { background: #7cb85c; }
+.video-toggle.off .toggle-pip { background: #e84a4a; }
+
 /* ── Toast ── */
 .toast {
   position: fixed;
@@ -2551,6 +2581,21 @@ function App() {
   const onAuth = (u, uname) => { setUser(u); setUsername(uname); };
   const onSignOut = async () => { await sb.auth.signOut(); setUser(null); setUsername(''); };
 
+  const toggleVideos = async () => {
+    const next = !videosEnabled;
+    setVideosEnabled(next);
+    // If turning off and currently on videos tab, redirect to feed
+    if (!next && tab === 'videos') setTab('feed');
+    try {
+      await sb.from('app_settings')
+        .update({ value: next ? 'true' : 'false' })
+        .eq('key', 'videos_enabled');
+    } catch (e) {
+      console.error('Failed to update videos toggle:', e);
+      setVideosEnabled(!next); // revert on failure
+    }
+  };
+
   if (!authChecked) return React.createElement('div', { className: 'loading', style: { minHeight: '100vh' } },
     React.createElement('div', { className: 'spinner' })
   );
@@ -2571,6 +2616,14 @@ function App() {
     React.createElement('div', { className: 'header' },
       React.createElement('div', { className: 'header-title' }, 'Going Yard'),
       React.createElement('div', { className: 'header-user' },
+        username === 'steve' && React.createElement('button', {
+          className: `video-toggle ${videosEnabled ? 'on' : 'off'}`,
+          onClick: toggleVideos,
+          title: `Videos are ${videosEnabled ? 'ON' : 'OFF'} — tap to toggle`
+        },
+          React.createElement('span', { className: 'toggle-pip' }),
+          '🎥 ' + (videosEnabled ? 'ON' : 'OFF')
+        ),
         React.createElement('span', { style: { color: USER_COLORS[username] } }, cap(username)),
         React.createElement(Avatar, { name: username, size: 32 }),
         React.createElement('button', {
