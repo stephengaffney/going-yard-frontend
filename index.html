@@ -1582,6 +1582,19 @@ function UploadModal({ event, drinkLog, currentUser, onClose, onUploaded, showTo
       setProgress(100);
 
       showToast('Chug video uploaded! 🍺');
+
+      // Notify all other users via backend
+      try {
+        const { data: { session } } = await sb.auth.getSession();
+        await fetch(`${BACKEND}/videos/notify`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${session.access_token}` },
+          body: JSON.stringify({ hr_event_id: event.id, player_name: event.full_name })
+        });
+      } catch (e) {
+        console.error('Video notify failed:', e);
+      }
+
       onUploaded();
       onClose();
     } catch (e) {
