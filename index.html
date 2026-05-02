@@ -1814,16 +1814,24 @@ function HRCard({ event, currentUser, onAssigned, showToast, videosEnabled, onNa
     loadData();
   };
 
+  const commentSubmitting = useRef(false);
   const addComment = async () => {
     if (!commentText.trim()) return;
-    const { data: { session } } = await sb.auth.getSession();
-    await fetch(`${BACKEND}/comments`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${session.access_token}` },
-      body: JSON.stringify({ hr_event_id: event.id, body: commentText.trim() })
-    });
+    if (commentSubmitting.current) return;
+    commentSubmitting.current = true;
+    const text = commentText.trim();
     setCommentText('');
-    loadData();
+    try {
+      const { data: { session } } = await sb.auth.getSession();
+      await fetch(`${BACKEND}/comments`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${session.access_token}` },
+        body: JSON.stringify({ hr_event_id: event.id, body: text })
+      });
+      loadData();
+    } finally {
+      commentSubmitting.current = false;
+    }
   };
 
   const approveDrink = async () => {
