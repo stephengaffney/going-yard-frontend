@@ -1330,12 +1330,12 @@ function useToast() {
 
 function DrinkStatusBadge({ status, approvedBy }) {
   const cfg = {
-    pending:            { cls: 'pending',   icon: '⏳', label: 'Pending' },
-    awaiting_approval:  { cls: 'awaiting',  icon: '👀', label: 'Awaiting Approval' },
+    pending:            { cls: 'pending',   icon: '⏳', label: 'To Be Assigned' },
+    awaiting_approval:  { cls: 'awaiting',  icon: '🍺', label: 'To Be Drank' },
     completed:          { cls: 'completed',      icon: '✅', label: 'Completed' },
     completed_late:     { cls: 'completed-late', icon: '⚠️', label: 'Completed Late' },
     late:               { cls: 'late',           icon: '🔴', label: 'Late!' },
-  }[status] || { cls: 'pending', icon: '⏳', label: 'Pending' };
+  }[status] || { cls: 'pending', icon: '⏳', label: 'To Be Assigned' };
 
   return React.createElement('span', { className: `drink-status-badge ${cfg.cls}` },
     cfg.icon, ' ', cfg.label
@@ -1990,8 +1990,8 @@ function HRCard({ event, currentUser, onAssigned, showToast, videosEnabled, onNa
 
 function SearchFilterBar({ search, onSearch, filters, onFilter, dateOptions }) {
   const statusFilters = [
-    { key: 'pending',           label: 'Pending',       cls: 'active' },
-    { key: 'awaiting_approval', label: 'Awaiting',      cls: 'active' },
+    { key: 'pending',           label: 'To Be Assigned', cls: 'active' },
+    { key: 'awaiting_approval', label: 'To Be Drank',   cls: 'active' },
     { key: 'completed',         label: 'Done',          cls: 'active-green' },
     { key: 'completed_late',    label: 'Done (Late)',   cls: 'active-orange' },
     { key: 'late',              label: 'Late',          cls: 'active-red' },
@@ -2414,7 +2414,8 @@ function LogScreen({ currentUser, videosEnabled, onNavigateVideos }) {
             status === 'late' ? 'Late'
             : status === 'completed' ? 'Done'
             : status === 'completed_late' ? 'Done (Late)'
-            : 'Pending'
+            : status === 'awaiting_approval' ? 'To Be Drank'
+            : 'To Be Assigned'
           )
         ),
         videosEnabled && l._hasVideo && React.createElement('button', { className: 'log-video-link', onClick: onNavigateVideos },
