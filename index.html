@@ -1673,6 +1673,17 @@ function UploadModal({ event, drinkLog, currentUser, onClose, onUploaded, showTo
       const ext  = file.name.split('.').pop();
       const path = `${event.id}/${currentUser}_${Date.now()}.${ext}`;
 
+      // Auto-cleanup: delete oldest videos if at or over the 10-video cap
+      try {
+        await fetch(`${BACKEND}/videos/cleanup`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${session.access_token}` },
+        });
+      } catch (e) {
+        console.error('Cleanup failed (continuing anyway):', e);
+      }
+      setProgress(20);
+
       // Upload to Supabase Storage
       const { error: upErr } = await sb.storage
         .from(VIDEO_BUCKET)
