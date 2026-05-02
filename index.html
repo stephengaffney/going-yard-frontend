@@ -888,6 +888,29 @@ const PLAYER_COLORS = {
 
 const ALL_USERS = ['frank', 'scott', 'tyler', 'ned', 'ryan', 'steve', 'dan'];
 
+// Maps each user to their MLB team icon (based on their matched players' team)
+const USER_TEAM_ICON = {
+  frank: 'Houston.svg',  // HOU — Diaz / Alvarez
+  scott: 'Philly.svg',   // PHI — Garcia / Harper
+  tyler: 'icon.svg',     // NYY — Volpe / Rice
+  ned:   'icon.svg',     // NYY — Dominguez / Chisholm
+  ryan:  'Philly.svg',   // PHI — Turner / Schwarber
+  steve: 'icon.svg',     // NYY — Wells / Grisham
+  dan:   'icon.svg',     // NYY — McMahon / Judge
+};
+
+function setTeamIcon(username) {
+  const icon = USER_TEAM_ICON[username?.toLowerCase()] || 'icon.svg';
+  // Update apple-touch-icon so "Add to Home Screen" uses the right team icon
+  let link = document.querySelector("link[rel='apple-touch-icon']");
+  if (!link) {
+    link = document.createElement('link');
+    link.rel = 'apple-touch-icon';
+    document.head.appendChild(link);
+  }
+  link.href = '/' + icon;
+}
+
 // Maps each user to their I Drink player (the player they drink for when they hit a HR)
 const I_DRINK_MATCHUP = {
   frank: { player: 'Diaz',      fullName: 'Yanier Diaz' },
@@ -1045,6 +1068,7 @@ function AuthScreen({ onAuth }) {
             group_joined: true,
           });
           if (data.session) window.registerPush(data.session.access_token);
+          setTeamIcon(username);
           onAuth(data.user, username.toLowerCase());
         }
       } else {
@@ -1055,6 +1079,7 @@ function AuthScreen({ onAuth }) {
         const { data, error: signInErr } = await sb.auth.signInWithPassword({ email: email.trim(), password });
         if (signInErr) throw signInErr;
         if (data.session) window.registerPush(data.session.access_token);
+        setTeamIcon(username);
         onAuth(data.user, username.toLowerCase());
       }
     } catch (e) {
@@ -1682,7 +1707,12 @@ function App() {
       if (session?.user) {
         setUser(session.user);
         sb.from('profiles').select('username').eq('id', session.user.id).single()
-          .then(({ data }) => { if (data) setUsername(data.username); });
+          .then(({ data }) => {
+            if (data) {
+              setUsername(data.username);
+              setTeamIcon(data.username);
+            }
+          });
       }
       setAuthChecked(true);
     });
