@@ -922,6 +922,16 @@ const I_DRINK_MATCHUP = {
   dan:   { player: 'McMahon',   fullName: 'Ryan McMahon' },
 };
 
+const YOU_DRINK_MATCHUP = {
+  frank: { player: 'Alvarez',   fullName: 'Yordan Alvarez' },
+  scott: { player: 'Harper',    fullName: 'Bryce Harper' },
+  tyler: { player: 'Rice',      fullName: 'Ben Rice' },
+  ned:   { player: 'Chisholm',  fullName: 'Jazz Chisholm Jr.' },
+  ryan:  { player: 'Schwarber', fullName: 'Kyle Schwarber' },
+  steve: { player: 'Grisham',   fullName: 'Trent Grisham' },
+  dan:   { player: 'Judge',     fullName: 'Aaron Judge' },
+};
+
 const TEAM_LOGOS = {
   HOU: 'https://www.mlbstatic.com/team-logos/117.svg',
   PHI: 'https://www.mlbstatic.com/team-logos/143.svg',
@@ -1574,6 +1584,50 @@ function LeaderboardScreen() {
           )
         );
       })
+    ),
+
+    // You Drink Progress Board
+    React.createElement('div', { className: 'section-title' }, 'Their Player Progress'),
+    React.createElement('div', { className: 'progress-card' },
+      (() => {
+        // Normalize: player with most HRs = 100%, everyone else scaled relative
+        const youDrinkHRs = ALL_USERS.map(user => ({
+          user,
+          hrs: iDrinkHRs[YOU_DRINK_MATCHUP[user].player] || 0,
+        }));
+        const maxHRs = Math.max(...youDrinkHRs.map(u => u.hrs), 1);
+        return youDrinkHRs
+          .slice()
+          .sort((a, b) => b.hrs - a.hrs)
+          .map(({ user, hrs }) => {
+            const matchup     = YOU_DRINK_MATCHUP[user];
+            const pct         = (hrs / maxHRs) * 100;
+            const color       = USER_COLORS[user] || '#888';
+            const playerColor = PLAYER_COLORS[matchup.player] || '#888';
+            return React.createElement('div', { key: user, className: 'progress-row' },
+              React.createElement('div', { className: 'progress-header' },
+                React.createElement(Avatar, { name: user, size: 34 }),
+                React.createElement('div', { className: 'progress-names' },
+                  React.createElement('div', { className: 'progress-user', style: { color } }, cap(user)),
+                  React.createElement('div', { className: 'progress-player', style: { color: playerColor } }, matchup.fullName)
+                ),
+                React.createElement('div', { className: 'progress-count', style: { color: playerColor } },
+                  hrs,
+                  React.createElement('span', null, ' HR')
+                )
+              ),
+              React.createElement('div', { className: 'progress-bar-track' },
+                React.createElement('div', {
+                  className: 'progress-bar-fill',
+                  style: {
+                    width: `${pct}%`,
+                    background: `linear-gradient(90deg, ${color}99, ${playerColor})`,
+                  }
+                })
+              )
+            );
+          });
+      })()
     ),
 
     // MLB HR Leaderboard
