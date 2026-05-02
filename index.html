@@ -831,6 +831,120 @@ body {
   border-radius: 4px;
 }
 
+/* ── Search & Filter Bar ── */
+.search-bar {
+  padding: 0.75rem 1rem 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  background: var(--bg);
+  position: sticky;
+  top: 57px;
+  z-index: 40;
+  border-bottom: 1px solid var(--border);
+  padding-bottom: 0.75rem;
+}
+
+.search-input-wrap {
+  position: relative;
+}
+
+.search-input-wrap svg {
+  position: absolute;
+  left: 0.75rem;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 15px; height: 15px;
+  color: var(--muted);
+  pointer-events: none;
+}
+
+.search-input {
+  width: 100%;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 0.55rem 0.75rem 0.55rem 2.25rem;
+  color: var(--text);
+  font-family: 'DM Sans', sans-serif;
+  font-size: 0.875rem;
+  outline: none;
+  transition: border-color 0.2s;
+}
+
+.search-input:focus { border-color: var(--accent); }
+.search-input::placeholder { color: var(--muted); }
+
+.filter-chips {
+  display: flex;
+  gap: 0.4rem;
+  overflow-x: auto;
+  padding-bottom: 2px;
+  scrollbar-width: none;
+}
+
+.filter-chips::-webkit-scrollbar { display: none; }
+
+.filter-chip {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  white-space: nowrap;
+  padding: 0.3rem 0.65rem;
+  border-radius: 20px;
+  font-size: 0.7rem;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  cursor: pointer;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--muted);
+  transition: all 0.15s;
+  flex-shrink: 0;
+}
+
+.filter-chip:hover { border-color: var(--accent); color: var(--text); }
+
+.filter-chip.active {
+  background: rgba(232,193,74,0.12);
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+.filter-chip.active-red {
+  background: rgba(232,74,74,0.12);
+  border-color: #e84a4a;
+  color: #e84a4a;
+}
+
+.filter-chip.active-blue {
+  background: rgba(74,159,255,0.12);
+  border-color: #4a9eff;
+  color: #4a9eff;
+}
+
+.filter-chip.active-green {
+  background: rgba(124,184,92,0.12);
+  border-color: #7cb85c;
+  color: #7cb85c;
+}
+
+.filter-divider {
+  width: 1px;
+  height: 20px;
+  background: var(--border);
+  align-self: center;
+  flex-shrink: 0;
+}
+
+.no-results {
+  text-align: center;
+  padding: 3rem 2rem;
+  color: var(--muted);
+  font-size: 0.875rem;
+}
+
 /* ── Toast ── */
 .toast {
   position: fixed;
@@ -1443,11 +1557,75 @@ function HRCard({ event, currentUser, onAssigned, showToast }) {
   );
 }
 
+// ── Search & Filter Bar component ────────────────────────────────────────
+
+function SearchFilterBar({ search, onSearch, filters, onFilter, dateOptions }) {
+  const statusFilters = [
+    { key: 'pending',            label: 'Pending',   cls: 'active' },
+    { key: 'awaiting_approval',  label: 'Awaiting',  cls: 'active' },
+    { key: 'completed',          label: 'Done',       cls: 'active-green' },
+    { key: 'late',               label: 'Late',       cls: 'active-red' },
+  ];
+  const typeFilters = [
+    { key: 'i_drink',   label: 'I Drink',  cls: 'active' },
+    { key: 'you_drink', label: 'Assign',   cls: 'active-blue' },
+  ];
+
+  const toggle = (key) => onFilter(prev => ({ ...prev, [key]: !prev[key] }));
+
+  return React.createElement('div', { className: 'search-bar' },
+    // Search input
+    React.createElement('div', { className: 'search-input-wrap' },
+      React.createElement('svg', { viewBox: '0 0 24 24', fill: 'none', stroke: 'currentColor', strokeWidth: 2 },
+        React.createElement('circle', { cx: 11, cy: 11, r: 8 }),
+        React.createElement('line', { x1: 21, y1: 21, x2: 16.65, y2: 16.65 })
+      ),
+      React.createElement('input', {
+        className: 'search-input',
+        placeholder: 'Search player or user...',
+        value: search,
+        onChange: e => onSearch(e.target.value),
+      })
+    ),
+    // Filter chips
+    React.createElement('div', { className: 'filter-chips' },
+      // Date filter
+      dateOptions.length > 0 && React.createElement('select', {
+        className: `filter-chip ${filters.date ? 'active' : ''}`,
+        value: filters.date || '',
+        onChange: e => onFilter(prev => ({ ...prev, date: e.target.value || null })),
+        style: { appearance: 'none', paddingRight: '0.65rem' }
+      },
+        React.createElement('option', { value: '' }, '📅 All Dates'),
+        dateOptions.map(d => React.createElement('option', { key: d, value: d }, d))
+      ),
+      React.createElement('div', { className: 'filter-divider' }),
+      // Status filters
+      statusFilters.map(f => React.createElement('button', {
+        key: f.key,
+        className: `filter-chip ${filters[f.key] ? f.cls : ''}`,
+        onClick: () => toggle(f.key),
+      }, f.label)),
+      React.createElement('div', { className: 'filter-divider' }),
+      // Type filters
+      typeFilters.map(f => React.createElement('button', {
+        key: f.key,
+        className: `filter-chip ${filters[f.key] ? f.cls : ''}`,
+        onClick: () => toggle(f.key),
+      }, f.label))
+    )
+  );
+}
+
 // ── Feed Screen ───────────────────────────────────────────────────────────
 
 function FeedScreen({ currentUser, showToast }) {
-  const [events, setEvents] = useState([]);
+  const [events, setEvents]   = useState([]);
   const [loading, setLoading] = useState(true);
+  const [search, setSearch]   = useState('');
+  const [filters, setFilters] = useState({});
+  // Cache of drink_log rows keyed by hr_event_id for filtering by status
+  const [drinkLogs, setDrinkLogs] = useState({});
 
   useEffect(() => {
     loadEvents();
@@ -1458,20 +1636,63 @@ function FeedScreen({ currentUser, showToast }) {
   }, []);
 
   const loadEvents = async () => {
-    const { data } = await sb.from('hr_events').select('*').order('created_at', { ascending: false }).limit(50);
-    if (data) setEvents(data);
+    const [evRes, dlRes] = await Promise.all([
+      sb.from('hr_events').select('*').order('created_at', { ascending: false }).limit(50),
+      sb.from('drink_log').select('*'),
+    ]);
+    if (evRes.data) setEvents(evRes.data);
+    if (dlRes.data) {
+      const map = {};
+      dlRes.data.forEach(dl => { map[dl.hr_event_id] = dl; });
+      setDrinkLogs(map);
+    }
     setLoading(false);
   };
 
+  // Unique dates for the date dropdown
+  const dateOptions = [...new Set(events.map(e =>
+    new Date(e.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
+  ))];
+
+  const anyStatusFilter = ['pending','awaiting_approval','completed','late'].some(k => filters[k]);
+  const anyTypeFilter   = ['i_drink','you_drink'].some(k => filters[k]);
+
+  const filtered = events.filter(e => {
+    // Search: player name or drinker username
+    if (search) {
+      const q = search.toLowerCase();
+      if (!e.full_name.toLowerCase().includes(q) && !e.drinker.toLowerCase().includes(q)) return false;
+    }
+    // Date filter
+    if (filters.date) {
+      const d = new Date(e.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+      if (d !== filters.date) return false;
+    }
+    // Status filter
+    if (anyStatusFilter) {
+      const dl     = drinkLogs[e.id];
+      const status = computeStatus(dl);
+      if (!filters[status]) return false;
+    }
+    // Type filter
+    if (anyTypeFilter && !filters[e.drink_type]) return false;
+    return true;
+  });
+
   if (loading) return React.createElement('div', { className: 'loading' }, React.createElement('div', { className: 'spinner' }));
 
-  if (!events.length) return React.createElement('div', { className: 'empty' },
-    React.createElement('div', { className: 'empty-icon' }, '⚾'),
-    React.createElement('p', null, 'No homers yet. Stay tuned.')
-  );
-
-  return React.createElement('div', { className: 'feed' },
-    events.map(e => React.createElement(HRCard, { key: e.id, event: e, currentUser, onAssigned: loadEvents, showToast }))
+  return React.createElement(React.Fragment, null,
+    React.createElement(SearchFilterBar, { search, onSearch: setSearch, filters, onFilter: setFilters, dateOptions }),
+    !events.length
+      ? React.createElement('div', { className: 'empty' },
+          React.createElement('div', { className: 'empty-icon' }, '⚾'),
+          React.createElement('p', null, 'No homers yet. Stay tuned.')
+        )
+      : filtered.length === 0
+        ? React.createElement('div', { className: 'no-results' }, 'No events match your search.')
+        : React.createElement('div', { className: 'feed' },
+            filtered.map(e => React.createElement(HRCard, { key: e.id, event: e, currentUser, onAssigned: loadEvents, showToast }))
+          )
   );
 }
 
@@ -1671,13 +1892,13 @@ function LeaderboardScreen() {
 // ── Log Screen ────────────────────────────────────────────────────────────
 
 function LogScreen() {
-  const [logs, setLogs]     = useState([]);
+  const [logs, setLogs]       = useState([]);
   const [loading, setLoading] = useState(true);
+  const [search, setSearch]   = useState('');
+  const [filters, setFilters] = useState({});
 
   useEffect(() => {
     const load = async () => {
-      // Join hr_events to get created_at for display date matching the Feed tab.
-      // Order by event_date desc (drink_log has no created_at column).
       const { data, error } = await sb
         .from('drink_log')
         .select('*, hr_events(created_at)')
@@ -1689,60 +1910,83 @@ function LogScreen() {
     load();
   }, []);
 
+  // Unique dates for dropdown
+  const dateOptions = [...new Set(logs.map(l => {
+    const raw = l.hr_events?.created_at || (l.event_date ? l.event_date + 'T12:00:00' : null);
+    return raw ? new Date(raw).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) : null;
+  }).filter(Boolean))];
+
+  const anyStatusFilter = ['pending','awaiting_approval','completed','late'].some(k => filters[k]);
+  const anyTypeFilter   = ['i_drink','you_drink'].some(k => filters[k]);
+
+  const filtered = logs.filter(l => {
+    const status      = computeStatus(l);
+    const actualDrinker = (l.drink_type === 'you_drink' && l.given_to) ? l.given_to : l.username;
+    const raw         = l.hr_events?.created_at || (l.event_date ? l.event_date + 'T12:00:00' : null);
+    const displayDate = raw ? new Date(raw).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) : '';
+
+    if (search) {
+      const q = search.toLowerCase();
+      const matchesPlayer = l.mlb_player?.toLowerCase().includes(q);
+      const matchesDrinker = l.username?.toLowerCase().includes(q) || actualDrinker?.toLowerCase().includes(q);
+      if (!matchesPlayer && !matchesDrinker) return false;
+    }
+    if (filters.date && displayDate !== filters.date) return false;
+    if (anyStatusFilter && !filters[status]) return false;
+    if (anyTypeFilter && !filters[l.drink_type]) return false;
+    return true;
+  });
+
+  const renderRow = (l) => {
+    const status      = computeStatus(l);
+    const raw         = l.hr_events?.created_at || (l.event_date ? l.event_date + 'T12:00:00' : null);
+    const displayDate = raw ? new Date(raw).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) : '—';
+
+    return React.createElement('div', { key: l.id, className: `log-row status-${status}` },
+      React.createElement('div', { style: { color: 'var(--muted)', fontSize: '0.75rem' } }, displayDate),
+      React.createElement('div', { style: { fontWeight: 500 } },
+        l.drink_type === 'you_drink' && l.given_to
+          ? React.createElement('span', null,
+              React.createElement('span', { style: { color: USER_COLORS[l.username] || '#888', fontSize: '0.75rem' } }, cap(l.username)),
+              React.createElement('span', { style: { color: 'var(--muted)' } }, ' → '),
+              React.createElement('span', { style: { color: USER_COLORS[l.given_to] || '#888' } }, cap(l.given_to))
+            )
+          : React.createElement('span', { style: { color: USER_COLORS[l.username] || '#888' } }, cap(l.username))
+      ),
+      React.createElement('div', { style: { fontSize: '0.78rem', color: 'var(--muted)' } }, l.mlb_player),
+      React.createElement('div', { style: { display: 'flex', alignItems: 'center', gap: '4px' } },
+        React.createElement('span', { className: `log-status-dot ${status}` }),
+        React.createElement('span', { style: {
+          fontSize: '0.7rem',
+          color: status === 'late' ? '#e84a4a'
+               : status === 'completed' ? '#7cb85c'
+               : status === 'awaiting_approval' ? 'var(--accent)'
+               : '#888'
+        } },
+          status === 'late' ? 'Late' : status === 'completed' ? 'Done' : 'Pending'
+        )
+      )
+    );
+  };
+
   if (loading) return React.createElement('div', { className: 'loading' }, React.createElement('div', { className: 'spinner' }));
 
-  return React.createElement('div', { className: 'log-screen' },
-    React.createElement('div', { className: 'section-title' }, 'Drink Log'),
-    React.createElement('div', { className: 'log-table' },
-      React.createElement('div', { className: 'log-header' },
-        React.createElement('div', null, 'Date'),
-        React.createElement('div', null, 'Drinker'),
-        React.createElement('div', null, 'Player'),
-        React.createElement('div', null, 'Status')
-      ),
-      logs.length === 0
-        ? React.createElement('div', { style: { padding: '2rem', textAlign: 'center', color: 'var(--muted)' } }, 'No drinks logged yet')
-        : logs.map(l => {
-            const status = computeStatus(l);
-            // Use the HR event's date for display (not the log insert date)
-            const displayDate = l.hr_events?.created_at
-              ? new Date(l.hr_events.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
-              : (l.event_date
-                  ? new Date(l.event_date + 'T12:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
-                  : '—');
-
-            // Actual drinker (for you_drink it's the assignee)
-            const actualDrinker = l.drink_type === 'you_drink' && l.given_to ? l.given_to : l.username;
-
-            return React.createElement('div', { key: l.id, className: `log-row status-${status}` },
-              React.createElement('div', { style: { color: 'var(--muted)', fontSize: '0.75rem' } }, displayDate),
-              React.createElement('div', { style: { fontWeight: 500 } },
-                l.drink_type === 'you_drink' && l.given_to
-                  ? React.createElement('span', null,
-                      React.createElement('span', { style: { color: USER_COLORS[l.username] || '#888', fontSize: '0.75rem' } }, cap(l.username)),
-                      React.createElement('span', { style: { color: 'var(--muted)' } }, ' → '),
-                      React.createElement('span', { style: { color: USER_COLORS[l.given_to] || '#888' } }, cap(l.given_to))
-                    )
-                  : React.createElement('span', { style: { color: USER_COLORS[l.username] || '#888' } }, cap(l.username))
-              ),
-              React.createElement('div', { style: { fontSize: '0.78rem', color: 'var(--muted)' } }, l.mlb_player),
-              React.createElement('div', { style: { display: 'flex', alignItems: 'center', gap: '4px' } },
-                React.createElement('span', { className: `log-status-dot ${status}` }),
-                React.createElement('span', { style: {
-                  fontSize: '0.7rem',
-                  color: status === 'late' ? '#e84a4a'
-                       : status === 'completed' ? '#7cb85c'
-                       : status === 'awaiting_approval' ? 'var(--accent)'
-                       : '#888'
-                } },
-                  status === 'late' ? 'Late'
-                  : status === 'completed' ? 'Done'
-                  : status === 'awaiting_approval' ? 'Pending'
-                  : 'Pending'
-                )
-              )
-            );
-          })
+  return React.createElement(React.Fragment, null,
+    React.createElement(SearchFilterBar, { search, onSearch: setSearch, filters, onFilter: setFilters, dateOptions }),
+    React.createElement('div', { className: 'log-screen' },
+      React.createElement('div', { className: 'log-table' },
+        React.createElement('div', { className: 'log-header' },
+          React.createElement('div', null, 'Date'),
+          React.createElement('div', null, 'Drinker'),
+          React.createElement('div', null, 'Player'),
+          React.createElement('div', null, 'Status')
+        ),
+        logs.length === 0
+          ? React.createElement('div', { style: { padding: '2rem', textAlign: 'center', color: 'var(--muted)' } }, 'No drinks logged yet')
+          : filtered.length === 0
+            ? React.createElement('div', { className: 'no-results' }, 'No entries match your search.')
+            : filtered.map(renderRow)
+      )
     )
   );
 }
