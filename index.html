@@ -107,16 +107,19 @@ body {
 
 /* ── Tab transition ── */
 @keyframes tab-enter {
-  from { opacity: 0; transform: translateY(6px); }
+  from { opacity: 0; transform: translateY(10px); }
   to   { opacity: 1; transform: translateY(0); }
 }
 
 .tab-screen {
-  animation: tab-enter 0.2s ease both;
   flex: 1;
   display: flex;
   flex-direction: column;
   min-height: 0;
+}
+
+.tab-screen.animating {
+  animation: tab-enter 0.25s ease both;
 }
 
 /* ── Auth Screen ── */
@@ -364,7 +367,7 @@ body {
 /* ── Feed ── */
 .feed {
   flex: 1;
-  padding: 1rem 1rem 6rem;
+  padding: 3rem 1rem 6rem;
   display: flex;
   flex-direction: column;
   gap: 1rem;
@@ -389,7 +392,7 @@ body {
   overflow: hidden;
   position: relative;
   transition: border-color 0.3s;
-  animation: card-enter 0.35s ease both;
+  animation: card-enter 0.55s ease both;
 }
 
 /* Awaiting approval — gold pulse */
@@ -1075,9 +1078,10 @@ body {
 }
 
 .ptr-indicator {
-  position: absolute;
-  top: 0; left: 50%;
-  transform: translateX(-50%) translateY(-48px);
+  position: sticky;
+  top: 8px;
+  left: 50%;
+  transform: translateX(-50%) scale(0.7);
   width: 36px; height: 36px;
   background: var(--surface);
   border: 1px solid var(--border);
@@ -1085,10 +1089,12 @@ body {
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: transform 0.2s ease, opacity 0.2s;
   opacity: 0;
   z-index: 10;
   box-shadow: 0 2px 12px rgba(0,0,0,0.3);
+  transition: opacity 0.15s, transform 0.15s;
+  margin: 0 auto -36px;
+  pointer-events: none;
 }
 
 .ptr-indicator.pulling {
@@ -1097,7 +1103,7 @@ body {
 
 .ptr-indicator.refreshing {
   opacity: 1;
-  transform: translateX(-50%) translateY(12px);
+  transform: translateX(-50%) scale(1);
 }
 
 .ptr-spinner {
@@ -3139,6 +3145,8 @@ function App() {
   const [user, setUser]               = useState(null);
   const [username, setUsername]       = useState('');
   const [tab, setTab]                 = useState('feed');
+  const [tabAnimating, setTabAnimating] = useState(false);
+  const prevTab = useRef('feed');
   const [toast, showToast]            = useToast();
   const [authChecked, setAuthChecked] = useState(false);
   const [videosEnabled, setVideosEnabled] = useState(false);
@@ -3182,6 +3190,14 @@ function App() {
     return () => subscription.unsubscribe();
   }, []);
 
+  const navigateTab = (newTab) => {
+    if (newTab === tab) return;
+    prevTab.current = tab;
+    setTab(newTab);
+    setTabAnimating(true);
+    setTimeout(() => setTabAnimating(false), 260);
+  };
+
   const onAuth = (u, uname) => { setUser(u); setUsername(uname); };
   const onSignOut = async () => {
     await sb.auth.signOut();
@@ -3197,7 +3213,7 @@ function App() {
     const next = !videosEnabled;
     setVideosEnabled(next);
     // If turning off and currently on videos tab, redirect to feed
-    if (!next && tab === 'videos') setTab('feed');
+    if (!next && tab === 'videos') navigateTab('feed');
     try {
       await sb.from('app_settings')
         .update({ value: next ? 'true' : 'false' })
@@ -3216,7 +3232,7 @@ function App() {
 
   const NavIcon = ({ id, label, path }) => React.createElement('button', {
     className: `nav-item ${tab === id ? 'active' : ''}`,
-    onClick: () => setTab(id)
+    onClick: () => navigateTab(id)
   },
     React.createElement('svg', { viewBox: '0 0 24 24', fill: tab === id ? 'currentColor' : 'none', stroke: 'currentColor', strokeWidth: 1.5 },
       React.createElement('path', { d: path })
@@ -3249,10 +3265,10 @@ function App() {
         }, 'Out')
       )
     ),
-    React.createElement('div', { key: tab, className: 'tab-screen' },
-      tab === 'feed'   && React.createElement(FeedScreen, { currentUser: username, showToast, videosEnabled, onNavigateVideos: videosEnabled ? () => setTab('videos') : null, deepLinkEventId: deepLink.eventId, onDeepLinkHandled: () => { setDeepLink({}); clearDeepLink(); } }),
+    React.createElement('div', { key: tab, className: `tab-screen${tabAnimating ? ' animating' : ''}` },
+      tab === 'feed'   && React.createElement(FeedScreen, { currentUser: username, showToast, videosEnabled, onNavigateVideos: videosEnabled ? () => navigateTab('videos') : null, deepLinkEventId: deepLink.eventId, onDeepLinkHandled: () => { setDeepLink({}); clearDeepLink(); } }),
       tab === 'board'  && React.createElement(LeaderboardScreen),
-      tab === 'log'    && React.createElement(LogScreen, { currentUser: username, videosEnabled, onNavigateVideos: videosEnabled ? () => setTab('videos') : null }),
+      tab === 'log'    && React.createElement(LogScreen, { currentUser: username, videosEnabled, onNavigateVideos: videosEnabled ? () => navigateTab('videos') : null }),
       tab === 'videos' && videosEnabled && React.createElement(VideosScreen, { currentUser: username, deepLinkVideoId: deepLink.videoId, onDeepLinkHandled: () => { setDeepLink({}); clearDeepLink(); } })
     ),
     React.createElement('nav', { className: 'nav' },
