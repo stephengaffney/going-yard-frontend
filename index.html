@@ -1200,8 +1200,10 @@ body {
   text-align: center;
   font-size: 0.8rem;
   color: var(--muted);
-  margin: 1rem 0 0.75rem;
+  margin: 0 0 1rem;
   min-height: 1.2rem;
+  padding: 0.5rem 0.5rem 0.75rem;
+  border-bottom: 1px solid var(--border);
 }
 
 .cal-range-label span { color: var(--accent); font-weight: 500; }
@@ -2776,6 +2778,9 @@ function DateRangePicker({ onApply, onClose, activeDates }) {
   return React.createElement('div', { className: 'cal-overlay', onClick: e => e.target === e.currentTarget && onClose() },
     React.createElement('div', { className: 'cal-sheet' },
       React.createElement('div', { className: 'cal-handle' }),
+      // Date range label at top
+      React.createElement('div', { className: 'cal-range-label' }, rangeLabel()),
+      // Month navigation
       React.createElement('div', { className: 'cal-header' },
         React.createElement('button', { className: 'cal-nav-btn', onClick: prevMonth }, '‹'),
         React.createElement('div', { className: 'cal-month-label' }, `${MONTHS[viewMonth]} ${viewYear}`),
@@ -2795,7 +2800,7 @@ function DateRangePicker({ onApply, onClose, activeDates }) {
           onMouseLeave: () => setHoverDate(null),
         }, day || ''))
       ),
-      React.createElement('div', { className: 'cal-range-label' }, rangeLabel()),
+      // Action buttons directly below calendar
       React.createElement('div', { className: 'cal-actions' },
         React.createElement('button', {
           className: 'cal-btn-clear',
