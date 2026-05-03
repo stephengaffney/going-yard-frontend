@@ -21,6 +21,8 @@
   --text: #f0f0f0;
   --muted: #888;
   --accent: #e8c14a;
+  --team-primary: #e8c14a;
+  --team-secondary: #e8c14a;
 
   --frank-color: #e85d4a;
   --scott-color: #4a9eff;
@@ -30,6 +32,65 @@
   --steve-color: #4acfe8;
   --dan-color: #e84a8a;
   --stephen-color: #e8c14a;
+}
+
+/* ── Baseball seam background ── */
+.seam-bg {
+  position: relative;
+  overflow: hidden;
+}
+
+.seam-bg::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-image:
+    radial-gradient(ellipse 180px 60px at 20% 30%, transparent 55%, rgba(255,255,255,0.018) 56%, rgba(255,255,255,0.018) 58%, transparent 59%),
+    radial-gradient(ellipse 180px 60px at 80% 70%, transparent 55%, rgba(255,255,255,0.018) 56%, rgba(255,255,255,0.018) 58%, transparent 59%);
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* ── Player headshot ── */
+.player-headshot {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  object-fit: cover;
+  object-position: top center;
+  border: 2px solid var(--border);
+  background: var(--surface2);
+  flex-shrink: 0;
+}
+
+.player-headshot-wrap {
+  position: relative;
+  flex-shrink: 0;
+}
+
+.player-headshot-fallback {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  background: var(--surface2);
+  border: 2px solid var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 1rem;
+  letter-spacing: 1px;
+  flex-shrink: 0;
+}
+
+/* ── Team color accent strip on header ── */
+.header-team-strip {
+  position: absolute;
+  bottom: 0; left: 0; right: 0;
+  height: 2px;
+  background: linear-gradient(90deg, transparent, var(--team-primary), var(--team-secondary), transparent);
+  opacity: 0.6;
+  transition: background 0.5s ease;
 }
 
 * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -55,6 +116,13 @@ body {
   background: var(--bg);
   position: relative;
   overflow: hidden;
+}
+
+.auth-screen.seam-bg::before {
+  background-image:
+    radial-gradient(ellipse 300px 100px at 15% 25%, transparent 55%, rgba(255,255,255,0.022) 56%, rgba(255,255,255,0.022) 58%, transparent 59%),
+    radial-gradient(ellipse 300px 100px at 85% 75%, transparent 55%, rgba(255,255,255,0.022) 56%, rgba(255,255,255,0.022) 58%, transparent 59%),
+    radial-gradient(ellipse 200px 70px at 50% 50%, transparent 55%, rgba(255,255,255,0.015) 56%, rgba(255,255,255,0.015) 58%, transparent 59%);
 }
 
 .auth-screen::before {
@@ -208,6 +276,7 @@ body {
   display: flex;
   align-items: center;
   justify-content: space-between;
+  overflow: hidden;
 }
 
 .header-title {
@@ -1256,10 +1325,38 @@ const sb = createClient(SUPABASE_URL, SUPABASE_ANON);
 const VIDEO_BUCKET = 'chug-videos'; // Supabase Storage bucket name
 const MAX_VIDEO_SECONDS = 15;
 
+// Team accent colors per user (used for dynamic theming)
+const USER_TEAM = {
+  frank: 'HOU', scott: 'PHI', tyler: 'NYY',
+  ned: 'NYY', ryan: 'PHI', steve: 'NYY', dan: 'NYY',
+};
+
+// Primary + secondary team colors for accent theming
+const TEAM_COLORS = {
+  NYY:  { primary: '#003087', secondary: '#C4CED4', accent: '#C4CED4' },
+  PHI:  { primary: '#E81828', secondary: '#002D72', accent: '#E81828' },
+  HOU:  { primary: '#EB6E1F', secondary: '#002D62', accent: '#EB6E1F' },
+};
+
 const USER_COLORS = {
   frank: '#e85d4a', scott: '#4a9eff', tyler: '#7cb85c',
   ned: '#c97de8', ryan: '#e87c3e', steve: '#4acfe8', dan: '#e84a8a',
 };
+
+// MLB player IDs for headshot photos
+const PLAYER_MLB_IDS = {
+  Alvarez:   670541, Harper:    547180, Rice:      700250,
+  Chisholm:  665862, Schwarber: 656941, Grisham:   663757,
+  Judge:     592450, Diaz:      673237, Garcia:    666969,
+  Volpe:     683011, Dominguez: 691176, Turner:    607208,
+  Wells:     669224, McMahon:   641857,
+};
+
+function playerHeadshotUrl(playerKey) {
+  const id = PLAYER_MLB_IDS[playerKey];
+  if (!id) return null;
+  return `https://img.mlbstatic.com/mlb-photos/image/upload/w_120,q_auto:best/v1/people/${id}/headshot/silo/current.png`;
+}
 
 const PLAYER_COLORS = {
   Alvarez: '#e85d4a', Harper: '#4a9eff', Rice: '#7cb85c',
@@ -1284,7 +1381,6 @@ const USER_TEAM_ICON = {
 
 function setTeamIcon(username) {
   const icon = USER_TEAM_ICON[username?.toLowerCase()] || 'icon.svg';
-  // Update apple-touch-icon so "Add to Home Screen" uses the right team icon
   let link = document.querySelector("link[rel='apple-touch-icon']");
   if (!link) {
     link = document.createElement('link');
@@ -1292,6 +1388,13 @@ function setTeamIcon(username) {
     document.head.appendChild(link);
   }
   link.href = '/' + icon;
+
+  // Apply team colors to CSS variables for dynamic theming
+  const team   = USER_TEAM[username?.toLowerCase()] || 'NYY';
+  const colors = TEAM_COLORS[team] || TEAM_COLORS['NYY'];
+  document.documentElement.style.setProperty('--team-primary',   colors.primary);
+  document.documentElement.style.setProperty('--team-secondary', colors.secondary);
+  document.documentElement.style.setProperty('--accent',         colors.accent);
 }
 
 // Maps each user to their I Drink player (the player they drink for when they hit a HR)
@@ -1409,6 +1512,34 @@ function clearDeepLink() {
 
 // ── Components ────────────────────────────────────────────────────────────
 
+function PlayerHeadshot({ playerKey, playerColor, size = 48 }) {
+  const [errored, setErrored] = React.useState(false);
+  const url = playerHeadshotUrl(playerKey);
+
+  if (!url || errored) {
+    return React.createElement('div', {
+      className: 'player-headshot-fallback',
+      style: {
+        width: size, height: size,
+        color: playerColor || '#888',
+        border: `2px solid ${playerColor || '#888'}44`,
+        fontSize: size * 0.25,
+      }
+    }, playerKey ? playerKey.slice(0, 2).toUpperCase() : '??');
+  }
+
+  return React.createElement('img', {
+    className: 'player-headshot',
+    src: url,
+    alt: playerKey,
+    style: {
+      width: size, height: size,
+      border: `2px solid ${playerColor || '#888'}66`,
+    },
+    onError: () => setErrored(true),
+  });
+}
+
 function Avatar({ name, size = 32, color }) {
   const c = color || USER_COLORS[name?.toLowerCase()] || '#888';
   const initials = name ? name.slice(0, 2).toUpperCase() : '??';
@@ -1515,7 +1646,7 @@ function AuthScreen({ onAuth }) {
     setLoading(false);
   };
 
-  return React.createElement('div', { className: 'auth-screen' },
+  return React.createElement('div', { className: 'auth-screen seam-bg' },
     React.createElement('div', { className: 'auth-logo' }, 'Going Yard'),
     React.createElement('div', { className: 'auth-sub' }, '& Drinking Hard'),
     React.createElement('div', { className: 'auth-card' },
@@ -2053,12 +2184,15 @@ function HRCard({ event, currentUser, onAssigned, showToast, videosEnabled, onNa
       // Top row: player name + drink type badge
       React.createElement('div', { className: 'hr-card-top' },
         React.createElement('div', { className: 'hr-player' },
-          React.createElement('div', { style: { display: 'flex', alignItems: 'center', gap: '8px' } },
-            TEAM_LOGOS[event.team] && React.createElement('img', {
-              src: TEAM_LOGOS[event.team], alt: event.team,
-              style: { width: 28, height: 28, objectFit: 'contain', flexShrink: 0 }
-            }),
-            React.createElement('div', { className: 'hr-player-name', style: { color: playerColor } }, event.full_name)
+          React.createElement('div', { style: { display: 'flex', alignItems: 'center', gap: '10px' } },
+            React.createElement(PlayerHeadshot, { playerKey: event.player_key, playerColor, size: 44 }),
+            React.createElement('div', null,
+              React.createElement('div', { className: 'hr-player-name', style: { color: playerColor } }, event.full_name),
+              TEAM_LOGOS[event.team] && React.createElement('img', {
+                src: TEAM_LOGOS[event.team], alt: event.team,
+                style: { height: 14, width: 'auto', objectFit: 'contain', opacity: 0.7, marginTop: 2 }
+              })
+            )
           ),
           React.createElement('div', { className: 'hr-player-team' }, `${event.team} • ${event.old_hrs} → ${event.new_hrs} HR`)
         ),
@@ -2417,7 +2551,7 @@ function LeaderboardScreen() {
         const playerColor = PLAYER_COLORS[matchup.player] || '#888';
         return React.createElement('div', { key: user, className: 'progress-row' },
           React.createElement('div', { className: 'progress-header' },
-            React.createElement(Avatar, { name: user, size: 34 }),
+            React.createElement(PlayerHeadshot, { playerKey: matchup.player, playerColor, size: 40 }),
             React.createElement('div', { className: 'progress-names' },
               React.createElement('div', { className: 'progress-user', style: { color } }, cap(user)),
               React.createElement('div', { className: 'progress-player', style: { color: playerColor } }, matchup.fullName)
@@ -2460,7 +2594,7 @@ function LeaderboardScreen() {
             const playerColor = PLAYER_COLORS[matchup.player] || '#888';
             return React.createElement('div', { key: user, className: 'progress-row' },
               React.createElement('div', { className: 'progress-header' },
-                React.createElement(Avatar, { name: user, size: 34 }),
+                React.createElement(PlayerHeadshot, { playerKey: matchup.player, playerColor, size: 40 }),
                 React.createElement('div', { className: 'progress-names' },
                   React.createElement('div', { className: 'progress-user', style: { color } }, cap(user)),
                   React.createElement('div', { className: 'progress-player', style: { color: playerColor } }, matchup.fullName)
@@ -2489,7 +2623,7 @@ function LeaderboardScreen() {
     React.createElement('div', { className: 'lb-card' },
       hrTotals.map((p, i) => React.createElement('div', { key: p.player_key, className: 'lb-row' },
         React.createElement('div', { className: `lb-rank ${rankClass(i)}` }, i + 1),
-        React.createElement(Avatar, { name: p.player_key, size: 36, color: PLAYER_COLORS[p.player_key] }),
+        React.createElement(PlayerHeadshot, { playerKey: p.player_key, playerColor: PLAYER_COLORS[p.player_key], size: 40 }),
         React.createElement('div', { style: { flex: 1 } },
           React.createElement('div', { className: 'lb-name', style: { color: PLAYER_COLORS[p.player_key] } }, p.full_name),
           React.createElement('div', { className: 'lb-sub' }, p.team)
@@ -2688,7 +2822,7 @@ function App() {
           .then(({ data }) => {
             if (data) {
               setUsername(data.username);
-              setTeamIcon(data.username);
+              setTeamIcon(data.username); // also applies team CSS vars
             }
           });
       }
@@ -2703,7 +2837,15 @@ function App() {
   }, []);
 
   const onAuth = (u, uname) => { setUser(u); setUsername(uname); };
-  const onSignOut = async () => { await sb.auth.signOut(); setUser(null); setUsername(''); };
+  const onSignOut = async () => {
+    await sb.auth.signOut();
+    setUser(null);
+    setUsername('');
+    // Reset team theming back to default gold
+    document.documentElement.style.setProperty('--accent',         '#e8c14a');
+    document.documentElement.style.setProperty('--team-primary',   '#e8c14a');
+    document.documentElement.style.setProperty('--team-secondary', '#e8c14a');
+  };
 
   const toggleVideos = async () => {
     const next = !videosEnabled;
@@ -2737,7 +2879,8 @@ function App() {
   );
 
   return React.createElement('div', { className: 'app' },
-    React.createElement('div', { className: 'header' },
+    React.createElement('div', { className: 'header seam-bg' },
+      React.createElement('div', { className: 'header-team-strip' }),
       React.createElement('div', { className: 'header-title' },
         React.createElement('div', { className: 'header-title-main' }, 'Going Yard'),
         React.createElement('div', { className: 'header-title-sub' }, '& Drinking Hard')
