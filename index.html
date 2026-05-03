@@ -1083,6 +1083,8 @@ body {
   border-radius: 24px 24px 0 0;
   border-top: 1px solid var(--border);
   padding: 0 1.25rem calc(1.5rem + env(safe-area-inset-bottom));
+  max-height: 90vh;
+  overflow-y: auto;
 }
 
 .cal-handle {
@@ -1208,6 +1210,11 @@ body {
   display: flex;
   gap: 0.75rem;
   margin-top: 1rem;
+  position: sticky;
+  bottom: 0;
+  background: var(--surface);
+  padding-bottom: 0.5rem;
+  padding-top: 0.5rem;
 }
 
 .cal-btn-clear {
@@ -2715,12 +2722,15 @@ function DateRangePicker({ onApply, onClose, activeDates }) {
   const handleDayClick = (day) => {
     const clicked = new Date(viewYear, viewMonth, day);
     if (!startDate || (startDate && endDate)) {
+      // Starting a new selection
       setStartDate(clicked);
       setEndDate(null);
     } else {
+      // Picking end date — must be same day or after start
       if (clicked < startDate) {
-        setEndDate(startDate);
+        // Ignore clicks before start date — start over from clicked date
         setStartDate(clicked);
+        setEndDate(null);
       } else {
         setEndDate(clicked);
       }
@@ -2752,6 +2762,9 @@ function DateRangePicker({ onApply, onClose, activeDates }) {
     let cls = 'cal-day';
     if (dateStr === todayStr) cls += ' cal-day-today';
     if (activeDates && activeDates.has(dateStr)) cls += ' cal-day-has-data';
+    // Grey out dates before startDate when picking end date
+    if (startDate && !endDate && dateObj < startDate && dateStr !== toStr(startDate))
+      cls += ' cal-day-disabled';
     if (startStr && dateStr === startStr) cls += ' cal-day-start';
     if (endStr   && dateStr === endStr)   cls += ' cal-day-end';
     if (startStr && effectiveEnd && dateStr > startStr && dateStr < effectiveEnd)
