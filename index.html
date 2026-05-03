@@ -3094,7 +3094,6 @@ function App() {
     };
     checkLiveGames();
     const liveInterval = setInterval(checkLiveGames, 5 * 60 * 1000);
-    return () => clearInterval(liveInterval);
 
     sb.auth.getSession().then(({ data: { session } }) => {
       if (session?.user) {
@@ -3103,7 +3102,7 @@ function App() {
           .then(({ data }) => {
             if (data) {
               setUsername(data.username);
-              setTeamIcon(data.username); // also applies team CSS vars
+              setTeamIcon(data.username);
             }
           });
       }
@@ -3114,7 +3113,11 @@ function App() {
       if (!session) { setUser(null); setUsername(''); }
     });
 
-    return () => subscription.unsubscribe();
+    // Single cleanup for both the interval and the auth subscription
+    return () => {
+      clearInterval(liveInterval);
+      subscription.unsubscribe();
+    };
   }, []);
 
   const onAuth = (u, uname) => { setUser(u); setUsername(uname); };
