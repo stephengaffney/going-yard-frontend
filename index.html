@@ -1066,6 +1066,177 @@ body {
 
 .reaction-picker-btn:hover { transform: scale(1.3); background: var(--surface2); }
 
+/* ── Date Range Calendar ── */
+.cal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.6);
+  z-index: 200;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+}
+
+.cal-sheet {
+  width: 100%; max-width: 480px;
+  background: var(--surface);
+  border-radius: 24px 24px 0 0;
+  border-top: 1px solid var(--border);
+  padding: 0 1.25rem calc(1.5rem + env(safe-area-inset-bottom));
+}
+
+.cal-handle {
+  width: 40px; height: 4px;
+  background: var(--border);
+  border-radius: 2px;
+  margin: 1rem auto 1.25rem;
+}
+
+.cal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 1rem;
+}
+
+.cal-month-label {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 1.2rem;
+  letter-spacing: 2px;
+  color: var(--text);
+}
+
+.cal-nav-btn {
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  width: 32px; height: 32px;
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer;
+  color: var(--text);
+  font-size: 1rem;
+  transition: background 0.15s;
+}
+
+.cal-nav-btn:hover { background: var(--border); }
+
+.cal-weekdays {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  margin-bottom: 4px;
+}
+
+.cal-weekday {
+  text-align: center;
+  font-size: 0.65rem;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  padding: 4px 0;
+}
+
+.cal-days {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 2px;
+}
+
+.cal-day {
+  aspect-ratio: 1;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 0.85rem;
+  border-radius: 8px;
+  cursor: pointer;
+  color: var(--text);
+  transition: background 0.12s, color 0.12s;
+  border: 1px solid transparent;
+  position: relative;
+}
+
+.cal-day:hover:not(.cal-day-empty):not(.cal-day-disabled) {
+  background: var(--surface2);
+  border-color: var(--border);
+}
+
+.cal-day.cal-day-empty { cursor: default; }
+.cal-day.cal-day-disabled { color: var(--muted); cursor: default; opacity: 0.4; }
+
+.cal-day.cal-day-start,
+.cal-day.cal-day-end {
+  background: var(--accent);
+  color: #0a0a0f;
+  font-weight: 600;
+}
+
+.cal-day.cal-day-in-range {
+  background: rgba(232,193,74,0.15);
+  border-radius: 0;
+  color: var(--accent);
+}
+
+.cal-day.cal-day-start { border-radius: 8px 0 0 8px; }
+.cal-day.cal-day-end   { border-radius: 0 8px 8px 0; }
+.cal-day.cal-day-start.cal-day-end { border-radius: 8px; }
+
+.cal-day.cal-day-today {
+  border-color: var(--accent);
+}
+
+.cal-day.cal-day-has-data::after {
+  content: '';
+  position: absolute;
+  bottom: 3px;
+  width: 4px; height: 4px;
+  border-radius: 50%;
+  background: var(--accent);
+}
+
+.cal-day.cal-day-start::after,
+.cal-day.cal-day-end::after { background: #0a0a0f; }
+
+.cal-range-label {
+  text-align: center;
+  font-size: 0.8rem;
+  color: var(--muted);
+  margin: 1rem 0 0.75rem;
+  min-height: 1.2rem;
+}
+
+.cal-range-label span { color: var(--accent); font-weight: 500; }
+
+.cal-actions {
+  display: flex;
+  gap: 0.75rem;
+  margin-top: 1rem;
+}
+
+.cal-btn-clear {
+  flex: 1;
+  background: none;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 0.75rem;
+  color: var(--muted);
+  font-family: 'DM Sans', sans-serif;
+  font-size: 0.9rem;
+  cursor: pointer;
+}
+
+.cal-btn-apply {
+  flex: 2;
+  background: var(--accent);
+  border: none;
+  border-radius: 8px;
+  padding: 0.75rem;
+  color: #0a0a0f;
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 1.1rem;
+  letter-spacing: 1px;
+  cursor: pointer;
+}
+
+.cal-btn-apply:disabled { opacity: 0.4; cursor: not-allowed; }
+
 /* ── Search & Filter Bar ── */
 .search-bar {
   padding: 0.75rem 1rem 0;
@@ -2413,6 +2584,7 @@ function HRCard({ event, currentUser, onAssigned, showToast, videosEnabled, onNa
       React.createElement('div', { className: 'drink-status-row' },
         React.createElement(DrinkStatusBadge, {
           status,
+          drinkType: event.drink_type,
           approvedBy: drinkLog?.approved_by
         }),
         // Hint text for pending you_drink awaiting assignment
@@ -2512,7 +2684,120 @@ function HRCard({ event, currentUser, onAssigned, showToast, videosEnabled, onNa
 
 // ── Search & Filter Bar component ────────────────────────────────────────
 
-function SearchFilterBar({ search, onSearch, filters, onFilter, dateOptions }) {
+function DateRangePicker({ onApply, onClose, activeDates }) {
+  const now = new Date();
+  const [viewYear, setViewYear]   = useState(now.getFullYear());
+  const [viewMonth, setViewMonth] = useState(now.getMonth());
+  const [startDate, setStartDate] = useState(null);
+  const [endDate, setEndDate]     = useState(null);
+  const [hoverDate, setHoverDate] = useState(null);
+
+  const WEEKDAYS = ['Su', 'Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa'];
+  const MONTHS   = ['January','February','March','April','May','June',
+                    'July','August','September','October','November','December'];
+
+  const firstDay   = new Date(viewYear, viewMonth, 1).getDay();
+  const daysInMonth = new Date(viewYear, viewMonth + 1, 0).getDate();
+  const todayStr   = now.toISOString().slice(0, 10);
+
+  const toStr = (d) => d ? d.toISOString().slice(0, 10) : null;
+
+  const prevMonth = () => {
+    if (viewMonth === 0) { setViewMonth(11); setViewYear(y => y - 1); }
+    else setViewMonth(m => m - 1);
+  };
+
+  const nextMonth = () => {
+    if (viewMonth === 11) { setViewMonth(0); setViewYear(y => y + 1); }
+    else setViewMonth(m => m + 1);
+  };
+
+  const handleDayClick = (day) => {
+    const clicked = new Date(viewYear, viewMonth, day);
+    if (!startDate || (startDate && endDate)) {
+      setStartDate(clicked);
+      setEndDate(null);
+    } else {
+      if (clicked < startDate) {
+        setEndDate(startDate);
+        setStartDate(clicked);
+      } else {
+        setEndDate(clicked);
+      }
+    }
+  };
+
+  const formatDisplay = (d) => d ? d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : null;
+
+  const rangeLabel = () => {
+    if (!startDate) return 'Select a start date';
+    if (!endDate)   return React.createElement('span', null, formatDisplay(startDate), ' → select end date');
+    return React.createElement('span', null, formatDisplay(startDate), ' → ', formatDisplay(endDate));
+  };
+
+  const days = [];
+  // Empty cells before first day
+  for (let i = 0; i < firstDay; i++) days.push(null);
+  for (let d = 1; d <= daysInMonth; d++) days.push(d);
+
+  const getDayClass = (day) => {
+    if (!day) return 'cal-day cal-day-empty';
+    const dateStr  = `${viewYear}-${String(viewMonth+1).padStart(2,'0')}-${String(day).padStart(2,'0')}`;
+    const dateObj  = new Date(viewYear, viewMonth, day);
+    const startStr = toStr(startDate);
+    const endStr   = toStr(endDate);
+    const hoverStr = toStr(hoverDate);
+    const effectiveEnd = endStr || hoverStr;
+
+    let cls = 'cal-day';
+    if (dateStr === todayStr) cls += ' cal-day-today';
+    if (activeDates && activeDates.has(dateStr)) cls += ' cal-day-has-data';
+    if (startStr && dateStr === startStr) cls += ' cal-day-start';
+    if (endStr   && dateStr === endStr)   cls += ' cal-day-end';
+    if (startStr && effectiveEnd && dateStr > startStr && dateStr < effectiveEnd)
+      cls += ' cal-day-in-range';
+    return cls;
+  };
+
+  return React.createElement('div', { className: 'cal-overlay', onClick: e => e.target === e.currentTarget && onClose() },
+    React.createElement('div', { className: 'cal-sheet' },
+      React.createElement('div', { className: 'cal-handle' }),
+      React.createElement('div', { className: 'cal-header' },
+        React.createElement('button', { className: 'cal-nav-btn', onClick: prevMonth }, '‹'),
+        React.createElement('div', { className: 'cal-month-label' }, `${MONTHS[viewMonth]} ${viewYear}`),
+        React.createElement('button', { className: 'cal-nav-btn', onClick: nextMonth }, '›')
+      ),
+      React.createElement('div', { className: 'cal-weekdays' },
+        WEEKDAYS.map(w => React.createElement('div', { key: w, className: 'cal-weekday' }, w))
+      ),
+      React.createElement('div', { className: 'cal-days' },
+        days.map((day, i) => React.createElement('div', {
+          key: i,
+          className: getDayClass(day),
+          onClick: day ? () => handleDayClick(day) : undefined,
+          onMouseEnter: day && startDate && !endDate
+            ? () => setHoverDate(new Date(viewYear, viewMonth, day))
+            : undefined,
+          onMouseLeave: () => setHoverDate(null),
+        }, day || ''))
+      ),
+      React.createElement('div', { className: 'cal-range-label' }, rangeLabel()),
+      React.createElement('div', { className: 'cal-actions' },
+        React.createElement('button', {
+          className: 'cal-btn-clear',
+          onClick: () => { setStartDate(null); setEndDate(null); onApply(null, null); onClose(); }
+        }, 'Clear'),
+        React.createElement('button', {
+          className: 'cal-btn-apply',
+          disabled: !startDate,
+          onClick: () => { onApply(toStr(startDate), toStr(endDate || startDate)); onClose(); }
+        }, 'Apply')
+      )
+    )
+  );
+}
+
+function SearchFilterBar({ search, onSearch, filters, onFilter, dateOptions, allEventDates }) {
   const statusFilters = [
     { key: 'pending',           label: 'To Be Assigned', cls: 'active' },
     { key: 'awaiting_approval', label: 'To Be Drank',   cls: 'active' },
@@ -2526,6 +2811,13 @@ function SearchFilterBar({ search, onSearch, filters, onFilter, dateOptions }) {
   ];
 
   const toggle = (key) => onFilter(prev => ({ ...prev, [key]: !prev[key] }));
+  const [showCal, setShowCal] = useState(false);
+
+  const dateLabel = filters.dateStart
+    ? filters.dateEnd && filters.dateEnd !== filters.dateStart
+      ? `${new Date(filters.dateStart + 'T12:00:00').toLocaleDateString('en-US',{month:'short',day:'numeric'})} – ${new Date(filters.dateEnd + 'T12:00:00').toLocaleDateString('en-US',{month:'short',day:'numeric'})}`
+      : new Date(filters.dateStart + 'T12:00:00').toLocaleDateString('en-US',{month:'short',day:'numeric'})
+    : '📅 Date Range';
 
   return React.createElement('div', { className: 'search-bar' },
     // Search input
@@ -2543,16 +2835,16 @@ function SearchFilterBar({ search, onSearch, filters, onFilter, dateOptions }) {
     ),
     // Filter chips
     React.createElement('div', { className: 'filter-chips' },
-      // Date filter
-      dateOptions.length > 0 && React.createElement('select', {
-        className: `filter-chip ${filters.date ? 'active' : ''}`,
-        value: filters.date || '',
-        onChange: e => onFilter(prev => ({ ...prev, date: e.target.value || null })),
-        style: { appearance: 'none', paddingRight: '0.65rem' }
-      },
-        React.createElement('option', { value: '' }, '📅 All Dates'),
-        dateOptions.map(d => React.createElement('option', { key: d, value: d }, d))
-      ),
+      // Date range chip — opens calendar
+      React.createElement('button', {
+        className: `filter-chip ${filters.dateStart ? 'active' : ''}`,
+        onClick: () => setShowCal(true),
+      }, dateLabel),
+      showCal && React.createElement(DateRangePicker, {
+        onClose: () => setShowCal(false),
+        activeDates: allEventDates,
+        onApply: (start, end) => onFilter(prev => ({ ...prev, dateStart: start || null, dateEnd: end || null })),
+      }),
       React.createElement('div', { className: 'filter-divider' }),
       // Status filters
       statusFilters.map(f => React.createElement('button', {
@@ -2620,9 +2912,8 @@ function FeedScreen({ currentUser, showToast, videosEnabled, onNavigateVideos, d
 
 
   // Unique dates for the date dropdown
-  const dateOptions = [...new Set(events.map(e =>
-    new Date(e.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
-  ))];
+  // Build set of YYYY-MM-DD strings for calendar dot indicators
+  const allEventDates = new Set(events.map(e => e.created_at?.slice(0, 10)).filter(Boolean));
 
   const anyStatusFilter = ['pending','awaiting_approval','completed','completed_late','late'].some(k => filters[k]);
   const anyTypeFilter   = ['i_drink','you_drink'].some(k => filters[k]);
@@ -2633,10 +2924,12 @@ function FeedScreen({ currentUser, showToast, videosEnabled, onNavigateVideos, d
       const q = search.toLowerCase();
       if (!e.full_name.toLowerCase().includes(q) && !e.drinker.toLowerCase().includes(q)) return false;
     }
-    // Date filter
-    if (filters.date) {
-      const d = new Date(e.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
-      if (d !== filters.date) return false;
+    // Date range filter
+    if (filters.dateStart) {
+      const d = e.created_at?.slice(0, 10);
+      if (!d) return false;
+      if (d < filters.dateStart) return false;
+      if (filters.dateEnd && d > filters.dateEnd) return false;
     }
     // Status filter
     if (anyStatusFilter) {
@@ -2652,7 +2945,7 @@ function FeedScreen({ currentUser, showToast, videosEnabled, onNavigateVideos, d
   if (loading) return React.createElement('div', { className: 'loading' }, React.createElement('div', { className: 'spinner' }));
 
   return React.createElement(React.Fragment, null,
-    React.createElement(SearchFilterBar, { search, onSearch: setSearch, filters, onFilter: setFilters, dateOptions }),
+    React.createElement(SearchFilterBar, { search, onSearch: setSearch, filters, onFilter: setFilters, dateOptions: [], allEventDates }),
     !events.length
       ? React.createElement('div', { className: 'empty' },
           React.createElement('div', { className: 'empty-icon' }, '⚾'),
@@ -2924,10 +3217,10 @@ function LogScreen({ currentUser, videosEnabled, onNavigateVideos }) {
   }, []);
 
   // Unique dates for dropdown
-  const dateOptions = [...new Set(logs.map(l => {
-    const raw = l.hr_events?.created_at || (l.event_date ? l.event_date + 'T12:00:00' : null);
-    return raw ? new Date(raw).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) : null;
-  }).filter(Boolean))];
+  const allEventDates = new Set(logs.map(l => {
+    const raw = l.hr_events?.created_at || (l.event_date ? l.event_date : null);
+    return raw ? raw.slice(0, 10) : null;
+  }).filter(Boolean));
 
   const anyStatusFilter = ['pending','awaiting_approval','completed','completed_late','late'].some(k => filters[k]);
   const anyTypeFilter   = ['i_drink','you_drink'].some(k => filters[k]);
@@ -2944,7 +3237,11 @@ function LogScreen({ currentUser, videosEnabled, onNavigateVideos }) {
       const matchesDrinker = l.username?.toLowerCase().includes(q) || actualDrinker?.toLowerCase().includes(q);
       if (!matchesPlayer && !matchesDrinker) return false;
     }
-    if (filters.date && displayDate !== filters.date) return false;
+    if (filters.dateStart) {
+      const rawStr = l.hr_events?.created_at?.slice(0, 10) || l.event_date || '';
+      if (!rawStr || rawStr < filters.dateStart) return false;
+      if (filters.dateEnd && rawStr > filters.dateEnd) return false;
+    }
     if (anyStatusFilter && !filters[status]) return false;
     if (anyTypeFilter && !filters[l.drink_type]) return false;
     return true;
@@ -2982,6 +3279,7 @@ function LogScreen({ currentUser, videosEnabled, onNavigateVideos }) {
             : status === 'completed' ? 'Done'
             : status === 'completed_late' ? 'Done (Late)'
             : status === 'awaiting_approval' ? 'To Be Drank'
+            : l.drink_type === 'i_drink' ? 'To Be Drank'
             : 'To Be Assigned'
           )
         ),
@@ -2998,7 +3296,7 @@ function LogScreen({ currentUser, videosEnabled, onNavigateVideos }) {
   if (loading) return React.createElement('div', { className: 'loading' }, React.createElement('div', { className: 'spinner' }));
 
   return React.createElement(React.Fragment, null,
-    React.createElement(SearchFilterBar, { search, onSearch: setSearch, filters, onFilter: setFilters, dateOptions }),
+    React.createElement(SearchFilterBar, { search, onSearch: setSearch, filters, onFilter: setFilters, dateOptions: [], allEventDates }),
     React.createElement('div', { className: 'log-screen' },
       React.createElement('div', { className: 'log-table' },
         React.createElement('div', { className: 'log-header' },
