@@ -1948,12 +1948,13 @@ function useToast() {
 
 // ── DrinkStatusBadge ──────────────────────────────────────────────────────
 
-function DrinkStatusBadge({ status, approvedBy }) {
+function DrinkStatusBadge({ status, drinkType, approvedBy }) {
+  const pendingLabel = drinkType === 'i_drink' ? 'To Be Drank' : 'To Be Assigned';
   const cfg = {
-    pending:            { cls: 'pending',   icon: '⏳', label: 'To Be Assigned' },
-    awaiting_approval:  { cls: 'awaiting',  icon: '🍺', label: 'To Be Drank' },
-    completed:          { cls: 'completed',      icon: '✅', label: 'Completed' },
-    completed_late:     { cls: 'completed-late', icon: '⚠️', label: 'Completed Late' },
+    pending:            { cls: 'pending',        icon: '⏳', label: pendingLabel },
+    awaiting_approval:  { cls: 'awaiting',        icon: '🍺', label: 'To Be Drank' },
+    completed:          { cls: 'completed',       icon: '✅', label: 'Completed' },
+    completed_late:     { cls: 'completed-late',  icon: '⚠️', label: 'Completed Late' },
     late:               { cls: 'late',           icon: '🔴', label: 'Late!' },
   }[status] || { cls: 'pending', icon: '⏳', label: 'To Be Assigned' };
 
