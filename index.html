@@ -2958,7 +2958,12 @@ function FeedScreen({ currentUser, showToast, videosEnabled, onNavigateVideos, d
     if (anyStatusFilter) {
       const dl     = drinkLogs[e.id];
       const status = computeStatus(dl);
-      if (!filters[status]) return false;
+      // For filter purposes, i_drink pending = "awaiting" (To Be Drank),
+      // only you_drink pending = "pending" (To Be Assigned)
+      const filterKey = (status === 'pending' && e.drink_type === 'i_drink')
+        ? 'awaiting_approval'
+        : status;
+      if (!filters[filterKey]) return false;
     }
     // Type filter
     if (anyTypeFilter && !filters[e.drink_type]) return false;
@@ -3265,7 +3270,11 @@ function LogScreen({ currentUser, videosEnabled, onNavigateVideos }) {
       if (!rawStr || rawStr < filters.dateStart) return false;
       if (filters.dateEnd && rawStr > filters.dateEnd) return false;
     }
-    if (anyStatusFilter && !filters[status]) return false;
+    // Same logic: i_drink pending maps to awaiting_approval for filtering
+    const filterKey = (status === 'pending' && l.drink_type === 'i_drink')
+      ? 'awaiting_approval'
+      : status;
+    if (anyStatusFilter && !filters[filterKey]) return false;
     if (anyTypeFilter && !filters[l.drink_type]) return false;
     return true;
   });
