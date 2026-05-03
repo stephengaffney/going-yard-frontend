@@ -286,6 +286,33 @@ body {
   gap: 1px;
 }
 
+.live-dot-wrap {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 0.65rem;
+  color: #7cb85c;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  font-weight: 600;
+}
+
+.live-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #7cb85c;
+  box-shadow: 0 0 0 0 rgba(124,184,92,0.6);
+  animation: live-pulse 1.5s ease infinite;
+  flex-shrink: 0;
+}
+
+@keyframes live-pulse {
+  0%   { box-shadow: 0 0 0 0   rgba(124,184,92,0.6); }
+  70%  { box-shadow: 0 0 0 6px rgba(124,184,92,0); }
+  100% { box-shadow: 0 0 0 0   rgba(124,184,92,0); }
+}
+
 .header-title-main {
   font-family: 'Bebas Neue', sans-serif;
   font-size: 1.5rem;
@@ -951,6 +978,65 @@ body {
   border-radius: 4px;
 }
 
+/* ── Reaction Emojis ── */
+.reactions-bar {
+  display: flex;
+  gap: 4px;
+  flex-wrap: wrap;
+  padding: 0.4rem 0;
+}
+
+.reaction-btn {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  padding: 3px 8px;
+  font-size: 0.8rem;
+  cursor: pointer;
+  transition: all 0.15s;
+  color: var(--muted);
+  line-height: 1;
+}
+
+.reaction-btn:hover { border-color: var(--accent); transform: scale(1.08); }
+
+.reaction-btn.reacted {
+  background: rgba(232,193,74,0.1);
+  border-color: rgba(232,193,74,0.4);
+  color: var(--accent);
+}
+
+.reaction-count {
+  font-size: 0.7rem;
+  font-weight: 600;
+}
+
+.reaction-picker {
+  display: flex;
+  gap: 4px;
+  padding: 4px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 24px;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.4);
+}
+
+.reaction-picker-btn {
+  background: none;
+  border: none;
+  font-size: 1.3rem;
+  cursor: pointer;
+  padding: 4px 6px;
+  border-radius: 16px;
+  transition: transform 0.15s, background 0.15s;
+  line-height: 1;
+}
+
+.reaction-picker-btn:hover { transform: scale(1.3); background: var(--surface2); }
+
 /* ── Search & Filter Bar ── */
 .search-bar {
   padding: 0.75rem 1rem 0;
@@ -1268,6 +1354,89 @@ body {
 .video-toggle.on  .toggle-pip { background: #7cb85c; }
 .video-toggle.off .toggle-pip { background: #e84a4a; }
 
+/* ── Podium Layout ── */
+.podium-wrap {
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 1.25rem 1rem 0;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px 12px 0 0;
+  border-bottom: none;
+}
+
+.podium-slot {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.4rem;
+  flex: 1;
+}
+
+.podium-slot.first  { order: 2; }
+.podium-slot.second { order: 1; }
+.podium-slot.third  { order: 3; }
+
+.podium-avatar-wrap {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+}
+
+.podium-crown {
+  font-size: 1.1rem;
+  line-height: 1;
+  margin-bottom: 2px;
+}
+
+.podium-name {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 0.85rem;
+  letter-spacing: 1px;
+  text-align: center;
+}
+
+.podium-drinks {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 1.1rem;
+  text-align: center;
+}
+
+.podium-late {
+  font-size: 0.6rem;
+  color: #e84a4a;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+}
+
+.podium-base {
+  width: 100%;
+  border-radius: 6px 6px 0 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 1.4rem;
+  color: rgba(255,255,255,0.4);
+}
+
+.podium-slot.first  .podium-base { height: 56px; background: linear-gradient(180deg, rgba(232,193,74,0.3), rgba(232,193,74,0.1)); border: 1px solid rgba(232,193,74,0.3); border-bottom: none; }
+.podium-slot.second .podium-base { height: 40px; background: linear-gradient(180deg, rgba(180,180,180,0.2), rgba(180,180,180,0.05)); border: 1px solid rgba(180,180,180,0.2); border-bottom: none; }
+.podium-slot.third  .podium-base { height: 28px; background: linear-gradient(180deg, rgba(205,127,50,0.2), rgba(205,127,50,0.05)); border: 1px solid rgba(205,127,50,0.2); border-bottom: none; }
+
+.podium-rest-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-top: none;
+  border-radius: 0 0 12px 12px;
+  overflow: hidden;
+  margin-bottom: 1.5rem;
+}
+
 /* ── Deep link highlight flash ── */
 @keyframes highlight-flash {
   0%   { box-shadow: 0 0 0 0   rgba(232,193,74,0); border-color: var(--border); }
@@ -1351,6 +1520,8 @@ const PLAYER_MLB_IDS = {
   Volpe:     683011, Dominguez: 691176, Turner:    607208,
   Wells:     669224, McMahon:   641857,
 };
+
+const REACTIONS = ['🍺', '🔥', '💀', '😂'];
 
 function playerHeadshotUrl(playerKey) {
   const id = PLAYER_MLB_IDS[playerKey];
@@ -2071,23 +2242,26 @@ function HRCard({ event, currentUser, onAssigned, showToast, videosEnabled, onNa
       .on('postgres_changes', { event: '*', schema: 'public', table: 'comments' }, loadData)
       .on('postgres_changes', { event: '*', schema: 'public', table: 'drink_assignments' }, loadData)
       .on('postgres_changes', { event: '*', schema: 'public', table: 'drink_log' }, loadData)
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'reactions' }, loadData)
       .subscribe();
     return () => sb.removeChannel(chan);
   }, [event.id]);
 
   const loadData = async () => {
-    const [l, c, a, dl, cv] = await Promise.all([
+    const [l, c, a, dl, cv, r] = await Promise.all([
       sb.from('likes').select('*').eq('target_type', 'hr_event').eq('target_id', event.id),
       sb.from('comments').select('*').eq('hr_event_id', event.id).order('created_at'),
       sb.from('drink_assignments').select('*').eq('hr_event_id', event.id).maybeSingle(),
       sb.from('drink_log').select('*').eq('hr_event_id', event.id).maybeSingle(),
       sb.from('chug_videos').select('*').eq('hr_event_id', event.id).maybeSingle(),
+      sb.from('reactions').select('*').eq('hr_event_id', event.id),
     ]);
     if (l.data) setLikes(l.data);
     if (c.data) setComments(c.data);
     if (a.data !== undefined) setAssignment(a.data);
     if (dl.data !== undefined) setDrinkLog(dl.data);
     if (cv.data !== undefined) setChugVideo(cv.data);
+    if (r.data) setReactions(r.data);
   };
 
   const toggleLike = async () => {
@@ -2126,6 +2300,25 @@ function HRCard({ event, currentUser, onAssigned, showToast, videosEnabled, onNa
       method: 'DELETE',
       headers: { 'Authorization': `Bearer ${session.access_token}` },
     });
+    loadData();
+  };
+
+  const toggleReaction = async (emoji) => {
+    setShowPicker(false);
+    const { data: { session } } = await sb.auth.getSession();
+    // Check if already reacted with this emoji
+    const existing = reactions.find(r => r.username === currentUser && r.emoji === emoji);
+    if (existing) {
+      // Remove reaction
+      await sb.from('reactions').delete().eq('id', existing.id);
+    } else {
+      // Add reaction
+      await sb.from('reactions').insert({
+        hr_event_id: event.id,
+        username:    currentUser,
+        emoji,
+      });
+    }
     loadData();
   };
 
@@ -2225,7 +2418,40 @@ function HRCard({ event, currentUser, onAssigned, showToast, videosEnabled, onNa
       React.createElement('div', { className: 'hr-timestamp' }, timestamp),
 
       // Actions row
+      // Reaction picker
+      showPicker && React.createElement('div', {
+        style: { padding: '0.5rem 1.25rem 0', display: 'flex', justifyContent: 'flex-start' }
+      },
+        React.createElement('div', { className: 'reaction-picker' },
+          REACTIONS.map(emoji => React.createElement('button', {
+            key: emoji,
+            className: 'reaction-picker-btn',
+            onClick: () => toggleReaction(emoji),
+          }, emoji))
+        )
+      ),
+      // Existing reactions
+      reactions.length > 0 && React.createElement('div', { style: { padding: '0 1.25rem' } },
+        React.createElement('div', { className: 'reactions-bar' },
+          REACTIONS.filter(e => reactions.some(r => r.emoji === e)).map(emoji => {
+            const count    = reactions.filter(r => r.emoji === emoji).length;
+            const reacted  = reactions.some(r => r.emoji === emoji && r.username === currentUser);
+            return React.createElement('button', {
+              key: emoji,
+              className: `reaction-btn ${reacted ? 'reacted' : ''}`,
+              onClick: () => toggleReaction(emoji),
+            },
+              emoji,
+              React.createElement('span', { className: 'reaction-count' }, count)
+            );
+          })
+        )
+      ),
       React.createElement('div', { className: 'hr-actions' },
+        // Reaction add button
+        React.createElement('button', { className: 'action-btn', onClick: () => setShowPicker(!showPicker) },
+          React.createElement('span', { style: { fontSize: '1rem', lineHeight: 1 } }, '😄')
+        ),
         // Like
         React.createElement('button', { className: `action-btn ${userLiked ? 'liked' : ''}`, onClick: toggleLike },
           React.createElement('svg', { viewBox: '0 0 24 24', fill: userLiked ? 'currentColor' : 'none', stroke: 'currentColor', strokeWidth: 2 },
@@ -2520,25 +2746,52 @@ function LeaderboardScreen() {
 
   return React.createElement('div', { className: 'leaderboard-screen' },
 
-    // Drink Leaderboard
+    // Drink Leaderboard — Podium for top 3, list for rest
     React.createElement('div', { className: 'section-title' }, 'Drink Leaderboard'),
-    React.createElement('div', { className: 'lb-card' },
-      drinkLB.every(u => u.drinks === 0)
-        ? React.createElement('div', { style: { padding: '2rem', textAlign: 'center', color: 'var(--muted)' } }, 'No drinks logged yet')
-        : drinkLB.map((u, i) => React.createElement('div', { key: u.username, className: 'lb-row' },
-            React.createElement('div', { className: `lb-rank ${rankClass(i)}` }, i + 1),
-            React.createElement(Avatar, { name: u.username, size: 36 }),
-            React.createElement('div', { style: { flex: 1 } },
-              React.createElement('div', { className: 'lb-name', style: { color: USER_COLORS[u.username] } }, cap(u.username)),
-              React.createElement('div', { className: 'lb-sub' }, 'drinks consumed')
-            ),
-            React.createElement('div', { className: 'lb-stat-group' },
-              React.createElement('div', { className: 'lb-stat', style: { color: USER_COLORS[u.username] } }, u.drinks),
-              React.createElement('div', { className: 'lb-label' }, 'Drinks'),
-              u.late > 0 && React.createElement('div', { className: 'late-badge' }, `${u.late} late`)
-            )
-          ))
-    ),
+    drinkLB.every(u => u.drinks === 0)
+      ? React.createElement('div', { className: 'lb-card', style: { padding: '2rem', textAlign: 'center', color: 'var(--muted)' } }, 'No drinks logged yet')
+      : React.createElement(React.Fragment, null,
+          // Podium — top 3
+          drinkLB.length >= 1 && React.createElement('div', { className: 'podium-wrap' },
+            [
+              drinkLB[1],  // 2nd — left
+              drinkLB[0],  // 1st — center
+              drinkLB[2],  // 3rd — right
+            ].filter(Boolean).map((u, idx) => {
+              const rank       = idx === 0 ? 2 : idx === 1 ? 1 : 3;
+              const slotClass  = rank === 1 ? 'first' : rank === 2 ? 'second' : 'third';
+              const crown      = rank === 1 ? '👑' : rank === 2 ? '🥈' : '🥉';
+              const avatarSize = rank === 1 ? 52 : 42;
+              const color      = USER_COLORS[u.username] || '#888';
+              return React.createElement('div', { key: u.username, className: `podium-slot ${slotClass}` },
+                React.createElement('div', { className: 'podium-avatar-wrap' },
+                  React.createElement('div', { className: 'podium-crown' }, crown),
+                  React.createElement(Avatar, { name: u.username, size: avatarSize, color }),
+                  React.createElement('div', { className: 'podium-name', style: { color } }, cap(u.username)),
+                  React.createElement('div', { className: 'podium-drinks', style: { color } }, u.drinks),
+                  u.late > 0 && React.createElement('div', { className: 'podium-late' }, `${u.late} late`)
+                ),
+                React.createElement('div', { className: 'podium-base' }, rank)
+              );
+            })
+          ),
+          // Rest of list (4th onward)
+          drinkLB.length > 3 && React.createElement('div', { className: 'podium-rest-card' },
+            drinkLB.slice(3).map((u, i) => React.createElement('div', { key: u.username, className: 'lb-row' },
+              React.createElement('div', { className: 'lb-rank' }, i + 4),
+              React.createElement(Avatar, { name: u.username, size: 36 }),
+              React.createElement('div', { style: { flex: 1 } },
+                React.createElement('div', { className: 'lb-name', style: { color: USER_COLORS[u.username] } }, cap(u.username)),
+                React.createElement('div', { className: 'lb-sub' }, 'drinks consumed')
+              ),
+              React.createElement('div', { className: 'lb-stat-group' },
+                React.createElement('div', { className: 'lb-stat', style: { color: USER_COLORS[u.username] } }, u.drinks),
+                React.createElement('div', { className: 'lb-label' }, 'Drinks'),
+                u.late > 0 && React.createElement('div', { className: 'late-badge' }, `${u.late} late`)
+              )
+            ))
+          )
+        ),
 
     // I Drink Progress Board
     React.createElement('div', { className: 'section-title' }, '20 HR Slugger'),
@@ -2797,6 +3050,7 @@ function App() {
   const [authChecked, setAuthChecked] = useState(false);
   const [videosEnabled, setVideosEnabled] = useState(false);
   const [deepLink, setDeepLink]           = useState(() => getDeepLink());
+  const [liveTeams, setLiveTeams]         = useState(new Set());
 
   useEffect(() => {
     // Handle deep link on first load
@@ -2814,6 +3068,33 @@ function App() {
         setVideosEnabled(vSetting?.value === 'true');
       }
     });
+
+    // Check for live games every 5 minutes
+    const TRACKED = ['NYY', 'PHI', 'HOU'];
+    const checkLiveGames = async () => {
+      try {
+        const today = new Date().toISOString().slice(0, 10).replace(/-/g, '');
+        const res   = await fetch(`https://statsapi.mlb.com/api/v1/schedule?sportId=1&date=${today}&hydrate=linescore`);
+        const json  = await res.json();
+        const live  = new Set();
+        const games = json?.dates?.[0]?.games || [];
+        games.forEach(g => {
+          const status = g?.status?.abstractGameState;
+          if (status === 'Live') {
+            const away = g?.teams?.away?.team?.abbreviation;
+            const home = g?.teams?.home?.team?.abbreviation;
+            if (TRACKED.includes(away)) live.add(away);
+            if (TRACKED.includes(home)) live.add(home);
+          }
+        });
+        setLiveTeams(live);
+      } catch (e) {
+        // Silently fail — live indicator is non-critical
+      }
+    };
+    checkLiveGames();
+    const liveInterval = setInterval(checkLiveGames, 5 * 60 * 1000);
+    return () => clearInterval(liveInterval);
 
     sb.auth.getSession().then(({ data: { session } }) => {
       if (session?.user) {
@@ -2883,7 +3164,11 @@ function App() {
       React.createElement('div', { className: 'header-team-strip' }),
       React.createElement('div', { className: 'header-title' },
         React.createElement('div', { className: 'header-title-main' }, 'Going Yard'),
-        React.createElement('div', { className: 'header-title-sub' }, '& Drinking Hard')
+        React.createElement('div', { className: 'header-title-sub' }, '& Drinking Hard'),
+        liveTeams.size > 0 && React.createElement('div', { className: 'live-dot-wrap' },
+          React.createElement('div', { className: 'live-dot' }),
+          [...liveTeams].join(' · ') + ' Live'
+        )
       ),
       React.createElement('div', { className: 'header-user' },
         username === 'steve' && React.createElement('button', {
