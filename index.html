@@ -2242,26 +2242,23 @@ function HRCard({ event, currentUser, onAssigned, showToast, videosEnabled, onNa
       .on('postgres_changes', { event: '*', schema: 'public', table: 'comments' }, loadData)
       .on('postgres_changes', { event: '*', schema: 'public', table: 'drink_assignments' }, loadData)
       .on('postgres_changes', { event: '*', schema: 'public', table: 'drink_log' }, loadData)
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'reactions' }, loadData)
       .subscribe();
     return () => sb.removeChannel(chan);
   }, [event.id]);
 
   const loadData = async () => {
-    const [l, c, a, dl, cv, r] = await Promise.all([
+    const [l, c, a, dl, cv] = await Promise.all([
       sb.from('likes').select('*').eq('target_type', 'hr_event').eq('target_id', event.id),
       sb.from('comments').select('*').eq('hr_event_id', event.id).order('created_at'),
       sb.from('drink_assignments').select('*').eq('hr_event_id', event.id).maybeSingle(),
       sb.from('drink_log').select('*').eq('hr_event_id', event.id).maybeSingle(),
       sb.from('chug_videos').select('*').eq('hr_event_id', event.id).maybeSingle(),
-      sb.from('reactions').select('*').eq('hr_event_id', event.id),
     ]);
     if (l.data) setLikes(l.data);
     if (c.data) setComments(c.data);
     if (a.data !== undefined) setAssignment(a.data);
     if (dl.data !== undefined) setDrinkLog(dl.data);
     if (cv.data !== undefined) setChugVideo(cv.data);
-    if (r.data) setReactions(r.data);
   };
 
   const toggleLike = async () => {
@@ -2300,25 +2297,6 @@ function HRCard({ event, currentUser, onAssigned, showToast, videosEnabled, onNa
       method: 'DELETE',
       headers: { 'Authorization': `Bearer ${session.access_token}` },
     });
-    loadData();
-  };
-
-  const toggleReaction = async (emoji) => {
-    setShowPicker(false);
-    const { data: { session } } = await sb.auth.getSession();
-    // Check if already reacted with this emoji
-    const existing = reactions.find(r => r.username === currentUser && r.emoji === emoji);
-    if (existing) {
-      // Remove reaction
-      await sb.from('reactions').delete().eq('id', existing.id);
-    } else {
-      // Add reaction
-      await sb.from('reactions').insert({
-        hr_event_id: event.id,
-        username:    currentUser,
-        emoji,
-      });
-    }
     loadData();
   };
 
@@ -2418,40 +2396,7 @@ function HRCard({ event, currentUser, onAssigned, showToast, videosEnabled, onNa
       React.createElement('div', { className: 'hr-timestamp' }, timestamp),
 
       // Actions row
-      // Reaction picker
-      showPicker && React.createElement('div', {
-        style: { padding: '0.5rem 1.25rem 0', display: 'flex', justifyContent: 'flex-start' }
-      },
-        React.createElement('div', { className: 'reaction-picker' },
-          REACTIONS.map(emoji => React.createElement('button', {
-            key: emoji,
-            className: 'reaction-picker-btn',
-            onClick: () => toggleReaction(emoji),
-          }, emoji))
-        )
-      ),
-      // Existing reactions
-      reactions.length > 0 && React.createElement('div', { style: { padding: '0 1.25rem' } },
-        React.createElement('div', { className: 'reactions-bar' },
-          REACTIONS.filter(e => reactions.some(r => r.emoji === e)).map(emoji => {
-            const count    = reactions.filter(r => r.emoji === emoji).length;
-            const reacted  = reactions.some(r => r.emoji === emoji && r.username === currentUser);
-            return React.createElement('button', {
-              key: emoji,
-              className: `reaction-btn ${reacted ? 'reacted' : ''}`,
-              onClick: () => toggleReaction(emoji),
-            },
-              emoji,
-              React.createElement('span', { className: 'reaction-count' }, count)
-            );
-          })
-        )
-      ),
       React.createElement('div', { className: 'hr-actions' },
-        // Reaction add button
-        React.createElement('button', { className: 'action-btn', onClick: () => setShowPicker(!showPicker) },
-          React.createElement('span', { style: { fontSize: '1rem', lineHeight: 1 } }, '😄')
-        ),
         // Like
         React.createElement('button', { className: `action-btn ${userLiked ? 'liked' : ''}`, onClick: toggleLike },
           React.createElement('svg', { viewBox: '0 0 24 24', fill: userLiked ? 'currentColor' : 'none', stroke: 'currentColor', strokeWidth: 2 },
@@ -3050,7 +2995,6 @@ function App() {
   const [authChecked, setAuthChecked] = useState(false);
   const [videosEnabled, setVideosEnabled] = useState(false);
   const [deepLink, setDeepLink]           = useState(() => getDeepLink());
-  const [liveTeams, setLiveTeams]         = useState(new Set());
 
   useEffect(() => {
     // Handle deep link on first load
@@ -3068,32 +3012,6 @@ function App() {
         setVideosEnabled(vSetting?.value === 'true');
       }
     });
-
-    // Check for live games every 5 minutes
-    const TRACKED = ['NYY', 'PHI', 'HOU'];
-    const checkLiveGames = async () => {
-      try {
-        const today = new Date().toISOString().slice(0, 10).replace(/-/g, '');
-        const res   = await fetch(`https://statsapi.mlb.com/api/v1/schedule?sportId=1&date=${today}&hydrate=linescore`);
-        const json  = await res.json();
-        const live  = new Set();
-        const games = json?.dates?.[0]?.games || [];
-        games.forEach(g => {
-          const status = g?.status?.abstractGameState;
-          if (status === 'Live') {
-            const away = g?.teams?.away?.team?.abbreviation;
-            const home = g?.teams?.home?.team?.abbreviation;
-            if (TRACKED.includes(away)) live.add(away);
-            if (TRACKED.includes(home)) live.add(home);
-          }
-        });
-        setLiveTeams(live);
-      } catch (e) {
-        // Silently fail — live indicator is non-critical
-      }
-    };
-    checkLiveGames();
-    const liveInterval = setInterval(checkLiveGames, 5 * 60 * 1000);
 
     sb.auth.getSession().then(({ data: { session } }) => {
       if (session?.user) {
@@ -3113,11 +3031,7 @@ function App() {
       if (!session) { setUser(null); setUsername(''); }
     });
 
-    // Single cleanup for both the interval and the auth subscription
-    return () => {
-      clearInterval(liveInterval);
-      subscription.unsubscribe();
-    };
+    return () => subscription.unsubscribe();
   }, []);
 
   const onAuth = (u, uname) => { setUser(u); setUsername(uname); };
@@ -3168,10 +3082,7 @@ function App() {
       React.createElement('div', { className: 'header-title' },
         React.createElement('div', { className: 'header-title-main' }, 'Going Yard'),
         React.createElement('div', { className: 'header-title-sub' }, '& Drinking Hard'),
-        liveTeams.size > 0 && React.createElement('div', { className: 'live-dot-wrap' },
-          React.createElement('div', { className: 'live-dot' }),
-          [...liveTeams].join(' · ') + ' Live'
-        )
+
       ),
       React.createElement('div', { className: 'header-user' },
         username === 'steve' && React.createElement('button', {
