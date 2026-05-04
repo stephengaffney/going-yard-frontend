@@ -2335,7 +2335,8 @@ function UploadModal({ event, drinkLog, currentUser, onClose, onUploaded, showTo
     vid.onloadedmetadata = () => {
       URL.revokeObjectURL(url);
       if (vid.duration > MAX_VIDEO_SECONDS) {
-        showToast(`Video must be ${MAX_VIDEO_SECONDS} seconds or less`);
+        const secs = Math.round(vid.duration);
+        showToast(`Video is ${secs}s — must be ${MAX_VIDEO_SECONDS} seconds or less`);
         return;
       }
       setFile(f);
@@ -2456,11 +2457,11 @@ function UploadModal({ event, drinkLog, currentUser, onClose, onUploaded, showTo
         ? React.createElement('video', { className: 'upload-preview', src: previewUrl, controls: true, playsInline: true })
         : React.createElement('div', { className: 'upload-zone' },
             React.createElement('input', {
-              type: 'file', accept: 'video/*', capture: 'environment',
+              type: 'file', accept: 'video/*',
               onChange: e => handleFile(e.target.files[0])
             }),
             React.createElement('div', { className: 'upload-zone-icon' }, '🎥'),
-            React.createElement('div', { className: 'upload-zone-text' }, 'Tap to record or choose a video'),
+            React.createElement('div', { className: 'upload-zone-text' }, 'Record now or choose from library'),
             React.createElement('div', { className: 'upload-zone-hint' }, `Max ${MAX_VIDEO_SECONDS} seconds`)
           ),
       uploading && React.createElement('div', { className: 'upload-progress' },
