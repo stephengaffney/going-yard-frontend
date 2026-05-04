@@ -282,6 +282,29 @@ body {
 .nav-item svg { width: 22px; height: 22px; }
 .nav-item span { font-size: 0.65rem; text-transform: uppercase; letter-spacing: 1px; }
 
+.nav-item-wrap {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.unread-dot {
+  position: absolute;
+  top: -2px;
+  right: -4px;
+  width: 8px; height: 8px;
+  border-radius: 50%;
+  background: var(--accent);
+  border: 2px solid var(--bg);
+  animation: unread-pulse 2s ease infinite;
+}
+
+@keyframes unread-pulse {
+  0%, 100% { transform: scale(1); opacity: 1; }
+  50%       { transform: scale(1.2); opacity: 0.8; }
+}
+
 /* ── Header ── */
 .header {
   position: sticky;
@@ -487,6 +510,38 @@ body {
   font-size: 0.75rem;
   color: var(--muted);
   margin-bottom: 0.75rem;
+}
+
+.drink-countdown {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 0.72rem;
+  font-weight: 600;
+  padding: 3px 8px;
+  border-radius: 10px;
+  margin-left: 8px;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.3px;
+}
+
+.drink-countdown.ok {
+  background: rgba(124,184,92,0.1);
+  color: #7cb85c;
+  border: 1px solid rgba(124,184,92,0.25);
+}
+
+.drink-countdown.warning {
+  background: rgba(232,193,74,0.12);
+  color: var(--accent);
+  border: 1px solid rgba(232,193,74,0.3);
+}
+
+.drink-countdown.urgent {
+  background: rgba(232,74,74,0.12);
+  color: #e84a4a;
+  border: 1px solid rgba(232,74,74,0.35);
+  animation: pulse-red 1.5s ease infinite;
 }
 
 /* ── Drink status badge ── */
@@ -822,6 +877,13 @@ body {
   display: flex;
   align-items: flex-end;
   justify-content: center;
+}
+
+/* Swipe-to-dismiss sheet — applied to inner sheet elements */
+.swipeable {
+  touch-action: pan-x;
+  transition: transform 0.2s ease, opacity 0.2s ease;
+  will-change: transform;
 }
 
 .modal {
@@ -1851,6 +1913,107 @@ function computeStatus(drinkLog) {
 }
 
 /**
+ * Countdown hook — returns { label, urgency } updating every second.
+ * urgency: 'ok' | 'warning' (< 6h) | 'urgent' (< 2h) | null (not applicable)
+ */
+/**
+ * Swipe-to-dismiss hook.
+ * Attach ref to the sheet element. When user swipes down > threshold, onDismiss fires.
+ */
+function useSwipeDismiss(onDismiss, threshold = 80) {
+  const ref       = useRef(null);
+  const startY    = useRef(null);
+  const currentY  = useRef(0);
+
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+
+    const onStart = (e) => {
+      startY.current = e.touches[0].clientY;
+      el.style.transition = 'none';
+    };
+
+    const onMove = (e) => {
+      if (startY.current === null) return;
+      const dy = e.touches[0].clientY - startY.current;
+      if (dy < 0) return;
+      currentY.current = dy;
+      el.style.transform = `translateY(${dy}px)`;
+      el.style.opacity   = String(Math.max(0.5, 1 - dy / 300));
+    };
+
+    const onEnd = () => {
+      if (currentY.current > threshold) {
+        el.style.transition = 'transform 0.2s ease, opacity 0.2s ease';
+        el.style.transform  = 'translateY(100%)';
+        el.style.opacity    = '0';
+        setTimeout(onDismiss, 200);
+      } else {
+        el.style.transition = 'transform 0.25s ease, opacity 0.25s ease';
+        el.style.transform  = 'translateY(0)';
+        el.style.opacity    = '1';
+      }
+      startY.current  = null;
+      currentY.current = 0;
+    };
+
+    el.addEventListener('touchstart', onStart, { passive: true });
+    el.addEventListener('touchmove',  onMove,  { passive: true });
+    el.addEventListener('touchend',   onEnd,   { passive: true });
+
+    return () => {
+      el.removeEventListener('touchstart', onStart);
+      el.removeEventListener('touchmove',  onMove);
+      el.removeEventListener('touchend',   onEnd);
+    };
+  }, [onDismiss, threshold]);
+
+  return ref;
+}
+
+function useCountdown(drinkLog, drinkType) {
+  const [now, setNow] = useState(Date.now());
+
+  useEffect(() => {
+    const id = setInterval(() => setNow(Date.now()), 1000);
+    return () => clearInterval(id);
+  }, []);
+
+  if (!drinkLog) return null;
+  const status = computeStatus(drinkLog);
+  if (!['pending', 'awaiting_approval'].includes(status)) return null;
+
+  // Determine clock start
+  let clockStart = null;
+  if (status === 'awaiting_approval' && drinkLog.assigned_at) {
+    clockStart = new Date(drinkLog.assigned_at).getTime();
+  } else if (drinkLog.hr_triggered_at) {
+    clockStart = new Date(drinkLog.hr_triggered_at).getTime();
+  } else if (drinkLog.event_date) {
+    clockStart = new Date(drinkLog.event_date + 'T12:00:00').getTime();
+  }
+
+  if (!clockStart) return null;
+
+  const deadline   = clockStart + (24 * 60 * 60 * 1000);
+  const remaining  = deadline - now;
+
+  if (remaining <= 0) return { label: '0h 0m 0s', urgency: 'urgent' };
+
+  const h = Math.floor(remaining / 3600000);
+  const m = Math.floor((remaining % 3600000) / 60000);
+  const s = Math.floor((remaining % 60000) / 1000);
+  const label = `${h}h ${m}m ${s}s`;
+
+  const urgency = remaining < 2 * 3600000 ? 'urgent'
+                : remaining < 6 * 3600000 ? 'warning'
+                : 'ok';
+
+  return { label, urgency };
+}
+
+/**
  * For a you_drink event:
  *   - assigner = event.drinker (the person who must assign)
  *   - actual drinker = drink_log.given_to (the person who must drink)
@@ -2120,8 +2283,9 @@ function AssignModal({ event, currentUser, onClose, onAssigned, showToast }) {
     setLoading(false);
   };
 
+  const swipeRef = useSwipeDismiss(onClose);
   return React.createElement('div', { className: 'modal-overlay', onClick: e => e.target === e.currentTarget && onClose() },
-    React.createElement('div', { className: 'modal' },
+    React.createElement('div', { className: 'modal', ref: swipeRef },
       React.createElement('div', { className: 'modal-handle' }),
       React.createElement('h3', null, 'Assign the Drink'),
       React.createElement('div', { className: 'user-grid' },
@@ -2263,8 +2427,9 @@ function UploadModal({ event, drinkLog, currentUser, onClose, onUploaded, showTo
 
   // Step 1: show warning; Step 2: show upload UI
   if (!warned) {
-    return React.createElement('div', { className: 'modal-overlay', onClick: e => e.target === e.currentTarget && onClose() },
-      React.createElement('div', { className: 'upload-modal' },
+    const swipeRef = useSwipeDismiss(onClose);
+  return React.createElement('div', { className: 'modal-overlay', onClick: e => e.target === e.currentTarget && onClose() },
+      React.createElement('div', { className: 'upload-modal', ref: swipeRef },
         React.createElement('div', { className: 'modal-handle' }),
         React.createElement('h3', { style: { fontFamily: "'Bebas Neue', sans-serif", fontSize: '1.5rem', letterSpacing: '1px', marginBottom: '1.25rem' } },
           'Before You Record'
@@ -2421,6 +2586,7 @@ function HRCard({ event, currentUser, onAssigned, showToast, videosEnabled, onNa
 
   // Compute derived status client-side
   const status       = computeStatus(drinkLog);
+  const countdown    = useCountdown(drinkLog, event.drink_type);
   const canApprove   = canUserApprove(event, drinkLog, currentUser);
   const canAssign    = event.drink_type === 'you_drink'
                         && event.drinker === currentUser
@@ -2608,7 +2774,12 @@ function HRCard({ event, currentUser, onAssigned, showToast, videosEnabled, onNa
           )
       ),
 
-      React.createElement('div', { className: 'hr-timestamp' }, timestamp),
+      React.createElement('div', { className: 'hr-timestamp' },
+        timestamp,
+        countdown && React.createElement('span', {
+          className: `drink-countdown ${countdown.urgency}`
+        }, '⏱ ', countdown.label)
+      ),
 
       // Actions row
       React.createElement('div', { className: 'hr-actions' },
@@ -2779,8 +2950,9 @@ function DateRangePicker({ onApply, onClose, activeDates }) {
     return cls;
   };
 
+  const swipeRef = useSwipeDismiss(onClose);
   return React.createElement('div', { className: 'cal-overlay', onClick: e => e.target === e.currentTarget && onClose() },
-    React.createElement('div', { className: 'cal-sheet' },
+    React.createElement('div', { className: 'cal-sheet', ref: swipeRef },
       React.createElement('div', { className: 'cal-handle' }),
       // Date range label at top
       React.createElement('div', { className: 'cal-range-label' }, rangeLabel()),
@@ -2888,7 +3060,7 @@ function SearchFilterBar({ search, onSearch, filters, onFilter, dateOptions, all
 
 // ── Feed Screen ───────────────────────────────────────────────────────────
 
-function FeedScreen({ currentUser, showToast, videosEnabled, onNavigateVideos, deepLinkEventId, onDeepLinkHandled }) {
+function FeedScreen({ currentUser, showToast, videosEnabled, onNavigateVideos, deepLinkEventId, onDeepLinkHandled, hasUnread, onClearUnread }) {
   const [events, setEvents]   = useState([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch]   = useState('');
@@ -2903,7 +3075,20 @@ function FeedScreen({ currentUser, showToast, videosEnabled, onNavigateVideos, d
     const chan = sb.channel('feed')
       .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'hr_events' }, loadEvents)
       .subscribe();
-    return () => sb.removeChannel(chan);
+
+    // Clear unread dot when user scrolls back to top of the feed
+    const feedEl = document.querySelector('.feed');
+    const handleScroll = () => {
+      if (feedEl && feedEl.scrollTop < 20 && hasUnread) {
+        onClearUnread && onClearUnread();
+      }
+    };
+    if (feedEl) feedEl.addEventListener('scroll', handleScroll, { passive: true });
+
+    return () => {
+      sb.removeChannel(chan);
+      if (feedEl) feedEl.removeEventListener('scroll', handleScroll);
+    };
   }, []);
 
   const loadEvents = async () => {
@@ -3359,6 +3544,8 @@ function App() {
   const [authChecked, setAuthChecked] = useState(false);
   const [videosEnabled, setVideosEnabled] = useState(false);
   const [deepLink, setDeepLink]           = useState(() => getDeepLink());
+  const [hasUnread, setHasUnread]         = useState(false);
+  const latestEventId                     = useRef(null);
 
   useEffect(() => {
     // Handle deep link on first load
@@ -3395,7 +3582,17 @@ function App() {
       if (!session) { setUser(null); setUsername(''); }
     });
 
-    return () => subscription.unsubscribe();
+    // Watch for new HR events to show unread dot on Feed tab
+    const hrChan = sb.channel('app-hr-watch')
+      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'hr_events' }, () => {
+        setHasUnread(true);
+      })
+      .subscribe();
+
+    return () => {
+      subscription.unsubscribe();
+      sb.removeChannel(hrChan);
+    };
   }, []);
 
   const navigateTab = (newTab) => {
@@ -3404,6 +3601,7 @@ function App() {
     setTab(newTab);
     setTabAnimating(true);
     setTimeout(() => setTabAnimating(false), 260);
+    // Don't clear unread here — clear only after scrolling to top in FeedScreen
   };
 
   const onAuth = (u, uname) => { setUser(u); setUsername(uname); };
@@ -3442,8 +3640,12 @@ function App() {
     className: `nav-item ${tab === id ? 'active' : ''}`,
     onClick: () => navigateTab(id)
   },
-    React.createElement('svg', { viewBox: '0 0 24 24', fill: tab === id ? 'currentColor' : 'none', stroke: 'currentColor', strokeWidth: 1.5 },
-      React.createElement('path', { d: path })
+    React.createElement('div', { className: 'nav-item-wrap' },
+      React.createElement('svg', { viewBox: '0 0 24 24', fill: tab === id ? 'currentColor' : 'none', stroke: 'currentColor', strokeWidth: 1.5 },
+        React.createElement('path', { d: path })
+      ),
+      id === 'feed' && hasUnread && tab !== 'feed' &&
+        React.createElement('div', { className: 'unread-dot' })
     ),
     React.createElement('span', null, label)
   );
@@ -3474,7 +3676,7 @@ function App() {
       )
     ),
     React.createElement('div', { key: tab, className: `tab-screen${tabAnimating ? ' animating' : ''}` },
-      tab === 'feed'   && React.createElement(FeedScreen, { currentUser: username, showToast, videosEnabled, onNavigateVideos: videosEnabled ? () => navigateTab('videos') : null, deepLinkEventId: deepLink.eventId, onDeepLinkHandled: () => { setDeepLink({}); clearDeepLink(); } }),
+      tab === 'feed'   && React.createElement(FeedScreen, { currentUser: username, showToast, videosEnabled, onNavigateVideos: videosEnabled ? () => navigateTab('videos') : null, deepLinkEventId: deepLink.eventId, onDeepLinkHandled: () => { setDeepLink({}); clearDeepLink(); }, hasUnread, onClearUnread: () => setHasUnread(false) }),
       tab === 'board'  && React.createElement(LeaderboardScreen),
       tab === 'log'    && React.createElement(LogScreen, { currentUser: username, videosEnabled, onNavigateVideos: videosEnabled ? () => navigateTab('videos') : null }),
       tab === 'videos' && videosEnabled && React.createElement(VideosScreen, { currentUser: username, deepLinkVideoId: deepLink.videoId, onDeepLinkHandled: () => { setDeepLink({}); clearDeepLink(); } })
