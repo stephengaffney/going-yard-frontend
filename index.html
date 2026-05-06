@@ -1599,6 +1599,120 @@ body {
   text-underline-offset: 2px;
 }
 
+/* ── In-app recording ── */
+.record-zone {
+  position: relative;
+  border-radius: 12px;
+  overflow: hidden;
+  background: #000;
+  margin-bottom: 1rem;
+  aspect-ratio: 9/16;
+  max-height: 300px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.record-preview {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.record-countdown {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  background: rgba(0,0,0,0.6);
+  color: #fff;
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 1.4rem;
+  letter-spacing: 2px;
+  padding: 4px 10px;
+  border-radius: 8px;
+  min-width: 48px;
+  text-align: center;
+}
+
+.record-countdown.urgent { color: #e84a4a; }
+
+.record-dot {
+  position: absolute;
+  top: 14px;
+  left: 12px;
+  width: 10px; height: 10px;
+  border-radius: 50%;
+  background: #e84a4a;
+  animation: live-pulse 1s ease infinite;
+}
+
+.record-btn {
+  width: 64px; height: 64px;
+  border-radius: 50%;
+  border: 4px solid #fff;
+  background: #e84a4a;
+  cursor: pointer;
+  transition: transform 0.15s;
+  flex-shrink: 0;
+}
+
+.record-btn:hover { transform: scale(1.06); }
+.record-btn.recording { background: #fff; border-color: #e84a4a; border-radius: 10px; width: 44px; height: 44px; }
+
+.record-controls {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 1rem 0 0.5rem;
+}
+
+.record-label {
+  font-size: 0.75rem;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.record-tabs {
+  display: flex;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+}
+
+.record-tab {
+  flex: 1;
+  padding: 0.6rem;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  background: var(--surface2);
+  color: var(--muted);
+  font-family: 'DM Sans', sans-serif;
+  font-size: 0.8rem;
+  cursor: pointer;
+  transition: all 0.15s;
+  text-align: center;
+}
+
+.record-tab.active {
+  border-color: var(--accent);
+  color: var(--accent);
+  background: rgba(232,193,74,0.08);
+}
+
+.browser-warning {
+  background: rgba(232,140,74,0.1);
+  border: 1px solid rgba(232,140,74,0.35);
+  border-radius: 10px;
+  padding: 0.875rem 1rem;
+  font-size: 0.82rem;
+  color: #e88c4a;
+  margin-bottom: 1rem;
+  line-height: 1.5;
+  text-align: center;
+}
+
 /* ── Admin video toggle ── */
 .video-toggle {
   display: flex;
@@ -2316,24 +2430,106 @@ function AssignModal({ event, currentUser, onClose, onAssigned, showToast }) {
 // ── Upload Modal ─────────────────────────────────────────────────────────
 
 function UploadModal({ event, drinkLog, currentUser, onClose, onUploaded, showToast, onNavigateVideos }) {
-  const [file, setFile]         = useState(null);
+  const [file, setFile]             = useState(null);
   const [previewUrl, setPreviewUrl] = useState(null);
   const [uploading, setUploading]   = useState(false);
   const [progress, setProgress]     = useState(0);
   const [warned, setWarned]         = useState(false);
+  const [mode, setMode]             = useState('record'); // 'record' | 'library'
+  const [recording, setRecording]   = useState(false);
+  const [timeLeft, setTimeLeft]     = useState(MAX_VIDEO_SECONDS);
+  const [stream, setStream]         = useState(null);
+  const [mediaRecorder, setMediaRecorder] = useState(null);
+  const videoRef    = useRef(null);
+  const chunksRef   = useRef([]);
+  const timerRef    = useRef(null);
+
+  // Detect Safari
+  const isSafari = /^((?!chrome|android).)*safari/i.test(navigator.userAgent);
+  const supportsRecording = isSafari && typeof MediaRecorder !== 'undefined';
 
   const actualDrinker = event.drink_type === 'you_drink' && drinkLog?.given_to
     ? drinkLog.given_to : event.drinker;
 
+  // Start camera stream
+  const startCamera = async () => {
+    try {
+      const s = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'user' }, audio: true });
+      setStream(s);
+      if (videoRef.current) {
+        videoRef.current.srcObject = s;
+        videoRef.current.play();
+      }
+    } catch (e) {
+      showToast('Could not access camera');
+    }
+  };
+
+  // Stop camera stream
+  const stopCamera = () => {
+    if (stream) stream.getTracks().forEach(t => t.stop());
+    setStream(null);
+  };
+
+  useEffect(() => {
+    if (warned && mode === 'record' && supportsRecording) startCamera();
+    return () => stopCamera();
+  }, [warned, mode]);
+
+  const startRecording = () => {
+    if (!stream) return;
+    chunksRef.current = [];
+    const mr = new MediaRecorder(stream, { mimeType: 'video/mp4' });
+    mr.ondataavailable = e => { if (e.data.size > 0) chunksRef.current.push(e.data); };
+    mr.onstop = () => {
+      const blob = new Blob(chunksRef.current, { type: 'video/mp4' });
+      const url  = URL.createObjectURL(blob);
+      setFile(new File([blob], `chug_${Date.now()}.mp4`, { type: 'video/mp4' }));
+      setPreviewUrl(url);
+      stopCamera();
+    };
+    mr.start();
+    setMediaRecorder(mr);
+    setRecording(true);
+    setTimeLeft(MAX_VIDEO_SECONDS);
+
+    // Countdown timer
+    let remaining = MAX_VIDEO_SECONDS;
+    timerRef.current = setInterval(() => {
+      remaining -= 1;
+      setTimeLeft(remaining);
+      if (remaining <= 0) stopRecording(mr);
+    }, 1000);
+  };
+
+  const stopRecording = (mr) => {
+    clearInterval(timerRef.current);
+    setRecording(false);
+    const recorder = mr || mediaRecorder;
+    if (recorder && recorder.state !== 'inactive') recorder.stop();
+  };
+
   const handleFile = (f) => {
     if (!f) return;
     if (!f.type.startsWith('video/')) { showToast('Please select a video file'); return; }
-    // Check duration after metadata loads
-    const url = URL.createObjectURL(f);
-    const vid  = document.createElement('video');
-    vid.preload = 'metadata';
+
+    const objectUrl = URL.createObjectURL(f);
+    const vid       = document.createElement('video');
+    vid.preload     = 'metadata';
+
+    let metadataLoaded = false;
+    const timeout = setTimeout(() => {
+      if (!metadataLoaded) {
+        URL.revokeObjectURL(objectUrl);
+        setFile(f);
+        setPreviewUrl(URL.createObjectURL(f));
+      }
+    }, 3000);
+
     vid.onloadedmetadata = () => {
-      URL.revokeObjectURL(url);
+      metadataLoaded = true;
+      clearTimeout(timeout);
+      URL.revokeObjectURL(objectUrl);
       if (vid.duration > MAX_VIDEO_SECONDS) {
         const secs = Math.round(vid.duration);
         showToast(`Video is ${secs}s — must be ${MAX_VIDEO_SECONDS} seconds or less`);
@@ -2342,7 +2538,14 @@ function UploadModal({ event, drinkLog, currentUser, onClose, onUploaded, showTo
       setFile(f);
       setPreviewUrl(URL.createObjectURL(f));
     };
-    vid.src = url;
+
+    vid.onerror = () => {
+      clearTimeout(timeout);
+      setFile(f);
+      setPreviewUrl(URL.createObjectURL(f));
+    };
+
+    vid.src = objectUrl;
   };
 
   const upload = async () => {
@@ -2426,10 +2629,11 @@ function UploadModal({ event, drinkLog, currentUser, onClose, onUploaded, showTo
     setUploading(false);
   };
 
-  // Step 1: show warning; Step 2: show upload UI
+  const swipeRef = useSwipeDismiss(onClose);
+
+  // Step 1: warning screen
   if (!warned) {
-    const swipeRef = useSwipeDismiss(onClose);
-  return React.createElement('div', { className: 'modal-overlay', onClick: e => e.target === e.currentTarget && onClose() },
+    return React.createElement('div', { className: 'modal-overlay', onClick: e => e.target === e.currentTarget && onClose() },
       React.createElement('div', { className: 'upload-modal', ref: swipeRef },
         React.createElement('div', { className: 'modal-handle' }),
         React.createElement('h3', { style: { fontFamily: "'Bebas Neue', sans-serif", fontSize: '1.5rem', letterSpacing: '1px', marginBottom: '1.25rem' } },
@@ -2447,33 +2651,93 @@ function UploadModal({ event, drinkLog, currentUser, onClose, onUploaded, showTo
     );
   }
 
+  // Step 2: preview screen after recording/selecting
+  if (previewUrl) {
+    return React.createElement('div', { className: 'modal-overlay', onClick: e => e.target === e.currentTarget && onClose() },
+      React.createElement('div', { className: 'upload-modal', ref: swipeRef },
+        React.createElement('div', { className: 'modal-handle' }),
+        React.createElement('h3', { style: { fontFamily: "'Bebas Neue', sans-serif", fontSize: '1.5rem', letterSpacing: '1px', marginBottom: '1rem' } }, 'Preview'),
+        React.createElement('video', { className: 'upload-preview', src: previewUrl, controls: true, playsInline: true, style: { width: '100%', borderRadius: '10px', marginBottom: '1rem' } }),
+        uploading && React.createElement('div', { className: 'upload-progress' },
+          React.createElement('div', { className: 'upload-progress-fill', style: { width: `${progress}%` } })
+        ),
+        React.createElement('div', { className: 'modal-actions' },
+          React.createElement('button', { className: 'btn-cancel', onClick: () => {
+            setFile(null); setPreviewUrl(null);
+            if (mode === 'record' && supportsRecording) startCamera();
+          }}, 'Re-record'),
+          React.createElement('button', {
+            className: 'btn-confirm',
+            onClick: upload,
+            disabled: !file || uploading
+          }, uploading ? 'Uploading...' : 'Upload Chug 🍺')
+        )
+      )
+    );
+  }
+
+  // Step 3: record / library tabs
   return React.createElement('div', { className: 'modal-overlay', onClick: e => e.target === e.currentTarget && onClose() },
-    React.createElement('div', { className: 'upload-modal' },
+    React.createElement('div', { className: 'upload-modal', ref: swipeRef },
       React.createElement('div', { className: 'modal-handle' }),
-      React.createElement('h3', { style: { fontFamily: "'Bebas Neue', sans-serif", fontSize: '1.5rem', letterSpacing: '1px', marginBottom: '1rem' } },
-        'Upload Your Chug'
-      ),
-      previewUrl
-        ? React.createElement('video', { className: 'upload-preview', src: previewUrl, controls: true, playsInline: true })
-        : React.createElement('div', { className: 'upload-zone' },
-            React.createElement('input', {
-              type: 'file', accept: 'video/*',
-              onChange: e => handleFile(e.target.files[0])
-            }),
-            React.createElement('div', { className: 'upload-zone-icon' }, '🎥'),
-            React.createElement('div', { className: 'upload-zone-text' }, 'Record now or choose from library'),
-            React.createElement('div', { className: 'upload-zone-hint' }, `Max ${MAX_VIDEO_SECONDS} seconds`)
-          ),
-      uploading && React.createElement('div', { className: 'upload-progress' },
-        React.createElement('div', { className: 'upload-progress-fill', style: { width: `${progress}%` } })
-      ),
-      React.createElement('div', { className: 'modal-actions', style: { marginTop: '0.75rem' } },
-        React.createElement('button', { className: 'btn-cancel', onClick: () => { setFile(null); setPreviewUrl(null); onClose(); } }, 'Cancel'),
+
+      // Mode tabs
+      React.createElement('div', { className: 'record-tabs' },
         React.createElement('button', {
-          className: 'btn-confirm',
-          onClick: upload,
-          disabled: !file || uploading
-        }, uploading ? 'Uploading...' : 'Upload Chug 🍺')
+          className: `record-tab ${mode === 'record' ? 'active' : ''}`,
+          onClick: () => { setMode('record'); }
+        }, '🎥 Record'),
+        React.createElement('button', {
+          className: `record-tab ${mode === 'library' ? 'active' : ''}`,
+          onClick: () => { stopCamera(); setMode('library'); }
+        }, '📷 Camera Roll')
+      ),
+
+      // Non-Safari warning on record tab
+      mode === 'record' && !supportsRecording &&
+        React.createElement('div', { className: 'browser-warning' },
+          '⚠️ In-app recording requires Safari on iOS. Please use Camera Roll to upload a video, or open this app in Safari to record.'
+        ),
+
+      // Record tab — Safari only
+      mode === 'record' && supportsRecording && React.createElement('div', null,
+        React.createElement('div', { className: 'record-zone' },
+          React.createElement('video', {
+            ref: videoRef,
+            className: 'record-preview',
+            autoPlay: true,
+            muted: true,
+            playsInline: true,
+          }),
+          recording && React.createElement('div', { className: 'record-dot' }),
+          recording && React.createElement('div', {
+            className: `record-countdown ${timeLeft <= 5 ? 'urgent' : ''}`,
+          }, `${timeLeft}s`)
+        ),
+        React.createElement('div', { className: 'record-controls' },
+          React.createElement('button', {
+            className: `record-btn ${recording ? 'recording' : ''}`,
+            onClick: () => recording ? stopRecording() : startRecording(),
+          }),
+          React.createElement('div', { className: 'record-label' },
+            recording ? `Recording — tap to stop` : 'Tap to record'
+          )
+        )
+      ),
+
+      // Library tab
+      mode === 'library' && React.createElement('div', { className: 'upload-zone' },
+        React.createElement('input', {
+          type: 'file', accept: 'video/*',
+          onChange: e => handleFile(e.target.files[0])
+        }),
+        React.createElement('div', { className: 'upload-zone-icon' }, '📁'),
+        React.createElement('div', { className: 'upload-zone-text' }, 'Choose from Camera Roll'),
+        React.createElement('div', { className: 'upload-zone-hint' }, `Max ${MAX_VIDEO_SECONDS} seconds`)
+      ),
+
+      React.createElement('div', { className: 'modal-actions', style: { marginTop: '0.75rem' } },
+        React.createElement('button', { className: 'btn-cancel', onClick: () => { stopCamera(); onClose(); } }, 'Cancel')
       )
     )
   );
