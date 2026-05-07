@@ -1929,28 +1929,9 @@ const PLAYER_COLORS = {
 
 const ALL_USERS = ['frank', 'scott', 'tyler', 'ned', 'ryan', 'steve', 'dan'];
 
-// Maps each user to their MLB team icon (based on their matched players' team)
-const USER_TEAM_ICON = {
-  frank: 'Houston.svg',  // HOU — Diaz / Alvarez
-  scott: 'Philly.svg',   // PHI — Garcia / Harper
-  tyler: 'icon.svg',     // NYY — Volpe / Rice
-  ned:   'icon.svg',     // NYY — Dominguez / Chisholm
-  ryan:  'Philly.svg',   // PHI — Turner / Schwarber
-  steve: 'icon.svg',     // NYY — Wells / Grisham
-  dan:   'icon.svg',     // NYY — McMahon / Judge
-};
-
 function setTeamIcon(username) {
-  const icon = USER_TEAM_ICON[username?.toLowerCase()] || 'icon.svg';
-  let link = document.querySelector("link[rel='apple-touch-icon']");
-  if (!link) {
-    link = document.createElement('link');
-    link.rel = 'apple-touch-icon';
-    document.head.appendChild(link);
-  }
-  link.href = '/' + icon;
-
-  // Apply team colors to CSS variables for dynamic theming
+  // Icon is now a single universal app icon — no per-team switching
+  // Team colors still applied for in-app theming
   const team   = USER_TEAM[username?.toLowerCase()] || 'NYY';
   const colors = TEAM_COLORS[team] || TEAM_COLORS['NYY'];
   document.documentElement.style.setProperty('--team-primary',   colors.primary);
@@ -2445,9 +2426,19 @@ function UploadModal({ event, drinkLog, currentUser, onClose, onUploaded, showTo
   const chunksRef   = useRef([]);
   const timerRef    = useRef(null);
 
-  // Detect Safari
-  const isSafari = /^((?!chrome|android).)*safari/i.test(navigator.userAgent);
-  const supportsRecording = isSafari && typeof MediaRecorder !== 'undefined';
+  // Detect MediaRecorder support — works on Safari iOS, Chrome Android, 
+  // and desktop Chrome/Firefox. Check for supported MIME types.
+  const supportsRecording = typeof MediaRecorder !== 'undefined' && (
+    MediaRecorder.isTypeSupported('video/mp4') ||
+    MediaRecorder.isTypeSupported('video/webm') ||
+    MediaRecorder.isTypeSupported('video/webm;codecs=vp8')
+  );
+  // Pick best supported MIME type per platform
+  const recordingMimeType = MediaRecorder.isTypeSupported('video/mp4')
+    ? 'video/mp4'
+    : MediaRecorder.isTypeSupported('video/webm;codecs=vp8')
+      ? 'video/webm;codecs=vp8'
+      : 'video/webm';
 
   const actualDrinker = event.drink_type === 'you_drink' && drinkLog?.given_to
     ? drinkLog.given_to : event.drinker;
@@ -2480,12 +2471,14 @@ function UploadModal({ event, drinkLog, currentUser, onClose, onUploaded, showTo
   const startRecording = () => {
     if (!stream) return;
     chunksRef.current = [];
-    const mr = new MediaRecorder(stream, { mimeType: 'video/mp4' });
+    const mr = new MediaRecorder(stream, { mimeType: recordingMimeType });
     mr.ondataavailable = e => { if (e.data.size > 0) chunksRef.current.push(e.data); };
     mr.onstop = () => {
-      const blob = new Blob(chunksRef.current, { type: 'video/mp4' });
+      const mimeBase = recordingMimeType.split(';')[0]; // strip codec params
+      const ext  = mimeBase === 'video/mp4' ? 'mp4' : 'webm';
+      const blob = new Blob(chunksRef.current, { type: mimeBase });
       const url  = URL.createObjectURL(blob);
-      setFile(new File([blob], `chug_${Date.now()}.mp4`, { type: 'video/mp4' }));
+      setFile(new File([blob], `chug_${Date.now()}.${ext}`, { type: mimeBase }));
       setPreviewUrl(url);
       stopCamera();
     };
@@ -2694,10 +2687,10 @@ function UploadModal({ event, drinkLog, currentUser, onClose, onUploaded, showTo
         }, '📷 Camera Roll')
       ),
 
-      // Non-Safari warning on record tab
+      // Browser warning only shown if MediaRecorder not supported at all
       mode === 'record' && !supportsRecording &&
         React.createElement('div', { className: 'browser-warning' },
-          '⚠️ In-app recording requires Safari on iOS. Please use Camera Roll to upload a video, or open this app in Safari to record.'
+          '⚠️ Your browser does not support in-app recording. Please use the Camera Roll tab to upload a video instead.'
         ),
 
       // Record tab — Safari only
@@ -3962,11 +3955,18 @@ ReactDOM.createRoot(document.getElementById('root')).render(React.createElement(
 // ── Service Worker + Push ─────────────────────────────────────────────────
 
 async function registerPush(accessToken) {
-  if (!('serviceWorker' in navigator) || !('PushManager' in window)) return;
+  if (!('serviceWorker' in navigator) || !('PushManager' in window)) {
+    console.log('[PUSH] Push not supported in this browser');
+    return;
+  }
   try {
     const reg = await navigator.serviceWorker.register('/sw.js');
+    // Request permission — works on desktop Chrome/Firefox too
     const permission = await Notification.requestPermission();
-    if (permission !== 'granted') return;
+    if (permission !== 'granted') {
+      console.log('[PUSH] Notification permission denied');
+      return;
+    }
 
     const keyRes = await fetch(`${BACKEND}/push/vapid-public-key`);
     const { key } = await keyRes.json();
