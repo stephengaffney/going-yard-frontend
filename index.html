@@ -3177,7 +3177,7 @@ function HRCard({ event, currentUser, onAssigned, showToast, videosEnabled, onNa
           'Record Chug'
         ),
         // View video link — only shown when feature is enabled and video exists
-        videosEnabled && hasVideo && React.createElement('button', { className: 'video-link-btn', onClick: () => onNavigateVideos && onNavigateVideos() },
+        videosEnabled && hasVideo && React.createElement('button', { className: 'video-link-btn', onClick: () => onNavigateVideos && onNavigateVideos(chugVideo?.id) },
           React.createElement('svg', { viewBox: '0 0 24 24', fill: 'none', stroke: 'currentColor', strokeWidth: 2 },
             React.createElement('path', { d: 'M15 10l4.553-2.276A1 1 0 0 1 21 8.723v6.554a1 1 0 0 1-1.447.894L15 14M3 8a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8z' })
           ),
@@ -4052,7 +4052,7 @@ function App() {
       )
     ),
     React.createElement('div', { key: tab, className: `tab-screen${tabAnimating ? ' animating' : ''}` },
-      tab === 'feed'   && React.createElement(FeedScreen, { currentUser: username, showToast, videosEnabled, onNavigateVideos: videosEnabled ? () => navigateTab('videos') : null, deepLinkEventId: deepLink.eventId, onDeepLinkHandled: () => { setDeepLink({}); clearDeepLink(); }, hasUnread, onClearUnread: () => setHasUnread(false) }),
+      tab === 'feed'   && React.createElement(FeedScreen, { currentUser: username, showToast, videosEnabled, onNavigateVideos: videosEnabled ? (videoId) => { if (videoId) setDeepLink({ videoId }); navigateTab('videos'); } : null, deepLinkEventId: deepLink.eventId, onDeepLinkHandled: () => { setDeepLink({}); clearDeepLink(); }, hasUnread, onClearUnread: () => setHasUnread(false) }),
       tab === 'board'  && React.createElement(LeaderboardScreen),
       tab === 'log'    && React.createElement(LogScreen, { currentUser: username, videosEnabled, onNavigateVideos: videosEnabled ? () => navigateTab('videos') : null }),
       tab === 'videos' && videosEnabled && React.createElement(VideosScreen, { currentUser: username, deepLinkVideoId: deepLink.videoId, onDeepLinkHandled: () => { setDeepLink({}); clearDeepLink(); }, onNavigateToEvent: (eventId) => { setDeepLink({ eventId }); navigateTab('feed'); } })
