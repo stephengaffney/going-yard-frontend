@@ -2122,7 +2122,7 @@ function useCountdown(drinkLog, drinkType) {
 function canUserApprove(event, drinkLog, currentUser) {
   if (!drinkLog) return false;
   const status = computeStatus(drinkLog);
-  if (status === 'completed') return false;
+  if (status === 'completed' || status === 'completed_late') return false;
 
   const actualDrinker = (
     event.drink_type === 'you_drink'
