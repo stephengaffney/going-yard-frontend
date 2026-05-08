@@ -584,7 +584,8 @@ body {
   border: 1px solid rgba(124,184,92,0.35);
 }
 
-.drink-status-badge.late {
+.drink-status-badge.late,
+.drink-status-badge.vacated {
   background: rgba(232,74,74,0.12);
   color: #e84a4a;
   border: 1px solid rgba(232,74,74,0.45);
@@ -3593,7 +3594,7 @@ function LeaderboardScreen() {
                   React.createElement('div', { className: 'podium-name', style: { color } }, cap(u.username)),
                   React.createElement('div', { className: 'podium-drinks', style: { color } }, u.drinks),
                   u.late > 0 && React.createElement('div', { className: 'podium-late' }, `${u.late} late`),
-                  u.vacated > 0 && React.createElement('div', { className: 'podium-vacated  ' }, `${u.vacated} vacated`)
+                  u.vacated > 0 && React.createElement('div', { className: 'podium-late' }, `${u.vacated} vacated`)
                 ),
                 React.createElement('div', { className: 'podium-base' }, rank)
               );
