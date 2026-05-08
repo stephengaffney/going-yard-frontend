@@ -2054,7 +2054,10 @@ function computeStatus(drinkLog) {
   const s = drinkLog.status || 'pending';
   if (s === 'completed') return 'completed';
   if (s === 'completed_late') return 'completed_late';
-  if (s === 'late') return 'late';
+  if (s === 'late') {
+    if (drinkLog.drink_type === 'you_drink' && !drinkLog.given_to) return 'vacated';
+    return 'late';
+  }
 
   // Use the precise timestamp for the clock start:
   // - awaiting_approval (assigned you_drink): clock starts at assigned_at
@@ -2290,6 +2293,7 @@ function DrinkStatusBadge({ status, drinkType, approvedBy }) {
     completed:          { cls: 'completed',       icon: '✅', label: 'Completed' },
     completed_late:     { cls: 'completed-late',  icon: '⚠️', label: 'Completed Late' },
     late:               { cls: 'late',           icon: '🔴', label: 'Late!' },
+    vacated:            { cls: 'vacated',        icon: '🔴', label: 'Vacated' },
   }[status] || { cls: 'pending', icon: '⏳', label: 'To Be Assigned' };
 
   return React.createElement('span', { className: `drink-status-badge ${cfg.cls}` },
@@ -3475,6 +3479,7 @@ function FeedScreen({ currentUser, showToast, videosEnabled, onNavigateVideos, d
       // only you_drink pending = "pending" (To Be Assigned)
       const filterKey = (status === 'pending' && e.drink_type === 'i_drink')
         ? 'awaiting_approval'
+        : status === 'vacated' ? 'late'
         : status;
       if (!filters[filterKey]) return false;
     }
@@ -3528,7 +3533,7 @@ function LeaderboardScreen() {
 
       // Build drink leaderboard from drink_log directly so we can count late drinks
       const counts = {};
-      ALL_USERS.forEach(u => { counts[u] = { drinks: 0, late: 0 }; });
+      ALL_USERS.forEach(u => { counts[u] = { drinks: 0, late: 0, vacated: 0 }; });
 
       if (allDrinkLogs.data) {
         allDrinkLogs.data.forEach(log => {
@@ -3538,11 +3543,12 @@ function LeaderboardScreen() {
           counts[key].drinks++;
           const status = computeStatus(log);
           if (status === 'late') counts[key].late++;
+          if (status === 'vacated') counts[key].vacated = (counts[key].vacated || 0) + 1;
         });
       }
 
       const lb = Object.entries(counts)
-        .map(([username, { drinks, late }]) => ({ username, drinks, late }))
+        .map(([username, { drinks, late, vacated }]) => ({ username, drinks, late, vacated }))
         .sort((a, b) => b.drinks - a.drinks);
       setDrinkLB(lb);
 
@@ -3580,7 +3586,8 @@ function LeaderboardScreen() {
                   React.createElement(Avatar, { name: u.username, size: avatarSize, color }),
                   React.createElement('div', { className: 'podium-name', style: { color } }, cap(u.username)),
                   React.createElement('div', { className: 'podium-drinks', style: { color } }, u.drinks),
-                  u.late > 0 && React.createElement('div', { className: 'podium-late' }, `${u.late} late`)
+                  u.late > 0 && React.createElement('div', { className: 'podium-late' }, `${u.late} late`),
+                  u.vacated > 0 && React.createElement('div', { className: 'podium-vacated  ' }, `${u.vacated} vacated`)
                 ),
                 React.createElement('div', { className: 'podium-base' }, rank)
               );
@@ -3598,7 +3605,8 @@ function LeaderboardScreen() {
               React.createElement('div', { className: 'lb-stat-group' },
                 React.createElement('div', { className: 'lb-stat', style: { color: USER_COLORS[u.username] } }, u.drinks),
                 React.createElement('div', { className: 'lb-label' }, 'Drinks'),
-                u.late > 0 && React.createElement('div', { className: 'late-badge' }, `${u.late} late`)
+                u.late > 0 && React.createElement('div', { className: 'late-badge' }, `${u.late} late`),
+                u.vacated > 0 && React.createElement('div', { className: 'vacated-badge' }, `${u.vacated} vacated`)
               )
             ))
           )
@@ -3786,6 +3794,7 @@ function LogScreen({ currentUser, videosEnabled, onNavigateVideos }) {
     // Same logic: i_drink pending maps to awaiting_approval for filtering
     const filterKey = (status === 'pending' && l.drink_type === 'i_drink')
       ? 'awaiting_approval'
+      : status === 'vacated' ? 'late'
       : status;
     if (anyStatusFilter && !filters[filterKey]) return false;
     if (anyTypeFilter && !filters[l.drink_type]) return false;
@@ -3814,13 +3823,15 @@ function LogScreen({ currentUser, videosEnabled, onNavigateVideos }) {
           React.createElement('span', { className: `log-status-dot ${status}` }),
           React.createElement('span', { style: {
             fontSize: '0.7rem',
-            color: status === 'late' ? '#e84a4a'
+            color: status === 'vacated' ? '#e84a4a'
+                 : status === 'late' ? '#e84a4a'
                  : status === 'completed' ? '#7cb85c'
                  : status === 'completed_late' ? '#e88c4a'
                  : status === 'awaiting_approval' ? 'var(--accent)'
                  : '#888'
           } },
-            status === 'late' ? 'Late'
+            status === 'vacated' ? 'Vacated'
+            : status === 'late' ? 'Late'
             : status === 'completed' ? 'Done'
             : status === 'completed_late' ? 'Done (Late)'
             : status === 'awaiting_approval' ? 'To Be Drank'
