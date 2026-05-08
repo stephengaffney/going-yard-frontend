@@ -848,7 +848,8 @@ body {
 }
 
 .log-row:last-child { border-bottom: none; }
-.log-row.status-late           { border-left-color: #e84a4a; }
+.log-row.status-late,
+.log-row.status-vacated        { border-left-color: #e84a4a; }
 .log-row.status-completed_late { border-left-color: #e88c4a; }
 .log-row.status-awaiting { border-left-color: var(--accent); }
 .log-row.status-completed { border-left-color: #7cb85c; }
@@ -865,7 +866,8 @@ body {
 .log-status-dot.pending   { background: #666; }
 .log-status-dot.awaiting  { background: var(--accent); }
 .log-status-dot.completed { background: #7cb85c; }
-.log-status-dot.late           { background: #e84a4a; }
+.log-status-dot.late,
+.log-status-dot.vacated        { background: #e84a4a; }
 .log-status-dot.completed_late { background: #e88c4a; }
 
 /* ── Assign Modal ── */
@@ -2938,7 +2940,7 @@ function HRCard({ event, currentUser, onAssigned, showToast, videosEnabled, onNa
   const hasVideo = !!chugVideo;
 
   // Card outline class
-  const baseClass = status === 'late'
+  const baseClass = (status === 'late' || status === 'vacated')
     ? 'hr-card late'
     : status === 'completed_late'
       ? 'hr-card completed-late'
@@ -3100,9 +3102,13 @@ function HRCard({ event, currentUser, onAssigned, showToast, videosEnabled, onNa
           approvedBy: drinkLog?.approved_by
         }),
         // Hint text for pending you_drink awaiting assignment
-        event.drink_type === 'you_drink' && !assignment && status !== 'late' &&
+        event.drink_type === 'you_drink' && !assignment && status !== 'late' && status !== 'vacated' &&
           React.createElement('span', { style: { fontSize: '0.7rem', color: 'var(--muted)' } },
             '— not yet assigned'
+          ),
+        event.drink_type === 'you_drink' && !assignment && status === 'vacated' &&
+          React.createElement('span', { style: { fontSize: '0.7rem', color: '#e84a4a' } },
+            '— expired without being assigned'
           )
       ),
 
@@ -3606,7 +3612,7 @@ function LeaderboardScreen() {
                 React.createElement('div', { className: 'lb-stat', style: { color: USER_COLORS[u.username] } }, u.drinks),
                 React.createElement('div', { className: 'lb-label' }, 'Drinks'),
                 u.late > 0 && React.createElement('div', { className: 'late-badge' }, `${u.late} late`),
-                u.vacated > 0 && React.createElement('div', { className: 'vacated-badge' }, `${u.vacated} vacated`)
+                u.vacated > 0 && React.createElement('div', { className: 'late-badge' }, `${u.vacated} vacated`)
               )
             ))
           )
