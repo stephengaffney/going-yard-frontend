@@ -4119,21 +4119,19 @@ function LogScreen({ currentUser, videosEnabled, onNavigateVideos }) {
     const load = async () => {
       const [logRes, vidRes] = await Promise.all([
         sb.from('drink_log').select('*, hr_events(created_at)').order('event_date', { ascending: false }),
-        sb.from('chug_videos').select('id, hr_event_id, actual_drinker'),
+        sb.from('chug_videos').select('hr_event_id, actual_drinker'),
       ]);
       if (logRes.error) console.error('[LOG] fetch error:', logRes.error);
       if (logRes.data) {
         // Annotate each log row with video info
         const videoSet = new Set((vidRes.data || []).map(v => v.hr_event_id));
         const videoOwner = {};
-        const videoIdMap = {};
-        (vidRes.data || []).forEach(v => { videoOwner[v.hr_event_id] = v.actual_drinker; videoIdMap[v.hr_event_id] = v.id; });
+        (vidRes.data || []).forEach(v => { videoOwner[v.hr_event_id] = v.actual_drinker; });
         const annotated = logRes.data.map(l => {
           const actualDrinker = (l.drink_type === 'you_drink' && l.given_to) ? l.given_to : l.username;
           return {
             ...l,
             _hasVideo:  videoSet.has(l.hr_event_id),
-            _videoId:   videoIdMap[l.hr_event_id] || null,
             _isMyDrink: actualDrinker === currentUser && !videoSet.has(l.hr_event_id)
                           && !['completed', 'done', 'completed_late'].includes(computeStatus(l))
                           && (l.drink_type === 'i_drink' || (l.drink_type === 'you_drink' && l.given_to)),
@@ -4229,10 +4227,10 @@ function LogScreen({ currentUser, videosEnabled, onNavigateVideos }) {
             : 'To Be Assigned'
           )
         ),
-        videosEnabled && l._hasVideo && React.createElement('button', { className: 'log-video-link', onClick: () => onNavigateVideos && onNavigateVideos(l._videoId) },
+        videosEnabled && l._hasVideo && React.createElement('button', { className: 'log-video-link', onClick: onNavigateVideos },
           '🎥 View'
         ),
-        videosEnabled && !l._hasVideo && l._isMyDrink && React.createElement('button', { className: 'log-video-link', onClick: () => onNavigateVideos && onNavigateVideos(null) },
+        videosEnabled && !l._hasVideo && l._isMyDrink && React.createElement('button', { className: 'log-video-link', onClick: onNavigateVideos },
           '🎥 Record'
         )
       )
@@ -4273,7 +4271,7 @@ function NotificationCenter({ currentUser }) {
 
   const NOTIF_ICONS = {
     hr: '⚾', assignment: '🍺', approval: '✅',
-    late: '🔴', comment: '💬', like: '❤️', video: '🎥',
+    late: '🔴', comment: '💬', like: '👍', video: '🎥',
   };
 
   const load = async () => {
@@ -4283,7 +4281,15 @@ function NotificationCenter({ currentUser }) {
       const res = await fetch(`${BACKEND}/notifications`, {
         headers: { 'Authorization': `Bearer ${session.access_token}` }
       });
-      if (res.ok) setNotifs(await res.json());
+      if (res.ok) {
+        const all = await res.json();
+        // Filter out notifications caused by the current user's own actions
+        const filtered = all.filter(n => {
+          const body = (n.body || '').toLowerCase();
+          return !body.startsWith(currentUser.toLowerCase() + ' ');
+        });
+        setNotifs(filtered);
+      }
     } catch (e) { console.error('[NOTIF]', e); }
     setLoading(false);
   };
@@ -4376,7 +4382,7 @@ function NotificationCenter({ currentUser }) {
           right: (() => {
             const el = dropdownRef.current;
             if (!el) return '12px';
-            return (window.innerWidth - el.getBoundingClientRect().right) + 'px';
+            return Math.max(8, window.innerWidth - el.getBoundingClientRect().right) + 'px';
           })(),
           zIndex: 9999,
         }
@@ -4561,7 +4567,7 @@ function App() {
     React.createElement('div', { key: tab, className: `tab-screen${tabAnimating ? ' animating' : ''}` },
       tab === 'feed'   && React.createElement(FeedScreen, { currentUser: username, showToast, videosEnabled, onNavigateVideos: videosEnabled ? (videoId) => { if (videoId) setDeepLink({ videoId }); navigateTab('videos'); } : null, deepLinkEventId: deepLink.eventId, onDeepLinkHandled: () => { setDeepLink({}); clearDeepLink(); }, hasUnread, onClearUnread: () => setHasUnread(false) }),
       tab === 'board'  && React.createElement(LeaderboardScreen),
-      tab === 'log'    && React.createElement(LogScreen, { currentUser: username, videosEnabled, onNavigateVideos: videosEnabled ? (videoId) => { if (videoId) setDeepLink({ videoId }); navigateTab('videos'); } : null }),
+      tab === 'log'    && React.createElement(LogScreen, { currentUser: username, videosEnabled, onNavigateVideos: videosEnabled ? () => navigateTab('videos') : null }),
       tab === 'videos' && videosEnabled && React.createElement(VideosScreen, { currentUser: username, deepLinkVideoId: deepLink.videoId, onDeepLinkHandled: () => { setDeepLink({}); clearDeepLink(); }, onNavigateToEvent: (eventId) => { setDeepLink({ eventId }); navigateTab('feed'); } })
     ),
     React.createElement('nav', { className: 'nav' },
