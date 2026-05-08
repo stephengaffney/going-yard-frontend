@@ -1943,6 +1943,213 @@ body {
   margin-top: -0.5rem;
 }
 
+/* ── Notification Bell ── */
+.notif-bell-wrap {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.notif-bell-btn {
+  background: none;
+  border: none;
+  color: var(--muted);
+  cursor: pointer;
+  padding: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 8px;
+  transition: color 0.2s;
+  position: relative;
+}
+
+.notif-bell-btn:hover { color: var(--text); }
+.notif-bell-btn svg { width: 20px; height: 20px; }
+
+.notif-count {
+  position: absolute;
+  top: -2px;
+  right: -4px;
+  background: var(--accent);
+  color: #0a0a0f;
+  font-size: 0.55rem;
+  font-weight: 700;
+  font-family: 'DM Sans', sans-serif;
+  min-width: 16px;
+  height: 16px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 3px;
+  border: 2px solid var(--bg);
+  line-height: 1;
+}
+
+/* ── Notification Dropdown ── */
+.notif-dropdown {
+  position: absolute;
+  top: calc(100% + 10px);
+  right: 0;
+  width: 320px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.5);
+  z-index: 300;
+  overflow: hidden;
+  animation: tab-enter 0.2s ease both;
+}
+
+.notif-dropdown-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.875rem 1rem 0.75rem;
+  border-bottom: 1px solid var(--border);
+}
+
+.notif-dropdown-title {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 1rem;
+  letter-spacing: 2px;
+  color: var(--text);
+}
+
+.notif-mark-read-btn {
+  background: none;
+  border: none;
+  color: var(--accent);
+  font-family: 'DM Sans', sans-serif;
+  font-size: 0.72rem;
+  cursor: pointer;
+  padding: 2px 6px;
+  border-radius: 6px;
+  transition: background 0.15s;
+}
+
+.notif-mark-read-btn:hover { background: rgba(232,193,74,0.1); }
+
+.notif-list {
+  max-height: 380px;
+  overflow-y: auto;
+  scrollbar-width: none;
+}
+
+.notif-list::-webkit-scrollbar { display: none; }
+
+.notif-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.625rem;
+  padding: 0.75rem 1rem;
+  border-bottom: 1px solid var(--border);
+  cursor: pointer;
+  transition: background 0.15s;
+  position: relative;
+}
+
+.notif-item:last-child { border-bottom: none; }
+.notif-item:hover { background: var(--surface2); }
+
+.notif-item.unread {
+  background: rgba(232,193,74,0.04);
+}
+
+.notif-unread-dot {
+  position: absolute;
+  top: 50%;
+  left: 6px;
+  transform: translateY(-50%);
+  width: 5px; height: 5px;
+  border-radius: 50%;
+  background: var(--accent);
+  flex-shrink: 0;
+}
+
+.notif-icon {
+  font-size: 1.1rem;
+  line-height: 1;
+  flex-shrink: 0;
+  margin-top: 1px;
+}
+
+.notif-content { flex: 1; min-width: 0; }
+
+.notif-title {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--text);
+  margin-bottom: 2px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.notif-body {
+  font-size: 0.72rem;
+  color: var(--muted);
+  line-height: 1.4;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.notif-time {
+  font-size: 0.65rem;
+  color: var(--muted);
+  white-space: nowrap;
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+.notif-empty {
+  padding: 2rem 1rem;
+  text-align: center;
+  color: var(--muted);
+  font-size: 0.875rem;
+}
+
+/* ── Video card likes/comments ── */
+.video-card-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.6rem 1rem;
+  border-top: 1px solid var(--border);
+  flex-wrap: wrap;
+}
+
+.video-comments-section {
+  padding: 0 1rem 0.75rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+/* ── Assignment message on video card ── */
+.video-assignment-msg {
+  background: var(--surface2);
+  border-radius: 8px;
+  padding: 0.5rem 0.875rem;
+  margin: 0 1rem 0.75rem;
+  font-size: 0.78rem;
+  color: var(--muted);
+  line-height: 1.4;
+}
+
+.video-assignment-msg strong { color: var(--text); }
+
+/* ── Log row tappable ── */
+.log-row.tappable {
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.2s;
+}
+
+.log-row.tappable:hover { background: var(--surface2); }
+
 </style>
 </head>
 <body>
@@ -2070,6 +2277,21 @@ const TEAM_LOGOS = {
  *                        or you_drink not yet assigned)
  *  awaiting_approval  → assigned but approval pending
  */
+
+function relativeTime(dateStr) {
+  if (!dateStr) return '';
+  const diff = Date.now() - new Date(dateStr).getTime();
+  const mins  = Math.floor(diff / 60000);
+  const hours = Math.floor(diff / 3600000);
+  if (diff < 60000)   return 'just now';
+  if (hours < 1)      return `${mins}m ago`;
+  if (hours < 24)     return `${hours}h ago`;
+  // Fallback to absolute for >= 24h
+  return new Date(dateStr).toLocaleString('en-US', {
+    month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit', hour12: true
+  });
+}
+
 function computeStatus(drinkLog) {
   if (!drinkLog) return 'pending';
   const s = drinkLog.status || 'pending';
@@ -2833,21 +3055,181 @@ function UploadModal({ event, drinkLog, currentUser, onClose, onUploaded, showTo
 
 // ── Videos Screen ─────────────────────────────────────────────────────────
 
+unction VideoCard({ v, currentUser, onNavigateToEvent }) {
+  const [likes, setLikes]         = useState([]);
+  const [comments, setComments]   = useState([]);
+  const [assignment, setAssignment] = useState(null);
+  const [commentText, setCommentText] = useState('');
+  const [showComments, setShowComments] = useState(true);
+
+  const color       = USER_COLORS[v.actual_drinker] || '#888';
+  const playerColor = PLAYER_COLORS[v.player_key] || '#888';
+  const userLiked   = likes.some(l => l.username === currentUser);
+  const timeAgo     = relativeTime(v.created_at);
+
+  useEffect(() => {
+    loadData();
+    const chan = sb.channel(`video-${v.id}`)
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'likes' }, loadData)
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'comments' }, loadData)
+      .subscribe();
+    return () => sb.removeChannel(chan);
+  }, [v.id]);
+
+  const loadData = async () => {
+    const [l, c, a] = await Promise.all([
+      sb.from('likes').select('*').eq('target_type', 'chug_video').eq('target_id', v.id),
+      sb.from('comments').select('*').eq('video_id', v.id).order('created_at'),
+      v.hr_event_id
+        ? sb.from('drink_assignments').select('*').eq('hr_event_id', v.hr_event_id).maybeSingle()
+        : Promise.resolve({ data: null }),
+    ]);
+    if (l.data) setLikes(l.data);
+    if (c.data) setComments(c.data);
+    if (a.data !== undefined) setAssignment(a.data);
+  };
+
+  const toggleLike = async () => {
+    const { data: { session } } = await sb.auth.getSession();
+    await fetch(`${BACKEND}/video-likes`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${session.access_token}` },
+      body: JSON.stringify({ video_id: v.id })
+    });
+    loadData();
+  };
+
+  const commentSubmitting = useRef(false);
+  const addComment = async () => {
+    if (!commentText.trim() || commentSubmitting.current) return;
+    commentSubmitting.current = true;
+    const text = commentText.trim();
+    setCommentText('');
+    try {
+      const { data: { session } } = await sb.auth.getSession();
+      await fetch(`${BACKEND}/video-comments`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${session.access_token}` },
+        body: JSON.stringify({ video_id: v.id, body: text })
+      });
+      loadData();
+    } finally { commentSubmitting.current = false; }
+  };
+
+  const deleteComment = async (commentId) => {
+    const { data: { session } } = await sb.auth.getSession();
+    await fetch(`${BACKEND}/video-comments/${commentId}`, {
+      method: 'DELETE',
+      headers: { 'Authorization': `Bearer ${session.access_token}` },
+    });
+    loadData();
+  };
+
+  return React.createElement('div', { key: v.id, id: `video-card-${v.id}`, className: 'video-card' },
+    // Header
+    React.createElement('div', { className: 'video-card-header' },
+      React.createElement(Avatar, { name: v.actual_drinker, size: 36, color }),
+      React.createElement('div', { className: 'video-card-meta' },
+        React.createElement('div', { className: 'video-card-title', style: { color } }, cap(v.actual_drinker)),
+        React.createElement('div', { className: 'video-card-sub' },
+          'for ',
+          React.createElement('span', { style: { color: playerColor } }, v.player_name),
+          "'s homer"
+        )
+      ),
+      React.createElement('div', { className: 'video-card-time' }, timeAgo)
+    ),
+
+    // Assignment message (you_drink only, when uploader ≠ actual_drinker)
+    assignment && v.uploader !== v.actual_drinker &&
+      React.createElement('div', { className: 'video-assignment-msg' },
+        React.createElement('strong', null, cap(assignment.assigner)),
+        ' assigned to ',
+        React.createElement('strong', null, cap(assignment.assignee)),
+        assignment.message ? ` — "${assignment.message}"` : ''
+      ),
+
+    // Video player
+    React.createElement('video', {
+      className: 'video-player',
+      src: v.public_url,
+      controls: true,
+      playsInline: true,
+      preload: 'metadata',
+    }),
+
+    // Actions row
+    React.createElement('div', { className: 'video-card-actions' },
+      // Like
+      React.createElement('button', { className: `action-btn ${userLiked ? 'liked' : ''}`, onClick: toggleLike },
+        React.createElement('svg', { viewBox: '0 0 24 24', fill: userLiked ? 'currentColor' : 'none', stroke: 'currentColor', strokeWidth: 2 },
+          React.createElement('path', { d: 'M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z' })
+        ),
+        likes.length > 0 && likes.length
+      ),
+      // Comments toggle
+      React.createElement('button', { className: 'action-btn', onClick: () => setShowComments(!showComments) },
+        React.createElement('svg', { viewBox: '0 0 24 24', fill: 'none', stroke: 'currentColor', strokeWidth: 2 },
+          React.createElement('path', { d: 'M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z' })
+        ),
+        comments.length > 0 && comments.length
+      ),
+      // View feed card button
+      React.createElement('button', {
+        className: 'feed-link-btn',
+        onClick: () => onNavigateToEvent && onNavigateToEvent(v.hr_event_id)
+      },
+        React.createElement('svg', { viewBox: '0 0 24 24', fill: 'none', stroke: 'currentColor', strokeWidth: 2, style: { width: 13, height: 13, flexShrink: 0 } },
+          React.createElement('path', { d: 'M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z M9 22V12h6v10' })
+        ),
+        '⚾ View Feed Card'
+      )
+    ),
+
+    // Comments
+    showComments && React.createElement('div', null,
+      comments.length > 0 && React.createElement('div', { className: 'video-comments-section' },
+        comments.map(c => React.createElement('div', { key: c.id, className: 'comment' },
+          React.createElement(Avatar, { name: c.username, size: 28 }),
+          React.createElement('div', { className: 'comment-body' },
+            React.createElement('div', { className: 'comment-username', style: { color: USER_COLORS[c.username] || '#888' } }, cap(c.username)),
+            React.createElement('div', { className: 'comment-text' }, c.body)
+          ),
+          c.username === currentUser && React.createElement('button', {
+            className: 'comment-delete-btn',
+            onClick: () => deleteComment(c.id)
+          }, '✕')
+        ))
+      ),
+      React.createElement('div', { className: 'comment-input-row' },
+        React.createElement('input', {
+          className: 'comment-input',
+          placeholder: 'Add a comment...',
+          value: commentText,
+          onChange: e => setCommentText(e.target.value),
+          onKeyDown: e => e.key === 'Enter' && addComment()
+        }),
+        React.createElement('button', { className: 'send-btn', onClick: addComment },
+          React.createElement('svg', { viewBox: '0 0 24 24', fill: 'none', stroke: '#0a0a0f', strokeWidth: 2.5 },
+            React.createElement('line', { x1: '22', y1: '2', x2: '11', y2: '13' }),
+            React.createElement('polygon', { points: '22 2 15 22 11 13 2 9 22 2' })
+          )
+        )
+      )
+    )
+  );
+}
+
 function VideosScreen({ currentUser, deepLinkVideoId, onDeepLinkHandled, onNavigateToEvent }) {
-  const [videos, setVideos]     = useState([]);
-  const [loading, setLoading]   = useState(true);
+  const [videos, setVideos]         = useState([]);
+  const [loading, setLoading]       = useState(true);
   const [userFilter, setUserFilter] = useState(null);
   const [highlightVideoId, setHighlightVideoId] = useState(deepLinkVideoId || null);
 
-  useEffect(() => {
-    load();
-  }, []);
+  useEffect(() => { load(); }, []);
 
   const load = async () => {
-    const { data, error } = await sb
-      .from('chug_videos')
-      .select('*')
-      .order('created_at', { ascending: false });
+    const { data, error } = await sb.from('chug_videos').select('*').order('created_at', { ascending: false });
     if (error) console.error('[VIDEOS]', error);
     if (data) setVideos(data);
     setLoading(false);
@@ -2863,14 +3245,11 @@ function VideosScreen({ currentUser, deepLinkVideoId, onDeepLinkHandled, onNavig
     }
   };
 
-  const filtered = userFilter
-    ? videos.filter(v => v.actual_drinker === userFilter)
-    : videos;
+  const filtered = userFilter ? videos.filter(v => v.actual_drinker === userFilter) : videos;
 
   if (loading) return React.createElement('div', { className: 'loading' }, React.createElement('div', { className: 'spinner' }));
 
   return React.createElement(React.Fragment, null,
-    // User filter chips
     React.createElement('div', { className: 'video-filter-row' },
       React.createElement('button', {
         className: `filter-chip ${!userFilter ? 'active' : ''}`,
@@ -2883,53 +3262,23 @@ function VideosScreen({ currentUser, deepLinkVideoId, onDeepLinkHandled, onNavig
         onClick: () => setUserFilter(userFilter === u ? null : u)
       }, cap(u)))
     ),
-
     React.createElement('div', { className: 'videos-screen' },
       filtered.length === 0
         ? React.createElement('div', { className: 'empty' },
             React.createElement('div', { className: 'empty-icon' }, '🎥'),
             React.createElement('p', null, userFilter ? `No chugs from ${cap(userFilter)} yet.` : 'No chug videos yet. Be the first!')
           )
-        : filtered.map(v => {
-            const color      = USER_COLORS[v.actual_drinker] || '#888';
-            const playerColor = PLAYER_COLORS[v.player_key] || '#888';
-            const timeAgo    = new Date(v.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit', hour12: true });
-            return React.createElement('div', { key: v.id, id: `video-card-${v.id}`, className: `video-card${highlightVideoId === v.id ? ' highlight' : ''}` },
-              React.createElement('div', { className: 'video-card-header' },
-                React.createElement(Avatar, { name: v.actual_drinker, size: 36, color }),
-                React.createElement('div', { className: 'video-card-meta' },
-                  React.createElement('div', { className: 'video-card-title', style: { color } }, cap(v.actual_drinker)),
-                  React.createElement('div', { className: 'video-card-sub' },
-                    'for ',
-                    React.createElement('span', { style: { color: playerColor } }, v.player_name),
-                    "'s homer"
-                  )
-                ),
-                React.createElement('div', { className: 'video-card-time' }, timeAgo)
-              ),
-              React.createElement('video', {
-                className: 'video-player',
-                src: v.public_url,
-                controls: true,
-                playsInline: true,
-                preload: 'metadata',
-              }),
-              React.createElement('div', { style: { padding: '0.75rem 1rem', borderTop: '1px solid var(--border)' } },
-                React.createElement('button', {
-                  className: 'feed-link-btn',
-                  onClick: () => onNavigateToEvent && onNavigateToEvent(v.hr_event_id)
-                },
-                  React.createElement('svg', { viewBox: '0 0 24 24', fill: 'none', stroke: 'currentColor', strokeWidth: 2, style: { width: 13, height: 13, flexShrink: 0 } },
-                    React.createElement('path', { d: 'M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z M9 22V12h6v10' })
-                  ),
-                  '⚾ View Feed Event'
-                )
-              )
-            );
-          })
+        : filtered.map(v => React.createElement(VideoCard, {
+            key: v.id,
+            v,
+            currentUser,
+            onNavigateToEvent,
+            highlight: highlightVideoId === v.id,
+          }))
     )
   );
 }
+
 
 // ── HR Card ───────────────────────────────────────────────────────────────
 
@@ -3061,9 +3410,7 @@ function HRCard({ event, currentUser, onAssigned, showToast, videosEnabled, onNa
     }
   };
 
-  const timestamp = new Date(event.created_at).toLocaleString('en-US', {
-    month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit', hour12: true
-  });
+  const timestamp = relativeTime(event.created_at);
 
   // Build the drink info line
   const drinkInfoLine = () => {
@@ -3842,7 +4189,16 @@ function LogScreen({ currentUser, videosEnabled, onNavigateVideos }) {
     const raw         = l.hr_events?.created_at || (l.event_date ? l.event_date + 'T12:00:00' : null);
     const displayDate = raw ? new Date(raw).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) : '—';
 
-    return React.createElement('div', { key: l.id, className: `log-row status-${status}` },
+    return React.createElement('div', {
+      key: l.id,
+      className: `log-row tappable status-${status}`,
+      onClick: (e) => {
+        if (e.target.closest('.log-video-link')) return;
+        if (l.hr_event_id) {
+          window.__navigateToEvent && window.__navigateToEvent(l.hr_event_id);
+        }
+      }
+    },
       React.createElement('div', { style: { color: 'var(--muted)', fontSize: '0.75rem' } }, displayDate),
       React.createElement('div', { style: { fontWeight: 500 } },
         l.drink_type === 'you_drink' && l.given_to
@@ -3908,6 +4264,132 @@ function LogScreen({ currentUser, videosEnabled, onNavigateVideos }) {
 }
 
 // ── Main App ──────────────────────────────────────────────────────────────
+
+function NotificationCenter({ currentUser }) {
+  const [open, setOpen]         = useState(false);
+  const [notifs, setNotifs]     = useState([]);
+  const [loading, setLoading]   = useState(false);
+  const dropdownRef             = useRef(null);
+
+  const unreadCount = notifs.filter(n => !n.read).length;
+
+  const NOTIF_ICONS = {
+    hr: '⚾', assignment: '🍺', approval: '✅',
+    late: '🔴', comment: '💬', like: '❤️', video: '🎥',
+  };
+
+  const load = async () => {
+    setLoading(true);
+    try {
+      const { data: { session } } = await sb.auth.getSession();
+      const res = await fetch(`${BACKEND}/notifications`, {
+        headers: { 'Authorization': `Bearer ${session.access_token}` }
+      });
+      if (res.ok) setNotifs(await res.json());
+    } catch (e) { console.error('[NOTIF]', e); }
+    setLoading(false);
+  };
+
+  const markAllRead = async () => {
+    const unreadIds = notifs.filter(n => !n.read).map(n => n.id);
+    if (!unreadIds.length) return;
+    setNotifs(prev => prev.map(n => ({ ...n, read: true })));
+    try {
+      const { data: { session } } = await sb.auth.getSession();
+      await fetch(`${BACKEND}/notifications/read`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${session.access_token}` },
+        body: JSON.stringify({ notification_ids: unreadIds })
+      });
+    } catch (e) { console.error('[NOTIF] mark read failed', e); }
+  };
+
+  const handleOpen = () => {
+    if (!open) { setOpen(true); load(); }
+    else setOpen(false);
+  };
+
+  // Close on outside click
+  useEffect(() => {
+    if (!open) return;
+    const handler = (e) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(e.target)) {
+        setOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handler);
+    document.addEventListener('touchstart', handler);
+    return () => {
+      document.removeEventListener('mousedown', handler);
+      document.removeEventListener('touchstart', handler);
+    };
+  }, [open]);
+
+  // Mark all read when dropdown opens and has unread
+  useEffect(() => {
+    if (open && unreadCount > 0) {
+      // Small delay so user sees the unread state briefly
+      const t = setTimeout(markAllRead, 1200);
+      return () => clearTimeout(t);
+    }
+  }, [open]);
+
+  // Realtime: re-fetch when new notifications arrive
+  useEffect(() => {
+    const chan = sb.channel('notif-watch')
+      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'notifications' }, () => {
+        load();
+      })
+      .subscribe();
+    load();
+    return () => sb.removeChannel(chan);
+  }, []);
+
+  const handleNotifClick = (n) => {
+    const d = n.data || {};
+    setOpen(false);
+    if (d.video_id) {
+      window.__navigateToVideo && window.__navigateToVideo(d.video_id);
+    } else if (d.hr_event_id) {
+      window.__navigateToEvent && window.__navigateToEvent(d.hr_event_id);
+    }
+  };
+
+  return React.createElement('div', { className: 'notif-bell-wrap', ref: dropdownRef },
+    React.createElement('button', { className: 'notif-bell-btn', onClick: handleOpen },
+      React.createElement('svg', { viewBox: '0 0 24 24', fill: open ? 'currentColor' : 'none', stroke: 'currentColor', strokeWidth: 1.8 },
+        React.createElement('path', { d: 'M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9' }),
+        React.createElement('path', { d: 'M13.73 21a2 2 0 0 1-3.46 0' })
+      ),
+      unreadCount > 0 && React.createElement('span', { className: 'notif-count' }, unreadCount > 9 ? '9+' : unreadCount)
+    ),
+    open && React.createElement('div', { className: 'notif-dropdown' },
+      React.createElement('div', { className: 'notif-dropdown-header' },
+        React.createElement('div', { className: 'notif-dropdown-title' }, 'Notifications'),
+        React.createElement('button', { className: 'notif-mark-read-btn', onClick: markAllRead }, 'Mark all read')
+      ),
+      React.createElement('div', { className: 'notif-list' },
+        loading
+          ? React.createElement('div', { className: 'notif-empty' }, 'Loading...')
+          : notifs.length === 0
+            ? React.createElement('div', { className: 'notif-empty' }, 'No notifications yet')
+            : notifs.map(n => React.createElement('div', {
+                key: n.id,
+                className: `notif-item ${!n.read ? 'unread' : ''}`,
+                onClick: () => handleNotifClick(n)
+              },
+                !n.read && React.createElement('div', { className: 'notif-unread-dot' }),
+                React.createElement('div', { className: 'notif-icon' }, NOTIF_ICONS[n.type] || '🔔'),
+                React.createElement('div', { className: 'notif-content' },
+                  React.createElement('div', { className: 'notif-title' }, n.title),
+                  React.createElement('div', { className: 'notif-body' }, n.body)
+                ),
+                React.createElement('div', { className: 'notif-time' }, relativeTime(n.created_at))
+              ))
+      )
+    )
+  );
+}
 
 function App() {
   const [user, setUser]               = useState(null);
@@ -4035,6 +4517,11 @@ function App() {
 
       ),
       React.createElement('div', { className: 'header-user' },
+        (() => {
+          window.__navigateToEvent = (eventId) => { setDeepLink({ eventId }); navigateTab('feed'); };
+          window.__navigateToVideo = (videoId) => { setDeepLink({ videoId }); navigateTab('videos'); };
+          return null;
+        })(),
         username === 'steve' && React.createElement('button', {
           className: `video-toggle ${videosEnabled ? 'on' : 'off'}`,
           onClick: toggleVideos,
@@ -4043,6 +4530,7 @@ function App() {
           React.createElement('span', { className: 'toggle-pip' }),
           '🎥 ' + (videosEnabled ? 'ON' : 'OFF')
         ),
+        React.createElement(NotificationCenter, { currentUser: username }),
         React.createElement('span', { style: { color: USER_COLORS[username] } }, cap(username)),
         React.createElement(Avatar, { name: username, size: 32 }),
         React.createElement('button', {
