@@ -1996,7 +1996,7 @@ body {
   border: 1px solid var(--border);
   border-radius: 16px;
   box-shadow: 0 8px 32px rgba(0,0,0,0.5);
-  z-index: 400;
+  z-index: 300;
   overflow: hidden;
   animation: tab-enter 0.2s ease both;
 }
@@ -2168,7 +2168,6 @@ body {
 
 <script>
 const { useState, useEffect, useCallback, useRef } = React;
-const { createPortal } = ReactDOM;
 const { createClient } = supabase;
 
 const SUPABASE_URL  = 'https://rhqyfjikjkwrzzhttuwq.supabase.co';
@@ -4123,19 +4122,21 @@ function LogScreen({ currentUser, videosEnabled, onNavigateVideos }) {
     const load = async () => {
       const [logRes, vidRes] = await Promise.all([
         sb.from('drink_log').select('*, hr_events(created_at)').order('event_date', { ascending: false }),
-        sb.from('chug_videos').select('hr_event_id, actual_drinker'),
+        sb.from('chug_videos').select('id, hr_event_id, actual_drinker'),
       ]);
       if (logRes.error) console.error('[LOG] fetch error:', logRes.error);
       if (logRes.data) {
         // Annotate each log row with video info
         const videoSet = new Set((vidRes.data || []).map(v => v.hr_event_id));
         const videoOwner = {};
-        (vidRes.data || []).forEach(v => { videoOwner[v.hr_event_id] = v.actual_drinker; });
+        const videoIdMap = {};
+        (vidRes.data || []).forEach(v => { videoOwner[v.hr_event_id] = v.actual_drinker; videoIdMap[v.hr_event_id] = v.id; });
         const annotated = logRes.data.map(l => {
           const actualDrinker = (l.drink_type === 'you_drink' && l.given_to) ? l.given_to : l.username;
           return {
             ...l,
             _hasVideo:  videoSet.has(l.hr_event_id),
+            _videoId:   videoIdMap[l.hr_event_id] || null,
             _isMyDrink: actualDrinker === currentUser && !videoSet.has(l.hr_event_id)
                           && !['completed', 'done', 'completed_late'].includes(computeStatus(l))
                           && (l.drink_type === 'i_drink' || (l.drink_type === 'you_drink' && l.given_to)),
@@ -4231,10 +4232,10 @@ function LogScreen({ currentUser, videosEnabled, onNavigateVideos }) {
             : 'To Be Assigned'
           )
         ),
-        videosEnabled && l._hasVideo && React.createElement('button', { className: 'log-video-link', onClick: onNavigateVideos },
+        videosEnabled && l._hasVideo && React.createElement('button', { className: 'log-video-link', onClick: () => onNavigateVideos && onNavigateVideos(l._videoId) },
           '🎥 View'
         ),
-        videosEnabled && !l._hasVideo && l._isMyDrink && React.createElement('button', { className: 'log-video-link', onClick: onNavigateVideos },
+        videosEnabled && !l._hasVideo && l._isMyDrink && React.createElement('button', { className: 'log-video-link', onClick: () => onNavigateVideos && onNavigateVideos(null) },
           '🎥 Record'
         )
       )
@@ -4355,59 +4356,38 @@ function NotificationCenter({ currentUser }) {
     }
   };
 
-  return React.createElement(React.Fragment, null,
-    React.createElement('div', { className: 'notif-bell-wrap', ref: dropdownRef },
-      React.createElement('button', { className: 'notif-bell-btn', onClick: handleOpen },
-        React.createElement('svg', { viewBox: '0 0 24 24', fill: open ? 'currentColor' : 'none', stroke: 'currentColor', strokeWidth: 1.8 },
-          React.createElement('path', { d: 'M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9' }),
-          React.createElement('path', { d: 'M13.73 21a2 2 0 0 1-3.46 0' })
-        ),
-        unreadCount > 0 && React.createElement('span', { className: 'notif-count' }, unreadCount > 9 ? '9+' : unreadCount)
-      )
-    ),
-    open && createPortal(
-      React.createElement('div', {
-        className: 'notif-dropdown',
-        style: {
-          position: 'fixed',
-          top: (() => {
-            const el = dropdownRef.current;
-            if (!el) return '60px';
-            return el.getBoundingClientRect().bottom + 8 + 'px';
-          })(),
-          right: (() => {
-            const el = dropdownRef.current;
-            if (!el) return '12px';
-            return (window.innerWidth - el.getBoundingClientRect().right) + 'px';
-          })(),
-          zIndex: 9999,
-        }
-      },
-        React.createElement('div', { className: 'notif-dropdown-header' },
-          React.createElement('div', { className: 'notif-dropdown-title' }, 'Notifications'),
-          React.createElement('button', { className: 'notif-mark-read-btn', onClick: markAllRead }, 'Mark all read')
-        ),
-        React.createElement('div', { className: 'notif-list' },
-          loading
-            ? React.createElement('div', { className: 'notif-empty' }, 'Loading...')
-            : notifs.length === 0
-              ? React.createElement('div', { className: 'notif-empty' }, 'No notifications yet')
-              : notifs.map(n => React.createElement('div', {
-                  key: n.id,
-                  className: `notif-item ${!n.read ? 'unread' : ''}`,
-                  onClick: () => handleNotifClick(n)
-                },
-                  !n.read && React.createElement('div', { className: 'notif-unread-dot' }),
-                  React.createElement('div', { className: 'notif-icon' }, NOTIF_ICONS[n.type] || '🔔'),
-                  React.createElement('div', { className: 'notif-content' },
-                    React.createElement('div', { className: 'notif-title' }, n.title),
-                    React.createElement('div', { className: 'notif-body' }, n.body)
-                  ),
-                  React.createElement('div', { className: 'notif-time' }, relativeTime(n.created_at))
-                ))
-        )
+  return React.createElement('div', { className: 'notif-bell-wrap', ref: dropdownRef },
+    React.createElement('button', { className: 'notif-bell-btn', onClick: handleOpen },
+      React.createElement('svg', { viewBox: '0 0 24 24', fill: open ? 'currentColor' : 'none', stroke: 'currentColor', strokeWidth: 1.8 },
+        React.createElement('path', { d: 'M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9' }),
+        React.createElement('path', { d: 'M13.73 21a2 2 0 0 1-3.46 0' })
       ),
-      document.body
+      unreadCount > 0 && React.createElement('span', { className: 'notif-count' }, unreadCount > 9 ? '9+' : unreadCount)
+    ),
+    open && React.createElement('div', { className: 'notif-dropdown' },
+      React.createElement('div', { className: 'notif-dropdown-header' },
+        React.createElement('div', { className: 'notif-dropdown-title' }, 'Notifications'),
+        React.createElement('button', { className: 'notif-mark-read-btn', onClick: markAllRead }, 'Mark all read')
+      ),
+      React.createElement('div', { className: 'notif-list' },
+        loading
+          ? React.createElement('div', { className: 'notif-empty' }, 'Loading...')
+          : notifs.length === 0
+            ? React.createElement('div', { className: 'notif-empty' }, 'No notifications yet')
+            : notifs.map(n => React.createElement('div', {
+                key: n.id,
+                className: `notif-item ${!n.read ? 'unread' : ''}`,
+                onClick: () => handleNotifClick(n)
+              },
+                !n.read && React.createElement('div', { className: 'notif-unread-dot' }),
+                React.createElement('div', { className: 'notif-icon' }, NOTIF_ICONS[n.type] || '🔔'),
+                React.createElement('div', { className: 'notif-content' },
+                  React.createElement('div', { className: 'notif-title' }, n.title),
+                  React.createElement('div', { className: 'notif-body' }, n.body)
+                ),
+                React.createElement('div', { className: 'notif-time' }, relativeTime(n.created_at))
+              ))
+      )
     )
   );
 }
@@ -4563,7 +4543,7 @@ function App() {
     React.createElement('div', { key: tab, className: `tab-screen${tabAnimating ? ' animating' : ''}` },
       tab === 'feed'   && React.createElement(FeedScreen, { currentUser: username, showToast, videosEnabled, onNavigateVideos: videosEnabled ? (videoId) => { if (videoId) setDeepLink({ videoId }); navigateTab('videos'); } : null, deepLinkEventId: deepLink.eventId, onDeepLinkHandled: () => { setDeepLink({}); clearDeepLink(); }, hasUnread, onClearUnread: () => setHasUnread(false) }),
       tab === 'board'  && React.createElement(LeaderboardScreen),
-      tab === 'log'    && React.createElement(LogScreen, { currentUser: username, videosEnabled, onNavigateVideos: videosEnabled ? () => navigateTab('videos') : null }),
+      tab === 'log'    && React.createElement(LogScreen, { currentUser: username, videosEnabled, onNavigateVideos: videosEnabled ? (videoId) => { if (videoId) setDeepLink({ videoId }); navigateTab('videos'); } : null }),
       tab === 'videos' && videosEnabled && React.createElement(VideosScreen, { currentUser: username, deepLinkVideoId: deepLink.videoId, onDeepLinkHandled: () => { setDeepLink({}); clearDeepLink(); }, onNavigateToEvent: (eventId) => { setDeepLink({ eventId }); navigateTab('feed'); } })
     ),
     React.createElement('nav', { className: 'nav' },
