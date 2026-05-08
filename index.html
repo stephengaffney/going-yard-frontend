@@ -1861,10 +1861,79 @@ body {
 }
 
 @keyframes fadeOut { to { opacity: 0; } }
+
+/* ── Splash Screen ── */
+#splash {
+  position: fixed;
+  inset: 0;
+  background: var(--bg);
+  z-index: 9999;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 1.25rem;
+  pointer-events: none;
+  transition: opacity 0.5s ease;
+}
+
+#splash.fade-out {
+  opacity: 0;
+}
+
+#splash.hidden {
+  display: none;
+}
+
+.splash-mug {
+  font-size: 3.5rem;
+  line-height: 1;
+  display: inline-block;
+  animation: mug-spin 1s linear infinite;
+  transform-origin: center center;
+  /* slight wobble makes it feel like liquid sloshing */
+  filter: drop-shadow(0 0 12px rgba(232,193,74,0.35));
+}
+
+@keyframes mug-spin {
+  0%   { transform: rotate(0deg) scale(1); }
+  25%  { transform: rotate(90deg) scale(1.06); }
+  50%  { transform: rotate(180deg) scale(1); }
+  75%  { transform: rotate(270deg) scale(1.06); }
+  100% { transform: rotate(360deg) scale(1); }
+}
+
+.splash-title {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 2.6rem;
+  color: #e8c14a;          /* gold — matches --accent default before team theming */
+  letter-spacing: 3px;
+  line-height: 1;
+  text-align: center;
+}
+
+.splash-sub {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 0.85rem;
+  color: #555;
+  letter-spacing: 4px;
+  text-transform: uppercase;
+  text-align: center;
+  margin-top: -0.5rem;
+}
+
 </style>
 </head>
 <body>
 <div id="root"></div>
+
+<div id="splash">
+  <span class="splash-mug">🍺</span>
+  <div>
+    <div class="splash-title">Going Yard</div>
+    <div class="splash-sub">&amp; Drinking Hard</div>
+  </div>
+</div>
 
 <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
 <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
@@ -3835,6 +3904,7 @@ function App() {
           });
       }
       setAuthChecked(true);
+      window._dismissSplash && window._dismissSplash();
     });
 
     const { data: { subscription } } = sb.auth.onAuthStateChange((_event, session) => {
@@ -3953,6 +4023,32 @@ function App() {
 ReactDOM.createRoot(document.getElementById('root')).render(React.createElement(App));
 
 // ── Service Worker + Push ─────────────────────────────────────────────────
+
+// ── Splash ────────────────────────────────────────────────────────────────
+(function () {
+  const splashEl = document.getElementById('splash');
+  if (!splashEl) return;
+
+  const MIN_MS = 2000; // always visible for at least 2 s
+  const start  = Date.now();
+  let dismissed = false;
+
+  function dismiss() {
+    if (dismissed) return;
+    dismissed = true;
+    const elapsed = Date.now() - start;
+    const delay   = Math.max(0, MIN_MS - elapsed);
+    setTimeout(() => {
+      splashEl.classList.add('fade-out');
+      splashEl.addEventListener('transitionend', () => {
+        splashEl.classList.add('hidden');
+      }, { once: true });
+    }, delay);
+  }
+
+  // Expose so App can call it after auth check + first render
+  window._dismissSplash = dismiss;
+})();
 
 async function registerPush(accessToken) {
   if (!('serviceWorker' in navigator) || !('PushManager' in window)) {
