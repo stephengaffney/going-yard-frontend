@@ -4349,8 +4349,7 @@ function NotificationCenter({ currentUser }) {
 
   const handleNotifClick = (n) => {
     const d = n.data || {};
-    console.log('notif clicked:', JSON.stringify(d));
-    console.log('navigateToEvent:', typeof window.__navigateToEvent);
+    alert(JSON.stringify(d) + ' | nav: ' + typeof window.__navigateToEvent);
     setOpen(false);
     setTimeout(() => {
       if (d.video_id) {
