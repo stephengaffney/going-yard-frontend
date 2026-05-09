@@ -4350,11 +4350,14 @@ function NotificationCenter({ currentUser }) {
   const handleNotifClick = (n) => {
     const d = n.data || {};
     setOpen(false);
-    if (d.video_id) {
-      window.__navigateToVideo && window.__navigateToVideo(d.video_id);
-    } else if (d.hr_event_id) {
-      window.__navigateToEvent && window.__navigateToEvent(d.hr_event_id);
-    }
+    // Small delay so the dropdown closes before navigation fires
+    setTimeout(() => {
+      if (d.video_id) {
+        window.__navigateToVideo && window.__navigateToVideo(d.video_id);
+      } else if (d.hr_event_id) {
+        window.__navigateToEvent && window.__navigateToEvent(d.hr_event_id);
+      }
+    }, 50);
   };
 
   const [dropdownPos, setDropdownPos] = useState({ top: '60px', right: '12px' });
