@@ -4317,9 +4317,9 @@ function NotificationCenter({ currentUser }) {
   useEffect(() => {
     if (!open) return;
     const handler = (e) => {
-      if (dropdownRef.current && !dropdownRef.current.contains(e.target)) {
-        setOpen(false);
-      }
+      const inBell = dropdownRef.current && dropdownRef.current.contains(e.target);
+      const inDropdown = e.target.closest('.notif-dropdown');
+      if (!inBell && !inDropdown) setOpen(false);
     };
     document.addEventListener('mousedown', handler);
     document.addEventListener('touchstart', handler);
@@ -4359,6 +4359,17 @@ function NotificationCenter({ currentUser }) {
     }
   };
 
+  const [dropdownPos, setDropdownPos] = useState({ top: '60px', right: '12px' });
+
+  useEffect(() => {
+    if (open && dropdownRef.current) {
+      const rect = dropdownRef.current.getBoundingClientRect();
+      setDropdownPos({
+        top: rect.bottom + 8 + 'px',
+        right: Math.max(8, window.innerWidth - rect.right) + 'px',
+      });
+    }
+  }, [open]);
   return React.createElement(React.Fragment, null,
     React.createElement('div', { className: 'notif-bell-wrap', ref: dropdownRef },
       React.createElement('button', { className: 'notif-bell-btn', onClick: handleOpen },
@@ -4372,20 +4383,7 @@ function NotificationCenter({ currentUser }) {
     open && createPortal(
       React.createElement('div', {
         className: 'notif-dropdown',
-        style: {
-          position: 'fixed',
-          top: (() => {
-            const el = dropdownRef.current;
-            if (!el) return '60px';
-            return el.getBoundingClientRect().bottom + 8 + 'px';
-          })(),
-          right: (() => {
-            const el = dropdownRef.current;
-            if (!el) return '12px';
-            return Math.max(8, window.innerWidth - el.getBoundingClientRect().right) + 'px';
-          })(),
-          zIndex: 9999,
-        }
+        style: { position: 'fixed', top: dropdownPos.top, right: dropdownPos.right, zIndex: 9999 }
       },
         React.createElement('div', { className: 'notif-dropdown-header' },
           React.createElement('div', { className: 'notif-dropdown-title' }, 'Notifications'),
