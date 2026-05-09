@@ -4319,11 +4319,13 @@ function NotificationCenter({ currentUser }) {
     const handler = (e) => {
       const inBell = dropdownRef.current && dropdownRef.current.contains(e.target);
       const inDropdown = e.target.closest('.notif-dropdown');
-      if (!inBell && !inDropdown) setOpen(false);
+      if (!inBell && !inDropdown) {
+        setOpen(false);
+      }
     };
-    document.addEventListener('mousedown', handler);
+    document.addEventListener('click', handler);
     return () => {
-      document.removeEventListener('mousedown', handler);
+      document.removeEventListener('click', handler);
     };
   }, [open]);
 
