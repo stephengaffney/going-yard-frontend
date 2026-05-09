@@ -4322,10 +4322,8 @@ function NotificationCenter({ currentUser }) {
       if (!inBell && !inDropdown) setOpen(false);
     };
     document.addEventListener('mousedown', handler);
-    document.addEventListener('touchstart', handler);
     return () => {
       document.removeEventListener('mousedown', handler);
-      document.removeEventListener('touchstart', handler);
     };
   }, [open]);
 
@@ -4366,7 +4364,7 @@ function NotificationCenter({ currentUser }) {
       const rect = dropdownRef.current.getBoundingClientRect();
       setDropdownPos({
         top: rect.bottom + 8 + 'px',
-        right: Math.max(8, window.innerWidth - rect.right) + 'px',
+        right: Math.max(8, document.documentElement.clientWidth - rect.right) + 'px',
       });
     }
   }, [open]);
