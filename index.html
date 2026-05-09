@@ -4430,6 +4430,8 @@ function App() {
   const latestEventId                     = useRef(null);
 
   useEffect(() => {
+    window.__navigateToEvent = (eventId) => { setDeepLink({ eventId }); navigateTab('feed'); };
+    window.__navigateToVideo = (videoId) => { setDeepLink({ videoId }); navigateTab('videos'); };
     // Handle deep link on first load
     const dl = getDeepLink();
     if (dl.tab === 'videos' || dl.videoId) {
@@ -4542,11 +4544,6 @@ function App() {
 
       ),
       React.createElement('div', { className: 'header-user' },
-        (() => {
-          window.__navigateToEvent = (eventId) => { setDeepLink({ eventId }); navigateTab('feed'); };
-          window.__navigateToVideo = (videoId) => { setDeepLink({ videoId }); navigateTab('videos'); };
-          return null;
-        })(),
         username === 'steve' && React.createElement('button', {
           className: `video-toggle ${videosEnabled ? 'on' : 'off'}`,
           onClick: toggleVideos,
