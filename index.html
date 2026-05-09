@@ -4430,8 +4430,18 @@ function App() {
   const latestEventId                     = useRef(null);
 
   useEffect(() => {
-    window.__navigateToEvent = (eventId) => { setDeepLink({ eventId }); navigateTab('feed'); };
-    window.__navigateToVideo = (videoId) => { setDeepLink({ videoId }); navigateTab('videos'); };
+    window.__navigateToEvent = (eventId) => {
+      setDeepLink({ eventId });
+      setTab('feed');
+      setTabAnimating(true);
+      setTimeout(() => setTabAnimating(false), 260);
+    };
+    window.__navigateToVideo = (videoId) => {
+      setDeepLink({ videoId });
+      setTab('videos');
+      setTabAnimating(true);
+      setTimeout(() => setTabAnimating(false), 260);
+    };
     // Handle deep link on first load
     const dl = getDeepLink();
     if (dl.tab === 'videos' || dl.videoId) {
