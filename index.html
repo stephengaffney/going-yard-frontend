@@ -4364,7 +4364,7 @@ function NotificationCenter({ currentUser }) {
       const rect = dropdownRef.current.getBoundingClientRect();
       setDropdownPos({
         top: rect.bottom + 8 + 'px',
-        right: Math.max(8, document.documentElement.clientWidth - rect.right) + 'px',
+        left: Math.min(rect.left, document.documentElement.clientWidth - 328) + 'px',
       });
     }
   }, [open]);
@@ -4381,7 +4381,7 @@ function NotificationCenter({ currentUser }) {
     open && createPortal(
       React.createElement('div', {
         className: 'notif-dropdown',
-        style: { position: 'fixed', top: dropdownPos.top, right: dropdownPos.right, zIndex: 9999 }
+        style: { position: 'fixed', top: dropdownPos.top, left: dropdownPos.left, zIndex: 9999 }
       },
         React.createElement('div', { className: 'notif-dropdown-header' },
           React.createElement('div', { className: 'notif-dropdown-title' }, 'Notifications'),
