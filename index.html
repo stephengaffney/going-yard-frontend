@@ -4349,8 +4349,9 @@ function NotificationCenter({ currentUser }) {
 
   const handleNotifClick = (n) => {
     const d = n.data || {};
+    console.log('notif clicked:', JSON.stringify(d));
+    console.log('navigateToEvent:', typeof window.__navigateToEvent);
     setOpen(false);
-    // Small delay so the dropdown closes before navigation fires
     setTimeout(() => {
       if (d.video_id) {
         window.__navigateToVideo && window.__navigateToVideo(d.video_id);
