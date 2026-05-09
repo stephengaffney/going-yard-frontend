@@ -3777,9 +3777,25 @@ function FeedScreen({ currentUser, showToast, videosEnabled, onNavigateVideos, d
   const [search, setSearch]   = useState('');
   const [filters, setFilters] = useState({});
   const [highlightId, setHighlightId] = useState(deepLinkEventId || null);
+  useEffect(() => {
+    if (deepLinkEventId) setHighlightId(deepLinkEventId);
+  }, [deepLinkEventId]);
   const [drinkLogs, setDrinkLogs] = useState({});
 
 
+
+  useEffect(() => {
+    if (deepLinkEventId && !loading) {
+      setTimeout(() => {
+        const el = document.getElementById(`hr-card-${deepLinkEventId}`);
+        if (el) {
+          el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          setHighlightId(deepLinkEventId);
+          setTimeout(() => { setHighlightId(null); onDeepLinkHandled && onDeepLinkHandled(); }, 2000);
+        }
+      }, 400);
+    }
+  }, [deepLinkEventId]);
 
   useEffect(() => {
     loadEvents();
