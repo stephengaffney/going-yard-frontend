@@ -3841,10 +3841,16 @@ function FeedScreen({ currentUser, showToast, videosEnabled, onNavigateVideos, d
   const anyTypeFilter   = ['i_drink','you_drink'].some(k => filters[k]);
 
   const filtered = events.filter(e => {
-    // Search: player name or drinker username
+    // Search: player name, drinker (assigner), or actual drinker (given_to for you_drink)
     if (search) {
-      const q = search.toLowerCase();
-      if (!e.full_name.toLowerCase().includes(q) && !e.drinker.toLowerCase().includes(q)) return false;
+      const q       = search.toLowerCase();
+      const dl      = drinkLogs[e.id];
+      const givenTo = dl?.given_to?.toLowerCase() || '';
+      const matches =
+        e.full_name.toLowerCase().includes(q) ||
+        e.drinker.toLowerCase().includes(q) ||
+        givenTo.includes(q);
+      if (!matches) return false;
     }
     // Date range filter
     if (filters.dateStart) {
@@ -3919,14 +3925,7 @@ function LeaderboardScreen() {
 
       if (allDrinkLogs.data) {
         allDrinkLogs.data.forEach(log => {
-          let drinker;
-          if (log.drink_type === 'i_drink') {
-            drinker = log.username;
-          } else {
-            // you_drink: only count if actually assigned to someone
-            if (!log.given_to) return;
-            drinker = log.given_to;
-          }
+          const drinker = (log.drink_type === 'you_drink' ? log.given_to : log.username) || log.username;
           const key = drinker.toLowerCase();
           if (counts[key] === undefined) return;
           counts[key].drinks++;
