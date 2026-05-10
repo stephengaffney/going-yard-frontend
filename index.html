@@ -1988,11 +1988,15 @@ body {
 
 /* ── Notification Dropdown ── */
 .notif-dropdown {
+  position: absolute;
+  top: calc(100% + 10px);
+  right: 0;
   width: 320px;
   background: var(--surface);
   border: 1px solid var(--border);
   border-radius: 16px;
   box-shadow: 0 8px 32px rgba(0,0,0,0.5);
+  z-index: 400;
   overflow: hidden;
   animation: tab-enter 0.2s ease both;
 }
@@ -2164,7 +2168,6 @@ body {
 
 <script>
 const { useState, useEffect, useCallback, useRef } = React;
-const { createPortal } = ReactDOM;
 const { createClient } = supabase;
 
 const SUPABASE_URL  = 'https://rhqyfjikjkwrzzhttuwq.supabase.co';
@@ -3777,25 +3780,9 @@ function FeedScreen({ currentUser, showToast, videosEnabled, onNavigateVideos, d
   const [search, setSearch]   = useState('');
   const [filters, setFilters] = useState({});
   const [highlightId, setHighlightId] = useState(deepLinkEventId || null);
-  useEffect(() => {
-    if (deepLinkEventId) setHighlightId(deepLinkEventId);
-  }, [deepLinkEventId]);
   const [drinkLogs, setDrinkLogs] = useState({});
 
 
-
-  useEffect(() => {
-    if (deepLinkEventId && !loading) {
-      setTimeout(() => {
-        const el = document.getElementById(`hr-card-${deepLinkEventId}`);
-        if (el) {
-          el.scrollIntoView({ behavior: 'smooth', block: 'center' });
-          setHighlightId(deepLinkEventId);
-          setTimeout(() => { setHighlightId(null); onDeepLinkHandled && onDeepLinkHandled(); }, 2000);
-        }
-      }, 400);
-    }
-  }, [deepLinkEventId]);
 
   useEffect(() => {
     loadEvents();
@@ -3932,7 +3919,14 @@ function LeaderboardScreen() {
 
       if (allDrinkLogs.data) {
         allDrinkLogs.data.forEach(log => {
-          const drinker = (log.drink_type === 'you_drink' ? log.given_to : log.username) || log.username;
+          let drinker;
+          if (log.drink_type === 'i_drink') {
+            drinker = log.username;
+          } else {
+            // you_drink: only count if actually assigned to someone
+            if (!log.given_to) return;
+            drinker = log.given_to;
+          }
           const key = drinker.toLowerCase();
           if (counts[key] === undefined) return;
           counts[key].drinks++;
@@ -4287,7 +4281,7 @@ function NotificationCenter({ currentUser }) {
 
   const NOTIF_ICONS = {
     hr: '⚾', assignment: '🍺', approval: '✅',
-    late: '🔴', comment: '💬', like: '👍', video: '🎥',
+    late: '🔴', comment: '💬', like: '❤️', video: '🎥',
   };
 
   const load = async () => {
@@ -4297,15 +4291,7 @@ function NotificationCenter({ currentUser }) {
       const res = await fetch(`${BACKEND}/notifications`, {
         headers: { 'Authorization': `Bearer ${session.access_token}` }
       });
-      if (res.ok) {
-        const all = await res.json();
-        // Filter out notifications caused by the current user's own actions
-        const filtered = all.filter(n => {
-          const body = (n.body || '').toLowerCase();
-          return !body.startsWith(currentUser.toLowerCase() + ' ');
-        });
-        setNotifs(filtered);
-      }
+      if (res.ok) setNotifs(await res.json());
     } catch (e) { console.error('[NOTIF]', e); }
     setLoading(false);
   };
@@ -4333,15 +4319,15 @@ function NotificationCenter({ currentUser }) {
   useEffect(() => {
     if (!open) return;
     const handler = (e) => {
-      const inBell = dropdownRef.current && dropdownRef.current.contains(e.target);
-      const inDropdown = e.target.closest('.notif-dropdown');
-      if (!inBell && !inDropdown) {
+      if (dropdownRef.current && !dropdownRef.current.contains(e.target)) {
         setOpen(false);
       }
     };
-    document.addEventListener('click', handler);
+    document.addEventListener('mousedown', handler);
+    document.addEventListener('touchstart', handler);
     return () => {
-      document.removeEventListener('click', handler);
+      document.removeEventListener('mousedown', handler);
+      document.removeEventListener('touchstart', handler);
     };
   }, [open]);
 
@@ -4368,66 +4354,45 @@ function NotificationCenter({ currentUser }) {
   const handleNotifClick = (n) => {
     const d = n.data || {};
     setOpen(false);
-    setTimeout(() => {
-      if (d.video_id) {
-        window.__navigateToVideo && window.__navigateToVideo(d.video_id);
-      } else if (d.hr_event_id) {
-        window.__navigateToEvent && window.__navigateToEvent(d.hr_event_id);
-      }
-    }, 50);
+    if (d.video_id) {
+      window.__navigateToVideo && window.__navigateToVideo(d.video_id);
+    } else if (d.hr_event_id) {
+      window.__navigateToEvent && window.__navigateToEvent(d.hr_event_id);
+    }
   };
 
-  const [dropdownPos, setDropdownPos] = useState({ top: '60px', right: '12px' });
-
-  useEffect(() => {
-    if (open && dropdownRef.current) {
-      const rect = dropdownRef.current.getBoundingClientRect();
-      setDropdownPos({
-        top: rect.bottom + 8 + 'px',
-        left: Math.min(rect.left, document.documentElement.clientWidth - 328) + 'px',
-      });
-    }
-  }, [open]);
-  return React.createElement(React.Fragment, null,
-    React.createElement('div', { className: 'notif-bell-wrap', ref: dropdownRef },
-      React.createElement('button', { className: 'notif-bell-btn', onClick: handleOpen },
-        React.createElement('svg', { viewBox: '0 0 24 24', fill: open ? 'currentColor' : 'none', stroke: 'currentColor', strokeWidth: 1.8 },
-          React.createElement('path', { d: 'M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9' }),
-          React.createElement('path', { d: 'M13.73 21a2 2 0 0 1-3.46 0' })
-        ),
-        unreadCount > 0 && React.createElement('span', { className: 'notif-count' }, unreadCount > 9 ? '9+' : unreadCount)
-      )
-    ),
-    open && createPortal(
-      React.createElement('div', {
-        className: 'notif-dropdown',
-        style: { position: 'fixed', top: dropdownPos.top, left: dropdownPos.left, zIndex: 9999 }
-      },
-        React.createElement('div', { className: 'notif-dropdown-header' },
-          React.createElement('div', { className: 'notif-dropdown-title' }, 'Notifications'),
-          React.createElement('button', { className: 'notif-mark-read-btn', onClick: markAllRead }, 'Mark all read')
-        ),
-        React.createElement('div', { className: 'notif-list' },
-          loading
-            ? React.createElement('div', { className: 'notif-empty' }, 'Loading...')
-            : notifs.length === 0
-              ? React.createElement('div', { className: 'notif-empty' }, 'No notifications yet')
-              : notifs.map(n => React.createElement('div', {
-                  key: n.id,
-                  className: `notif-item ${!n.read ? 'unread' : ''}`,
-                  onClick: () => handleNotifClick(n)
-                },
-                  !n.read && React.createElement('div', { className: 'notif-unread-dot' }),
-                  React.createElement('div', { className: 'notif-icon' }, NOTIF_ICONS[n.type] || '🔔'),
-                  React.createElement('div', { className: 'notif-content' },
-                    React.createElement('div', { className: 'notif-title' }, n.title),
-                    React.createElement('div', { className: 'notif-body' }, n.body)
-                  ),
-                  React.createElement('div', { className: 'notif-time' }, relativeTime(n.created_at))
-                ))
-        )
+  return React.createElement('div', { className: 'notif-bell-wrap', ref: dropdownRef },
+    React.createElement('button', { className: 'notif-bell-btn', onClick: handleOpen },
+      React.createElement('svg', { viewBox: '0 0 24 24', fill: open ? 'currentColor' : 'none', stroke: 'currentColor', strokeWidth: 1.8 },
+        React.createElement('path', { d: 'M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9' }),
+        React.createElement('path', { d: 'M13.73 21a2 2 0 0 1-3.46 0' })
       ),
-      document.body
+      unreadCount > 0 && React.createElement('span', { className: 'notif-count' }, unreadCount > 9 ? '9+' : unreadCount)
+    ),
+    open && React.createElement('div', { className: 'notif-dropdown' },
+      React.createElement('div', { className: 'notif-dropdown-header' },
+        React.createElement('div', { className: 'notif-dropdown-title' }, 'Notifications'),
+        React.createElement('button', { className: 'notif-mark-read-btn', onClick: markAllRead }, 'Mark all read')
+      ),
+      React.createElement('div', { className: 'notif-list' },
+        loading
+          ? React.createElement('div', { className: 'notif-empty' }, 'Loading...')
+          : notifs.length === 0
+            ? React.createElement('div', { className: 'notif-empty' }, 'No notifications yet')
+            : notifs.map(n => React.createElement('div', {
+                key: n.id,
+                className: `notif-item ${!n.read ? 'unread' : ''}`,
+                onClick: () => handleNotifClick(n)
+              },
+                !n.read && React.createElement('div', { className: 'notif-unread-dot' }),
+                React.createElement('div', { className: 'notif-icon' }, NOTIF_ICONS[n.type] || '🔔'),
+                React.createElement('div', { className: 'notif-content' },
+                  React.createElement('div', { className: 'notif-title' }, n.title),
+                  React.createElement('div', { className: 'notif-body' }, n.body)
+                ),
+                React.createElement('div', { className: 'notif-time' }, relativeTime(n.created_at))
+              ))
+      )
     )
   );
 }
@@ -4446,18 +4411,6 @@ function App() {
   const latestEventId                     = useRef(null);
 
   useEffect(() => {
-    window.__navigateToEvent = (eventId) => {
-      setDeepLink({ eventId });
-      setTab('feed');
-      setTabAnimating(true);
-      setTimeout(() => setTabAnimating(false), 260);
-    };
-    window.__navigateToVideo = (videoId) => {
-      setDeepLink({ videoId });
-      setTab('videos');
-      setTabAnimating(true);
-      setTimeout(() => setTabAnimating(false), 260);
-    };
     // Handle deep link on first load
     const dl = getDeepLink();
     if (dl.tab === 'videos' || dl.videoId) {
@@ -4570,6 +4523,11 @@ function App() {
 
       ),
       React.createElement('div', { className: 'header-user' },
+        (() => {
+          window.__navigateToEvent = (eventId) => { setDeepLink({ eventId }); navigateTab('feed'); };
+          window.__navigateToVideo = (videoId) => { setDeepLink({ videoId }); navigateTab('videos'); };
+          return null;
+        })(),
         username === 'steve' && React.createElement('button', {
           className: `video-toggle ${videosEnabled ? 'on' : 'off'}`,
           onClick: toggleVideos,
