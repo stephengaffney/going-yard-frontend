@@ -751,6 +751,142 @@ body {
   color: #e84a4a !important;
 }
 
+/* ── Reply threading ── */
+.comment-replies {
+  margin-left: 36px;
+  margin-top: 4px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  border-left: 2px solid var(--border);
+  padding-left: 8px;
+}
+
+.reply-btn {
+  background: none;
+  border: none;
+  color: var(--muted);
+  font-family: 'DM Sans', sans-serif;
+  font-size: 0.7rem;
+  cursor: pointer;
+  padding: 2px 0;
+  text-align: left;
+  transition: color 0.15s;
+}
+.reply-btn:hover { color: var(--accent); }
+
+.reply-input-row {
+  display: flex;
+  gap: 0.4rem;
+  margin-left: 36px;
+  margin-top: 4px;
+}
+
+.reply-input {
+  flex: 1;
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 0.35rem 0.75rem;
+  color: var(--text);
+  font-family: 'DM Sans', sans-serif;
+  font-size: 0.8rem;
+  outline: none;
+}
+.reply-input:focus { border-color: var(--accent); }
+
+/* ── Settings Screen ── */
+.settings-screen {
+  flex: 1;
+  padding: 1rem 1rem 6rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.settings-section-title {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 1rem;
+  letter-spacing: 2px;
+  color: var(--muted);
+  text-transform: uppercase;
+  margin-bottom: 0.5rem;
+  padding: 0 0.25rem;
+}
+
+.settings-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+.settings-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.875rem 1rem;
+  border-bottom: 1px solid var(--border);
+  gap: 1rem;
+}
+.settings-row:last-child { border-bottom: none; }
+
+.settings-row-label {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.875rem;
+  color: var(--text);
+}
+
+.settings-row-icon { font-size: 1rem; }
+
+.toggle-switch {
+  position: relative;
+  width: 44px;
+  height: 24px;
+  flex-shrink: 0;
+}
+
+.toggle-switch input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+  position: absolute;
+}
+
+.toggle-track {
+  position: absolute;
+  inset: 0;
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  cursor: pointer;
+  transition: background 0.2s, border-color 0.2s;
+}
+
+.toggle-switch input:checked + .toggle-track {
+  background: rgba(232,193,74,0.2);
+  border-color: var(--accent);
+}
+
+.toggle-track::after {
+  content: '';
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: var(--muted);
+  transition: transform 0.2s, background 0.2s;
+}
+
+.toggle-switch input:checked + .toggle-track::after {
+  transform: translateX(20px);
+  background: var(--accent);
+}
+
 /* ── Leaderboard ── */
 .leaderboard-screen { flex: 1; padding: 1rem 1rem 6rem; }
 
@@ -2987,9 +3123,10 @@ function UploadModal({ event, drinkLog, currentUser, onClose, onUploaded, showTo
           method: 'POST',
           headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${session.access_token}` },
           body: JSON.stringify({
-            hr_event_id: event.id,
-            player_name: event.full_name,
-            video_id:    videoRow?.id || null,
+            hr_event_id:    event.id,
+            player_name:    event.full_name,
+            video_id:       videoRow?.id || null,
+            actual_drinker: actualDrinker,
           })
         });
       } catch (e) {
@@ -3122,11 +3259,13 @@ function UploadModal({ event, drinkLog, currentUser, onClose, onUploaded, showTo
 // ── Videos Screen ─────────────────────────────────────────────────────────
 
 function VideoCard({ v, currentUser, onNavigateToEvent, highlight }) {
-  const [likes, setLikes]         = useState([]);
-  const [comments, setComments]   = useState([]);
+  const [likes, setLikes]           = useState([]);
+  const [comments, setComments]     = useState([]);
   const [assignment, setAssignment] = useState(null);
   const [commentText, setCommentText] = useState('');
   const [showComments, setShowComments] = useState(true);
+  const [replyingTo, setReplyingTo] = useState(null); // comment id
+  const [replyText, setReplyText]   = useState('');
 
   const color       = USER_COLORS[v.actual_drinker] || '#888';
   const playerColor = PLAYER_COLORS[v.player_key] || '#888';
@@ -3166,18 +3305,19 @@ function VideoCard({ v, currentUser, onNavigateToEvent, highlight }) {
   };
 
   const commentSubmitting = useRef(false);
-  const addComment = async () => {
-    if (!commentText.trim() || commentSubmitting.current) return;
+  const addComment = async (parentId = null) => {
+    const text = parentId ? replyText.trim() : commentText.trim();
+    if (!text || commentSubmitting.current) return;
     commentSubmitting.current = true;
-    const text = commentText.trim();
-    setCommentText('');
+    if (parentId) setReplyText(''); else setCommentText('');
     try {
       const { data: { session } } = await sb.auth.getSession();
       await fetch(`${BACKEND}/video-comments`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${session.access_token}` },
-        body: JSON.stringify({ video_id: v.id, body: text })
+        body: JSON.stringify({ video_id: v.id, body: text, parent_comment_id: parentId || null })
       });
+      setReplyingTo(null);
       loadData();
     } finally { commentSubmitting.current = false; }
   };
@@ -3191,8 +3331,49 @@ function VideoCard({ v, currentUser, onNavigateToEvent, highlight }) {
     loadData();
   };
 
+  // Build threaded comment tree
+  const topLevel = comments.filter(c => !c.parent_comment_id);
+  const replies  = comments.filter(c =>  c.parent_comment_id);
+  const repliesFor = (id) => replies.filter(r => r.parent_comment_id === id);
+
+  const renderComment = (c, isReply = false) => React.createElement('div', { key: c.id, className: 'comment' },
+    React.createElement(Avatar, { name: c.username, size: isReply ? 22 : 28 }),
+    React.createElement('div', { style: { flex: 1 } },
+      React.createElement('div', { className: 'comment-body' },
+        React.createElement('div', { className: 'comment-username', style: { color: USER_COLORS[c.username] || '#888' } }, cap(c.username)),
+        React.createElement('div', { className: 'comment-text' }, c.body)
+      ),
+      !isReply && React.createElement('button', {
+        className: 'reply-btn',
+        onClick: () => { if (replyingTo === c.id) { setReplyingTo(null); setReplyText(''); } else setReplyingTo(c.id); }
+      }, replyingTo === c.id ? 'Cancel' : 'Reply'),
+      repliesFor(c.id).length > 0 && React.createElement('div', { className: 'comment-replies' },
+        repliesFor(c.id).map(r => renderComment(r, true))
+      ),
+      replyingTo === c.id && React.createElement('div', { className: 'reply-input-row' },
+        React.createElement('input', {
+          className: 'reply-input',
+          placeholder: `Reply to ${cap(c.username)}...`,
+          value: replyText,
+          autoFocus: true,
+          onChange: e => setReplyText(e.target.value),
+          onKeyDown: e => e.key === 'Enter' && addComment(c.id)
+        }),
+        React.createElement('button', { className: 'send-btn', onClick: () => addComment(c.id) },
+          React.createElement('svg', { viewBox: '0 0 24 24', fill: 'none', stroke: '#0a0a0f', strokeWidth: 2.5 },
+            React.createElement('line', { x1: '22', y1: '2', x2: '11', y2: '13' }),
+            React.createElement('polygon', { points: '22 2 15 22 11 13 2 9 22 2' })
+          )
+        )
+      )
+    ),
+    c.username === currentUser && React.createElement('button', {
+      className: 'comment-delete-btn',
+      onClick: () => deleteComment(c.id)
+    }, '✕')
+  );
+
   return React.createElement('div', { key: v.id, id: `video-card-${v.id}`, className: `video-card${highlight ? ' highlight' : ''}` },
-    // Header
     React.createElement('div', { className: 'video-card-header' },
       React.createElement(Avatar, { name: v.actual_drinker, size: 36, color }),
       React.createElement('div', { className: 'video-card-meta' },
@@ -3206,7 +3387,6 @@ function VideoCard({ v, currentUser, onNavigateToEvent, highlight }) {
       React.createElement('div', { className: 'video-card-time' }, timeAgo)
     ),
 
-    // Assignment message (you_drink only, when uploader ≠ actual_drinker)
     assignment && v.uploader !== v.actual_drinker &&
       React.createElement('div', { className: 'video-assignment-msg' },
         React.createElement('strong', null, cap(assignment.assigner)),
@@ -3215,7 +3395,6 @@ function VideoCard({ v, currentUser, onNavigateToEvent, highlight }) {
         assignment.message ? ` — "${assignment.message}"` : ''
       ),
 
-    // Video player
     React.createElement('video', {
       className: 'video-player',
       src: v.public_url,
@@ -3224,23 +3403,19 @@ function VideoCard({ v, currentUser, onNavigateToEvent, highlight }) {
       preload: 'metadata',
     }),
 
-    // Actions row
     React.createElement('div', { className: 'video-card-actions' },
-      // Like
       React.createElement('button', { className: `action-btn ${userLiked ? 'liked' : ''}`, onClick: toggleLike },
         React.createElement('svg', { viewBox: '0 0 24 24', fill: userLiked ? 'currentColor' : 'none', stroke: 'currentColor', strokeWidth: 2 },
           React.createElement('path', { d: 'M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z' })
         ),
         likes.length > 0 && likes.length
       ),
-      // Comments toggle
       React.createElement('button', { className: 'action-btn', onClick: () => setShowComments(!showComments) },
         React.createElement('svg', { viewBox: '0 0 24 24', fill: 'none', stroke: 'currentColor', strokeWidth: 2 },
           React.createElement('path', { d: 'M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z' })
         ),
         comments.length > 0 && comments.length
       ),
-      // View feed card button
       React.createElement('button', {
         className: 'feed-link-btn',
         onClick: () => onNavigateToEvent && onNavigateToEvent(v.hr_event_id)
@@ -3252,20 +3427,9 @@ function VideoCard({ v, currentUser, onNavigateToEvent, highlight }) {
       )
     ),
 
-    // Comments
     showComments && React.createElement('div', null,
-      comments.length > 0 && React.createElement('div', { className: 'video-comments-section' },
-        comments.map(c => React.createElement('div', { key: c.id, className: 'comment' },
-          React.createElement(Avatar, { name: c.username, size: 28 }),
-          React.createElement('div', { className: 'comment-body' },
-            React.createElement('div', { className: 'comment-username', style: { color: USER_COLORS[c.username] || '#888' } }, cap(c.username)),
-            React.createElement('div', { className: 'comment-text' }, c.body)
-          ),
-          c.username === currentUser && React.createElement('button', {
-            className: 'comment-delete-btn',
-            onClick: () => deleteComment(c.id)
-          }, '✕')
-        ))
+      topLevel.length > 0 && React.createElement('div', { className: 'video-comments-section' },
+        topLevel.map(c => renderComment(c))
       ),
       React.createElement('div', { className: 'comment-input-row' },
         React.createElement('input', {
@@ -3275,7 +3439,7 @@ function VideoCard({ v, currentUser, onNavigateToEvent, highlight }) {
           onChange: e => setCommentText(e.target.value),
           onKeyDown: e => e.key === 'Enter' && addComment()
         }),
-        React.createElement('button', { className: 'send-btn', onClick: addComment },
+        React.createElement('button', { className: 'send-btn', onClick: () => addComment() },
           React.createElement('svg', { viewBox: '0 0 24 24', fill: 'none', stroke: '#0a0a0f', strokeWidth: 2.5 },
             React.createElement('line', { x1: '22', y1: '2', x2: '11', y2: '13' }),
             React.createElement('polygon', { points: '22 2 15 22 11 13 2 9 22 2' })
@@ -3356,6 +3520,8 @@ function HRCard({ event, currentUser, onAssigned, showToast, videosEnabled, onNa
   const [comments, setComments]     = useState([]);
   const [showComments, setShowComments] = useState(true);
   const [commentText, setCommentText]   = useState('');
+  const [replyingTo, setReplyingTo]     = useState(null);
+  const [replyText, setReplyText]       = useState('');
   const [showAssign, setShowAssign]   = useState(false);
   const [showUpload, setShowUpload]   = useState(false);
   const [assignment, setAssignment]   = useState(null);
@@ -3434,19 +3600,19 @@ function HRCard({ event, currentUser, onAssigned, showToast, videosEnabled, onNa
   };
 
   const commentSubmitting = useRef(false);
-  const addComment = async () => {
-    if (!commentText.trim()) return;
-    if (commentSubmitting.current) return;
+  const addComment = async (parentId = null) => {
+    const text = parentId ? replyText.trim() : commentText.trim();
+    if (!text || commentSubmitting.current) return;
     commentSubmitting.current = true;
-    const text = commentText.trim();
-    setCommentText('');
+    if (parentId) setReplyText(''); else setCommentText('');
     try {
       const { data: { session } } = await sb.auth.getSession();
       await fetch(`${BACKEND}/comments`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${session.access_token}` },
-        body: JSON.stringify({ hr_event_id: event.id, body: text })
+        body: JSON.stringify({ hr_event_id: event.id, body: text, parent_comment_id: parentId || null })
       });
+      setReplyingTo(null);
       loadData();
     } finally {
       commentSubmitting.current = false;
@@ -3604,35 +3770,70 @@ function HRCard({ event, currentUser, onAssigned, showToast, videosEnabled, onNa
 
     // Comments section
     showComments && React.createElement('div', null,
-      comments.length > 0 && React.createElement('div', { className: 'comments-section' },
-        comments.map(c => React.createElement('div', { key: c.id, className: 'comment' },
-          React.createElement(Avatar, { name: c.username, size: 28 }),
-          React.createElement('div', { className: 'comment-body' },
-            React.createElement('div', { className: 'comment-username', style: { color: USER_COLORS[c.username] || '#888' } }, cap(c.username)),
-            React.createElement('div', { className: 'comment-text' }, c.body)
+      (() => {
+        const topLevel = comments.filter(c => !c.parent_comment_id);
+        const replies  = comments.filter(c =>  c.parent_comment_id);
+        const repliesFor = (id) => replies.filter(r => r.parent_comment_id === id);
+
+        const renderComment = (c, isReply = false) => React.createElement('div', { key: c.id, className: 'comment' },
+          React.createElement(Avatar, { name: c.username, size: isReply ? 22 : 28 }),
+          React.createElement('div', { style: { flex: 1 } },
+            React.createElement('div', { className: 'comment-body' },
+              React.createElement('div', { className: 'comment-username', style: { color: USER_COLORS[c.username] || '#888' } }, cap(c.username)),
+              React.createElement('div', { className: 'comment-text' }, c.body)
+            ),
+            !isReply && React.createElement('button', {
+              className: 'reply-btn',
+              onClick: () => { if (replyingTo === c.id) { setReplyingTo(null); setReplyText(''); } else setReplyingTo(c.id); }
+            }, replyingTo === c.id ? 'Cancel' : 'Reply'),
+            repliesFor(c.id).length > 0 && React.createElement('div', { className: 'comment-replies' },
+              repliesFor(c.id).map(r => renderComment(r, true))
+            ),
+            replyingTo === c.id && React.createElement('div', { className: 'reply-input-row' },
+              React.createElement('input', {
+                className: 'reply-input',
+                placeholder: `Reply to ${cap(c.username)}...`,
+                value: replyText,
+                autoFocus: true,
+                onChange: e => setReplyText(e.target.value),
+                onKeyDown: e => e.key === 'Enter' && addComment(c.id)
+              }),
+              React.createElement('button', { className: 'send-btn', onClick: () => addComment(c.id) },
+                React.createElement('svg', { viewBox: '0 0 24 24', fill: 'none', stroke: '#0a0a0f', strokeWidth: 2.5 },
+                  React.createElement('line', { x1: '22', y1: '2', x2: '11', y2: '13' }),
+                  React.createElement('polygon', { points: '22 2 15 22 11 13 2 9 22 2' })
+                )
+              )
+            )
           ),
           c.username === currentUser && React.createElement('button', {
             className: 'comment-delete-btn',
             title: 'Delete comment',
             onClick: () => deleteComment(c.id)
           }, '✕')
-        ))
-      ),
-      React.createElement('div', { className: 'comment-input-row' },
-        React.createElement('input', {
-          className: 'comment-input',
-          placeholder: 'Add a comment...',
-          value: commentText,
-          onChange: e => setCommentText(e.target.value),
-          onKeyDown: e => e.key === 'Enter' && addComment()
-        }),
-        React.createElement('button', { className: 'send-btn', onClick: addComment },
-          React.createElement('svg', { viewBox: '0 0 24 24', fill: 'none', stroke: '#0a0a0f', strokeWidth: 2.5 },
-            React.createElement('line', { x1: '22', y1: '2', x2: '11', y2: '13' }),
-            React.createElement('polygon', { points: '22 2 15 22 11 13 2 9 22 2' })
+        );
+
+        return React.createElement(React.Fragment, null,
+          topLevel.length > 0 && React.createElement('div', { className: 'comments-section' },
+            topLevel.map(c => renderComment(c))
+          ),
+          React.createElement('div', { className: 'comment-input-row' },
+            React.createElement('input', {
+              className: 'comment-input',
+              placeholder: 'Add a comment...',
+              value: commentText,
+              onChange: e => setCommentText(e.target.value),
+              onKeyDown: e => e.key === 'Enter' && addComment()
+            }),
+            React.createElement('button', { className: 'send-btn', onClick: () => addComment() },
+              React.createElement('svg', { viewBox: '0 0 24 24', fill: 'none', stroke: '#0a0a0f', strokeWidth: 2.5 },
+                React.createElement('line', { x1: '22', y1: '2', x2: '11', y2: '13' }),
+                React.createElement('polygon', { points: '22 2 15 22 11 13 2 9 22 2' })
+              )
+            )
           )
-        )
-      )
+        );
+      })()
     ),
 
     showAssign && React.createElement(AssignModal, {
@@ -4400,10 +4601,13 @@ function NotificationCenter({ currentUser }) {
     setLoading(false);
   };
 
+  const visibleNotifs = notifs.filter(n => prefs[n.type] !== false);
+  const unreadCount   = visibleNotifs.filter(n => !n.read).length;
+
   const markAllRead = async () => {
-    const unreadIds = notifs.filter(n => !n.read).map(n => n.id);
+    const unreadIds = visibleNotifs.filter(n => !n.read).map(n => n.id);
     if (!unreadIds.length) return;
-    setNotifs(prev => prev.map(n => ({ ...n, read: true })));
+    setNotifs(prev => prev.map(n => unreadIds.includes(n.id) ? { ...n, read: true } : n));
     try {
       const { data: { session } } = await sb.auth.getSession();
       await fetch(`${BACKEND}/notifications/read`, {
@@ -4483,9 +4687,6 @@ function NotificationCenter({ currentUser }) {
     };
   };
 
-  const visibleNotifs = notifs.filter(n => prefs[n.type] !== false);
-  const unreadCount = visibleNotifs.filter(n => !n.read).length;
-
   return React.createElement(React.Fragment, null,
     React.createElement('div', { className: 'notif-bell-wrap', ref: dropdownRef },
       React.createElement('button', { className: 'notif-bell-btn', onClick: handleOpen },
@@ -4550,11 +4751,125 @@ function NotificationCenter({ currentUser }) {
   );
 }
 
+// ── Settings Screen ───────────────────────────────────────────────────────
+
+function SettingsScreen({ currentUser, onSignOut }) {
+  const ALL_TYPES = ['hr', 'assignment', 'approval', 'late', 'comment', 'like', 'video'];
+  const LABELS = {
+    hr: 'Home Run alerts', assignment: 'Drink assignments', approval: 'Drink approvals',
+    late: 'Late drink alerts', comment: 'Comments & replies', like: 'Likes & cheers', video: 'Chug videos',
+  };
+  const ICONS = {
+    hr: '⚾', assignment: '🍺', approval: '✅', late: '🔴', comment: '💬', like: '👍', video: '🎥',
+  };
+
+  const [pushPrefs, setPushPrefs] = useState(null);
+  const [saving, setSaving]       = useState(false);
+  const [saved, setSaved]         = useState(false);
+
+  useEffect(() => {
+    const load = async () => {
+      try {
+        const { data: { session } } = await sb.auth.getSession();
+        const res = await fetch(`${BACKEND}/notifications/preferences`, {
+          headers: { 'Authorization': `Bearer ${session.access_token}` }
+        });
+        if (res.ok) setPushPrefs(await res.json());
+        else setPushPrefs(Object.fromEntries(ALL_TYPES.map(t => [t, true])));
+      } catch {
+        setPushPrefs(Object.fromEntries(ALL_TYPES.map(t => [t, true])));
+      }
+    };
+    load();
+  }, []);
+
+  const togglePush = (type) => {
+    setPushPrefs(prev => ({ ...prev, [type]: !prev[type] }));
+    setSaved(false);
+  };
+
+  const savePushPrefs = async () => {
+    setSaving(true);
+    try {
+      const { data: { session } } = await sb.auth.getSession();
+      await fetch(`${BACKEND}/notifications/preferences`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${session.access_token}` },
+        body: JSON.stringify(pushPrefs)
+      });
+      setSaved(true);
+      setTimeout(() => setSaved(false), 2000);
+    } catch (e) {
+      console.error('Failed to save push prefs', e);
+    }
+    setSaving(false);
+  };
+
+  return React.createElement('div', { className: 'settings-screen' },
+
+    // Profile section
+    React.createElement('div', null,
+      React.createElement('div', { className: 'settings-section-title' }, 'Profile'),
+      React.createElement('div', { className: 'settings-card' },
+        React.createElement('div', { className: 'settings-row' },
+          React.createElement('div', { className: 'settings-row-label' },
+            React.createElement(Avatar, { name: currentUser, size: 36 }),
+            React.createElement('div', null,
+              React.createElement('div', { style: { fontWeight: 600, color: USER_COLORS[currentUser] || '#888' } }, cap(currentUser)),
+              React.createElement('div', { style: { fontSize: '0.75rem', color: 'var(--muted)' } }, 'Going Yard & Drinking Hard')
+            )
+          )
+        ),
+        React.createElement('div', { className: 'settings-row' },
+          React.createElement('div', { className: 'settings-row-label' }, '🚪 Sign out'),
+          React.createElement('button', {
+            onClick: onSignOut,
+            style: { background: 'none', border: '1px solid rgba(232,74,74,0.4)', borderRadius: '8px', color: '#e84a4a', padding: '0.35rem 0.75rem', cursor: 'pointer', fontSize: '0.8rem', fontFamily: "'DM Sans', sans-serif" }
+          }, 'Sign Out')
+        )
+      )
+    ),
+
+    // Push notification preferences
+    React.createElement('div', null,
+      React.createElement('div', { className: 'settings-section-title' }, 'Push Notifications'),
+      React.createElement('div', { style: { fontSize: '0.75rem', color: 'var(--muted)', marginBottom: '0.5rem', padding: '0 0.25rem' } },
+        'Choose which events send you a phone notification.'
+      ),
+      pushPrefs === null
+        ? React.createElement('div', { className: 'loading' }, React.createElement('div', { className: 'spinner' }))
+        : React.createElement('div', { className: 'settings-card' },
+            ALL_TYPES.map(type => React.createElement('div', { key: type, className: 'settings-row' },
+              React.createElement('div', { className: 'settings-row-label' },
+                React.createElement('span', { className: 'settings-row-icon' }, ICONS[type]),
+                LABELS[type]
+              ),
+              React.createElement('label', { className: 'toggle-switch' },
+                React.createElement('input', {
+                  type: 'checkbox',
+                  checked: pushPrefs[type] !== false,
+                  onChange: () => togglePush(type)
+                }),
+                React.createElement('span', { className: 'toggle-track' })
+              )
+            ))
+          ),
+      pushPrefs !== null && React.createElement('button', {
+        className: 'btn-primary',
+        style: { marginTop: '0.75rem' },
+        onClick: savePushPrefs,
+        disabled: saving
+      }, saved ? '✅ Saved!' : saving ? 'Saving...' : 'Save Preferences')
+    )
+  );
+}
+
 function App() {
   const [user, setUser]               = useState(null);
   const [username, setUsername]       = useState('');
   const [tab, setTab]                 = useState('feed');
   const [tabAnimating, setTabAnimating] = useState(false);
+  const [showSettings, setShowSettings] = useState(false);
   const prevTab = useRef('feed');
   const [toast, showToast]            = useToast();
   const [authChecked, setAuthChecked] = useState(false);
@@ -4698,17 +5013,18 @@ function App() {
         ),
         React.createElement(NotificationCenter, { currentUser: username }),
         React.createElement('span', { style: { color: USER_COLORS[username] } }, cap(username)),
-        React.createElement(Avatar, { name: username, size: 32 }),
-        React.createElement('button', {
-          onClick: onSignOut,
-          style: { background: 'none', border: 'none', color: 'var(--muted)', cursor: 'pointer', fontSize: '0.75rem' }
-        }, 'Out')
+        React.createElement('div', {
+          onClick: () => setShowSettings(true),
+          style: { cursor: 'pointer' }
+        },
+          React.createElement(Avatar, { name: username, size: 32 })
+        )
       )
     ),
     React.createElement('div', { key: tab, className: `tab-screen${tabAnimating ? ' animating' : ''}` },
       tab === 'feed'   && React.createElement(FeedScreen, { currentUser: username, showToast, videosEnabled, onNavigateVideos: videosEnabled ? (videoId) => { if (videoId) setDeepLink({ videoId }); navigateTab('videos'); } : null, deepLinkEventId: deepLink.eventId, onDeepLinkHandled: () => { setDeepLink({}); clearDeepLink(); }, hasUnread, onClearUnread: () => setHasUnread(false) }),
       tab === 'board'  && React.createElement(LeaderboardScreen),
-      tab === 'log'    && React.createElement(LogScreen, { currentUser: username, videosEnabled, onNavigateVideos: videosEnabled ? () => navigateTab('videos') : null }),
+      tab === 'log'    && React.createElement(LogScreen, { currentUser: username, videosEnabled, onNavigateVideos: videosEnabled ? (videoId) => { if (videoId) setDeepLink({ videoId }); navigateTab('videos'); } : null }),
       tab === 'videos' && videosEnabled && React.createElement(VideosScreen, { currentUser: username, deepLinkVideoId: deepLink.videoId, onDeepLinkHandled: () => { setDeepLink({}); clearDeepLink(); }, onNavigateToEvent: (eventId) => { setDeepLink({ eventId }); navigateTab('feed'); } })
     ),
     React.createElement('nav', { className: 'nav' },
@@ -4717,7 +5033,24 @@ function App() {
       React.createElement(NavIcon, { id: 'log',    label: 'Log',     path: 'M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2 M9 5a2 2 0 0 0 2 2h2a2 2 0 0 0 2-2 M9 5a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2 M12 12h.01 M12 16h.01' }),
       videosEnabled && React.createElement(NavIcon, { id: 'videos', label: 'Chugs', path: 'M15 10l4.553-2.276A1 1 0 0 1 21 8.723v6.554a1 1 0 0 1-1.447.894L15 14M3 8a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8z' })
     ),
-    toast && React.createElement(Toast, { msg: toast })
+    toast && React.createElement(Toast, { msg: toast }),
+
+    // Settings modal
+    showSettings && React.createElement('div', {
+      style: { position: 'fixed', inset: 0, zIndex: 500, display: 'flex', flexDirection: 'column', background: 'var(--bg)' }
+    },
+      // Settings header
+      React.createElement('div', { className: 'header', style: { display: 'flex', alignItems: 'center', gap: '0.75rem' } },
+        React.createElement('button', {
+          onClick: () => setShowSettings(false),
+          style: { background: 'none', border: 'none', color: 'var(--muted)', cursor: 'pointer', fontSize: '1.2rem', padding: '4px 8px', lineHeight: 1 }
+        }, '←'),
+        React.createElement('div', { className: 'header-title-main' }, 'Settings')
+      ),
+      React.createElement('div', { style: { flex: 1, overflowY: 'auto' } },
+        React.createElement(SettingsScreen, { currentUser: username, onSignOut: () => { setShowSettings(false); onSignOut(); } })
+      )
+    )
   );
 }
 
