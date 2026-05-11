@@ -1847,6 +1847,76 @@ body {
   margin-bottom: 1.5rem;
 }
 
+/* ── Leaderboard pill tabs ── */
+.lb-pills {
+  display: flex;
+  gap: 0.4rem;
+  overflow-x: auto;
+  padding: 0.75rem 0 0.5rem;
+  scrollbar-width: none;
+  flex-shrink: 0;
+}
+.lb-pills::-webkit-scrollbar { display: none; }
+
+.lb-pill {
+  white-space: nowrap;
+  padding: 0.35rem 0.85rem;
+  border-radius: 20px;
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 0.75rem;
+  letter-spacing: 1.5px;
+  cursor: pointer;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--muted);
+  transition: all 0.15s;
+  flex-shrink: 0;
+}
+.lb-pill:hover { border-color: var(--accent); color: var(--text); }
+.lb-pill.active {
+  background: rgba(232,193,74,0.12);
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+/* ── Notification filter pills ── */
+.notif-filter-row {
+  display: flex;
+  gap: 0.35rem;
+  flex-wrap: wrap;
+  padding: 0.6rem 1rem;
+  border-bottom: 1px solid var(--border);
+  background: var(--surface2);
+}
+.notif-filter-pill {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 9px;
+  border-radius: 20px;
+  font-size: 0.65rem;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+  cursor: pointer;
+  border: 1px solid var(--border);
+  background: none;
+  color: var(--muted);
+  font-family: 'DM Sans', sans-serif;
+  transition: all 0.15s;
+  white-space: nowrap;
+}
+.notif-filter-pill.on {
+  background: rgba(232,193,74,0.1);
+  border-color: var(--accent);
+  color: var(--accent);
+}
+.notif-filter-pill.off {
+  background: rgba(136,136,136,0.08);
+  border-color: transparent;
+  color: #555;
+  text-decoration: line-through;
+}
+
 /* ── Deep link highlight flash ── */
 @keyframes highlight-flash {
   0%   { box-shadow: 0 0 0 0   rgba(232,193,74,0); border-color: var(--border); }
@@ -3051,7 +3121,7 @@ function UploadModal({ event, drinkLog, currentUser, onClose, onUploaded, showTo
 
 // ── Videos Screen ─────────────────────────────────────────────────────────
 
-function VideoCard({ v, currentUser, onNavigateToEvent }) {
+function VideoCard({ v, currentUser, onNavigateToEvent, highlight }) {
   const [likes, setLikes]         = useState([]);
   const [comments, setComments]   = useState([]);
   const [assignment, setAssignment] = useState(null);
@@ -3121,7 +3191,7 @@ function VideoCard({ v, currentUser, onNavigateToEvent }) {
     loadData();
   };
 
-  return React.createElement('div', { key: v.id, id: `video-card-${v.id}`, className: 'video-card' },
+  return React.createElement('div', { key: v.id, id: `video-card-${v.id}`, className: `video-card${highlight ? ' highlight' : ''}` },
     // Header
     React.createElement('div', { className: 'video-card-header' },
       React.createElement(Avatar, { name: v.actual_drinker, size: 36, color }),
@@ -3220,25 +3290,28 @@ function VideosScreen({ currentUser, deepLinkVideoId, onDeepLinkHandled, onNavig
   const [videos, setVideos]         = useState([]);
   const [loading, setLoading]       = useState(true);
   const [userFilter, setUserFilter] = useState(null);
-  const [highlightVideoId, setHighlightVideoId] = useState(deepLinkVideoId || null);
+  const [highlightVideoId, setHighlightVideoId] = useState(null);
 
   useEffect(() => { load(); }, []);
+
+  // React to deepLinkVideoId changes (e.g. clicking a notification while already on Videos tab)
+  useEffect(() => {
+    if (!deepLinkVideoId) return;
+    setHighlightVideoId(deepLinkVideoId);
+    setTimeout(() => {
+      const el = document.getElementById(`video-card-${deepLinkVideoId}`);
+      if (el) {
+        el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        setTimeout(() => { setHighlightVideoId(null); onDeepLinkHandled && onDeepLinkHandled(); }, 2000);
+      }
+    }, 400);
+  }, [deepLinkVideoId]);
 
   const load = async () => {
     const { data, error } = await sb.from('chug_videos').select('*').order('created_at', { ascending: false });
     if (error) console.error('[VIDEOS]', error);
     if (data) setVideos(data);
     setLoading(false);
-
-    if (deepLinkVideoId) {
-      setTimeout(() => {
-        const el = document.getElementById(`video-card-${deepLinkVideoId}`);
-        if (el) {
-          el.scrollIntoView({ behavior: 'smooth', block: 'center' });
-          setTimeout(() => { setHighlightVideoId(null); onDeepLinkHandled && onDeepLinkHandled(); }, 2000);
-        }
-      }, 400);
-    }
   };
 
   const filtered = userFilter ? videos.filter(v => v.actual_drinker === userFilter) : videos;
@@ -3912,8 +3985,17 @@ function LeaderboardScreen() {
   const [hrTotals, setHrTotals]       = useState([]);
   const [drinkTotals, setDrinkTotals] = useState([]);
   const [drinkLB, setDrinkLB]         = useState([]);
-  const [iDrinkHRs, setIDrinkHRs]     = useState({}); // player_key → current_hrs
+  const [iDrinkHRs, setIDrinkHRs]     = useState({});
   const [loading, setLoading]         = useState(true);
+  const [activeTab, setActiveTab]     = useState('drinks');
+
+  const TABS = [
+    { key: 'drinks',   label: 'Drink Leaderboard' },
+    { key: 'slugger',  label: '20 HR Slugger' },
+    { key: 'hitter',   label: 'Big Hitter' },
+    { key: 'mlb',      label: 'MLB Home Runs' },
+    { key: 'combined', label: 'Combined Leaderboard' },
+  ];
 
   useEffect(() => {
     const load = async () => {
@@ -3925,14 +4007,12 @@ function LeaderboardScreen() {
 
       if (hr.data) {
         setHrTotals(hr.data.sort((a, b) => b.current_hrs - a.current_hrs));
-        // Build a map of player_key → current_hrs for the progress bars
         const hrMap = {};
         hr.data.forEach(p => { hrMap[p.player_key] = p.current_hrs || 0; });
         setIDrinkHRs(hrMap);
       }
       if (dl.data) setDrinkTotals(dl.data.sort((a, b) => b.total_drinks - a.total_drinks));
 
-      // Build drink leaderboard from drink_log directly so we can count late drinks
       const counts = {};
       ALL_USERS.forEach(u => { counts[u] = { drinks: 0, late: 0, vacated: 0 }; });
 
@@ -3942,7 +4022,6 @@ function LeaderboardScreen() {
           if (log.drink_type === 'i_drink') {
             drinker = log.username;
           } else {
-            // you_drink: only count if actually assigned to someone
             if (!log.given_to) return;
             drinker = log.given_to;
           }
@@ -3969,65 +4048,56 @@ function LeaderboardScreen() {
 
   if (loading) return React.createElement('div', { className: 'loading' }, React.createElement('div', { className: 'spinner' }));
 
-  return React.createElement('div', { className: 'leaderboard-screen' },
+  // ── Tab content renderers ──
 
-    // Drink Leaderboard — Podium for top 3, list for rest
-    React.createElement('div', { className: 'section-title' }, 'Drink Leaderboard'),
-    drinkLB.every(u => u.drinks === 0)
-      ? React.createElement('div', { className: 'lb-card', style: { padding: '2rem', textAlign: 'center', color: 'var(--muted)' } }, 'No drinks logged yet')
-      : React.createElement(React.Fragment, null,
-          // Podium — top 3
-          drinkLB.length >= 1 && React.createElement('div', { className: 'podium-wrap' },
-            [
-              drinkLB[1],  // 2nd — left
-              drinkLB[0],  // 1st — center
-              drinkLB[2],  // 3rd — right
-            ].filter(Boolean).map((u, idx) => {
-              const rank       = idx === 0 ? 2 : idx === 1 ? 1 : 3;
-              const slotClass  = rank === 1 ? 'first' : rank === 2 ? 'second' : 'third';
-              const crown      = rank === 1 ? '👑' : rank === 2 ? '🥈' : '🥉';
-              const avatarSize = rank === 1 ? 52 : 42;
-              const color      = USER_COLORS[u.username] || '#888';
-              return React.createElement('div', { key: u.username, className: `podium-slot ${slotClass}` },
-                React.createElement('div', { className: 'podium-avatar-wrap' },
-                  React.createElement('div', { className: 'podium-crown' }, crown),
-                  React.createElement(Avatar, { name: u.username, size: avatarSize, color }),
-                  React.createElement('div', { className: 'podium-name', style: { color } }, cap(u.username)),
-                  React.createElement('div', { className: 'podium-drinks', style: { color } }, u.drinks),
-                  u.late > 0 && React.createElement('div', { className: 'podium-late' }, `${u.late} late`),
-                  u.vacated > 0 && React.createElement('div', { className: 'podium-late' }, `${u.vacated} vacated`)
-                ),
-                React.createElement('div', { className: 'podium-base' }, rank)
-              );
-            })
-          ),
-          // Rest of list (4th onward)
-          drinkLB.length > 3 && React.createElement('div', { className: 'podium-rest-card' },
-            drinkLB.slice(3).map((u, i) => React.createElement('div', { key: u.username, className: 'lb-row' },
-              React.createElement('div', { className: 'lb-rank' }, i + 4),
-              React.createElement(Avatar, { name: u.username, size: 36 }),
-              React.createElement('div', { style: { flex: 1 } },
-                React.createElement('div', { className: 'lb-name', style: { color: USER_COLORS[u.username] } }, cap(u.username)),
-                React.createElement('div', { className: 'lb-sub' }, 'drinks consumed')
+  const renderDrinks = () => drinkLB.every(u => u.drinks === 0)
+    ? React.createElement('div', { className: 'lb-card', style: { padding: '2rem', textAlign: 'center', color: 'var(--muted)' } }, 'No drinks logged yet')
+    : React.createElement(React.Fragment, null,
+        drinkLB.length >= 1 && React.createElement('div', { className: 'podium-wrap' },
+          [drinkLB[1], drinkLB[0], drinkLB[2]].filter(Boolean).map((u, idx) => {
+            const rank      = idx === 0 ? 2 : idx === 1 ? 1 : 3;
+            const slotClass = rank === 1 ? 'first' : rank === 2 ? 'second' : 'third';
+            const crown     = rank === 1 ? '👑' : rank === 2 ? '🥈' : '🥉';
+            const color     = USER_COLORS[u.username] || '#888';
+            return React.createElement('div', { key: u.username, className: `podium-slot ${slotClass}` },
+              React.createElement('div', { className: 'podium-avatar-wrap' },
+                React.createElement('div', { className: 'podium-crown' }, crown),
+                React.createElement(Avatar, { name: u.username, size: rank === 1 ? 52 : 42, color }),
+                React.createElement('div', { className: 'podium-name', style: { color } }, cap(u.username)),
+                React.createElement('div', { className: 'podium-drinks', style: { color } }, u.drinks),
+                u.late > 0 && React.createElement('div', { className: 'podium-late' }, `${u.late} late`),
+                u.vacated > 0 && React.createElement('div', { className: 'podium-late' }, `${u.vacated} vacated`)
               ),
-              React.createElement('div', { className: 'lb-stat-group' },
-                React.createElement('div', { className: 'lb-stat', style: { color: USER_COLORS[u.username] } }, u.drinks),
-                React.createElement('div', { className: 'lb-label' }, 'Drinks'),
-                u.late > 0 && React.createElement('div', { className: 'late-badge' }, `${u.late} late`),
-                u.vacated > 0 && React.createElement('div', { className: 'late-badge' }, `${u.vacated} vacated`)
-              )
-            ))
-          )
+              React.createElement('div', { className: 'podium-base' }, rank)
+            );
+          })
         ),
+        drinkLB.length > 3 && React.createElement('div', { className: 'podium-rest-card' },
+          drinkLB.slice(3).map((u, i) => React.createElement('div', { key: u.username, className: 'lb-row' },
+            React.createElement('div', { className: 'lb-rank' }, i + 4),
+            React.createElement(Avatar, { name: u.username, size: 36 }),
+            React.createElement('div', { style: { flex: 1 } },
+              React.createElement('div', { className: 'lb-name', style: { color: USER_COLORS[u.username] } }, cap(u.username)),
+              React.createElement('div', { className: 'lb-sub' }, 'drinks consumed')
+            ),
+            React.createElement('div', { className: 'lb-stat-group' },
+              React.createElement('div', { className: 'lb-stat', style: { color: USER_COLORS[u.username] } }, u.drinks),
+              React.createElement('div', { className: 'lb-label' }, 'Drinks'),
+              u.late > 0 && React.createElement('div', { className: 'late-badge' }, `${u.late} late`),
+              u.vacated > 0 && React.createElement('div', { className: 'late-badge' }, `${u.vacated} vacated`)
+            )
+          ))
+        )
+      );
 
-    // I Drink Progress Board
-    React.createElement('div', { className: 'section-title' }, '20 HR Slugger'),
-    React.createElement('div', { className: 'progress-card' },
-      ALL_USERS.map(user => {
-        const matchup = I_DRINK_MATCHUP[user];
-        const hrs     = iDrinkHRs[matchup.player] || 0;
-        const pct     = Math.min((hrs / 20) * 100, 100);
-        const color   = USER_COLORS[user] || '#888';
+  const renderSlugger = () => {
+    const sorted = ALL_USERS
+      .map(user => ({ user, matchup: I_DRINK_MATCHUP[user], hrs: iDrinkHRs[I_DRINK_MATCHUP[user].player] || 0 }))
+      .sort((a, b) => b.hrs - a.hrs);
+    return React.createElement('div', { className: 'progress-card' },
+      sorted.map(({ user, matchup, hrs }) => {
+        const pct         = Math.min((hrs / 20) * 100, 100);
+        const color       = USER_COLORS[user] || '#888';
         const playerColor = PLAYER_COLORS[matchup.player] || '#888';
         return React.createElement('div', { key: user, className: 'progress-row' },
           React.createElement('div', { className: 'progress-header' },
@@ -4037,102 +4107,89 @@ function LeaderboardScreen() {
               React.createElement('div', { className: 'progress-player', style: { color: playerColor } }, matchup.fullName)
             ),
             React.createElement('div', { className: 'progress-count', style: { color: playerColor } },
-              hrs,
-              React.createElement('span', null, ' / 20')
+              hrs, React.createElement('span', null, ' / 20')
             )
           ),
           React.createElement('div', { className: 'progress-bar-track' },
-            React.createElement('div', {
-              className: 'progress-bar-fill',
-              style: {
-                width: `${pct}%`,
-                background: `linear-gradient(90deg, ${color}99, ${playerColor})`,
-              }
-            })
+            React.createElement('div', { className: 'progress-bar-fill', style: { width: `${pct}%`, background: `linear-gradient(90deg, ${color}99, ${playerColor})` } })
           )
         );
       })
-    ),
+    );
+  };
 
-    // You Drink Progress Board
-    React.createElement('div', { className: 'section-title' }, 'Big Hitter'),
-    React.createElement('div', { className: 'progress-card' },
-      (() => {
-        // Normalize: player with most HRs = 100%, everyone else scaled relative
-        const youDrinkHRs = ALL_USERS.map(user => ({
-          user,
-          hrs: iDrinkHRs[YOU_DRINK_MATCHUP[user].player] || 0,
-        }));
-        const maxHRs = Math.max(...youDrinkHRs.map(u => u.hrs), 1);
-        return youDrinkHRs
-          .slice()
-          .sort((a, b) => b.hrs - a.hrs)
-          .map(({ user, hrs }) => {
-            const matchup     = YOU_DRINK_MATCHUP[user];
-            const pct         = (hrs / maxHRs) * 100;
-            const color       = USER_COLORS[user] || '#888';
-            const playerColor = PLAYER_COLORS[matchup.player] || '#888';
-            return React.createElement('div', { key: user, className: 'progress-row' },
-              React.createElement('div', { className: 'progress-header' },
-                React.createElement(PlayerHeadshot, { playerKey: matchup.player, playerColor, size: 40 }),
-                React.createElement('div', { className: 'progress-names' },
-                  React.createElement('div', { className: 'progress-user', style: { color } }, cap(user)),
-                  React.createElement('div', { className: 'progress-player', style: { color: playerColor } }, matchup.fullName)
-                ),
-                React.createElement('div', { className: 'progress-count', style: { color: playerColor } },
-                  hrs,
-                  React.createElement('span', null, ' HR')
-                )
-              ),
-              React.createElement('div', { className: 'progress-bar-track' },
-                React.createElement('div', {
-                  className: 'progress-bar-fill',
-                  style: {
-                    width: `${pct}%`,
-                    background: `linear-gradient(90deg, ${color}99, ${playerColor})`,
-                  }
-                })
-              )
-            );
-          });
-      })()
-    ),
-
-    // MLB HR Leaderboard
-    React.createElement('div', { className: 'section-title' }, 'MLB Home Runs'),
-    React.createElement('div', { className: 'lb-card' },
-      hrTotals.map((p, i) => React.createElement('div', { key: p.player_key, className: 'lb-row' },
-        React.createElement('div', { className: `lb-rank ${rankClass(i)}` }, i + 1),
-        React.createElement(PlayerHeadshot, { playerKey: p.player_key, playerColor: PLAYER_COLORS[p.player_key], size: 40 }),
-        React.createElement('div', { style: { flex: 1 } },
-          React.createElement('div', { className: 'lb-name', style: { color: PLAYER_COLORS[p.player_key] } }, p.full_name),
-          React.createElement('div', { className: 'lb-sub' }, p.team)
-        ),
-        React.createElement('div', { className: 'lb-stat-group' },
-          React.createElement('div', { className: 'lb-stat', style: { color: PLAYER_COLORS[p.player_key] } }, p.current_hrs),
-          React.createElement('div', { className: 'lb-label' }, 'HRs')
-        )
-      ))
-    ),
-
-    // Combined leaderboard
-    React.createElement('div', { className: 'section-title' }, 'Combined Leaderboard'),
-    React.createElement('div', { className: 'lb-card' },
-      drinkTotals.length === 0
-        ? React.createElement('div', { style: { padding: '2rem', textAlign: 'center', color: 'var(--muted)' } }, 'No drinks logged yet')
-        : drinkTotals.map((u, i) => React.createElement('div', { key: u.username, className: 'lb-row' },
-            React.createElement('div', { className: `lb-rank ${rankClass(i)}` }, i + 1),
-            React.createElement(Avatar, { name: u.username, size: 36 }),
-            React.createElement('div', { style: { flex: 1 } },
-              React.createElement('div', { className: 'lb-name', style: { color: USER_COLORS[u.username] } }, cap(u.username)),
-              React.createElement('div', { className: 'lb-sub' }, `${u.drinks_received || 0} received · ${u.drinks_assigned || 0} assigned`)
+  const renderHitter = () => {
+    const youDrinkHRs = ALL_USERS.map(user => ({ user, hrs: iDrinkHRs[YOU_DRINK_MATCHUP[user].player] || 0 }));
+    const maxHRs = Math.max(...youDrinkHRs.map(u => u.hrs), 1);
+    return React.createElement('div', { className: 'progress-card' },
+      youDrinkHRs.slice().sort((a, b) => b.hrs - a.hrs).map(({ user, hrs }) => {
+        const matchup     = YOU_DRINK_MATCHUP[user];
+        const color       = USER_COLORS[user] || '#888';
+        const playerColor = PLAYER_COLORS[matchup.player] || '#888';
+        return React.createElement('div', { key: user, className: 'progress-row' },
+          React.createElement('div', { className: 'progress-header' },
+            React.createElement(PlayerHeadshot, { playerKey: matchup.player, playerColor, size: 40 }),
+            React.createElement('div', { className: 'progress-names' },
+              React.createElement('div', { className: 'progress-user', style: { color } }, cap(user)),
+              React.createElement('div', { className: 'progress-player', style: { color: playerColor } }, matchup.fullName)
             ),
-            React.createElement('div', { className: 'lb-stat-group' },
-              React.createElement('div', { className: 'lb-stat', style: { color: USER_COLORS[u.username] } }, u.total_drinks),
-              React.createElement('div', { className: 'lb-label' }, 'Total')
+            React.createElement('div', { className: 'progress-count', style: { color: playerColor } },
+              hrs, React.createElement('span', null, ' HR')
             )
-          ))
-    )
+          ),
+          React.createElement('div', { className: 'progress-bar-track' },
+            React.createElement('div', { className: 'progress-bar-fill', style: { width: `${(hrs / maxHRs) * 100}%`, background: `linear-gradient(90deg, ${color}99, ${playerColor})` } })
+          )
+        );
+      })
+    );
+  };
+
+  const renderMLB = () => React.createElement('div', { className: 'lb-card' },
+    hrTotals.map((p, i) => React.createElement('div', { key: p.player_key, className: 'lb-row' },
+      React.createElement('div', { className: `lb-rank ${rankClass(i)}` }, i + 1),
+      React.createElement(PlayerHeadshot, { playerKey: p.player_key, playerColor: PLAYER_COLORS[p.player_key], size: 40 }),
+      React.createElement('div', { style: { flex: 1 } },
+        React.createElement('div', { className: 'lb-name', style: { color: PLAYER_COLORS[p.player_key] } }, p.full_name),
+        React.createElement('div', { className: 'lb-sub' }, p.team)
+      ),
+      React.createElement('div', { className: 'lb-stat-group' },
+        React.createElement('div', { className: 'lb-stat', style: { color: PLAYER_COLORS[p.player_key] } }, p.current_hrs),
+        React.createElement('div', { className: 'lb-label' }, 'HRs')
+      )
+    ))
+  );
+
+  const renderCombined = () => React.createElement('div', { className: 'lb-card' },
+    drinkTotals.length === 0
+      ? React.createElement('div', { style: { padding: '2rem', textAlign: 'center', color: 'var(--muted)' } }, 'No drinks logged yet')
+      : drinkTotals.map((u, i) => React.createElement('div', { key: u.username, className: 'lb-row' },
+          React.createElement('div', { className: `lb-rank ${rankClass(i)}` }, i + 1),
+          React.createElement(Avatar, { name: u.username, size: 36 }),
+          React.createElement('div', { style: { flex: 1 } },
+            React.createElement('div', { className: 'lb-name', style: { color: USER_COLORS[u.username] } }, cap(u.username)),
+            React.createElement('div', { className: 'lb-sub' }, `${u.drinks_received || 0} received · ${u.drinks_assigned || 0} assigned`)
+          ),
+          React.createElement('div', { className: 'lb-stat-group' },
+            React.createElement('div', { className: 'lb-stat', style: { color: USER_COLORS[u.username] } }, u.total_drinks),
+            React.createElement('div', { className: 'lb-label' }, 'Total')
+          )
+        ))
+  );
+
+  const contentMap = { drinks: renderDrinks, slugger: renderSlugger, hitter: renderHitter, mlb: renderMLB, combined: renderCombined };
+
+  return React.createElement('div', { className: 'leaderboard-screen' },
+    // Pill tabs
+    React.createElement('div', { className: 'lb-pills' },
+      TABS.map(t => React.createElement('button', {
+        key: t.key,
+        className: `lb-pill ${activeTab === t.key ? 'active' : ''}`,
+        onClick: () => setActiveTab(t.key),
+      }, t.label))
+    ),
+    // Active tab content
+    contentMap[activeTab]()
   );
 }
 
@@ -4294,13 +4351,34 @@ function NotificationCenter({ currentUser }) {
   const [open, setOpen]         = useState(false);
   const [notifs, setNotifs]     = useState([]);
   const [loading, setLoading]   = useState(false);
+  const [showFilters, setShowFilters] = useState(false);
   const dropdownRef             = useRef(null);
+  const panelRef                = useRef(null);
 
-  const unreadCount = notifs.filter(n => !n.read).length;
+  const NOTIF_FILTER_KEY = `notif_prefs_${currentUser}`;
+  const DEFAULT_PREFS = { hr: true, assignment: true, approval: true, late: true, comment: true, like: true, video: true };
+
+  const loadPrefs = () => {
+    try { return { ...DEFAULT_PREFS, ...JSON.parse(localStorage.getItem(NOTIF_FILTER_KEY) || '{}') }; }
+    catch { return DEFAULT_PREFS; }
+  };
+  const [prefs, setPrefs] = useState(loadPrefs);
+
+  const savePrefs = (next) => {
+    setPrefs(next);
+    try { localStorage.setItem(NOTIF_FILTER_KEY, JSON.stringify(next)); } catch {}
+  };
+
+  const togglePref = (key) => savePrefs({ ...prefs, [key]: !prefs[key] });
 
   const NOTIF_ICONS = {
     hr: '⚾', assignment: '🍺', approval: '✅',
     late: '🔴', comment: '💬', like: '👍', video: '🎥',
+  };
+
+  const NOTIF_LABELS = {
+    hr: 'HRs', assignment: 'Assignments', approval: 'Approvals',
+    late: 'Late Alerts', comment: 'Comments', like: 'Likes', video: 'Videos',
   };
 
   const load = async () => {
@@ -4312,7 +4390,6 @@ function NotificationCenter({ currentUser }) {
       });
       if (res.ok) {
         const all = await res.json();
-        // Filter out notifications caused by the current user's own actions
         const filtered = all.filter(n => {
           const body = (n.body || '').toLowerCase();
           return !body.startsWith(currentUser.toLowerCase() + ' ');
@@ -4342,19 +4419,21 @@ function NotificationCenter({ currentUser }) {
     else setOpen(false);
   };
 
-  // Close on outside click
+  // Close only when tapping outside BOTH the bell and the panel
   useEffect(() => {
     if (!open) return;
     const handler = (e) => {
-      const inBell = dropdownRef.current && dropdownRef.current.contains(e.target);
-      const inDropdown = e.target.closest('.notif-dropdown');
-      if (!inBell && !inDropdown) {
-        setOpen(false);
-      }
+      const inBell  = dropdownRef.current && dropdownRef.current.contains(e.target);
+      const inPanel = panelRef.current    && panelRef.current.contains(e.target);
+      if (!inBell && !inPanel) setOpen(false);
     };
-    document.addEventListener('click', handler);
+    // touchend + delay so scroll gestures inside panel don't trigger close
+    const onTouchEnd = (e) => { setTimeout(() => handler(e), 50); };
+    document.addEventListener('mousedown', handler);
+    document.addEventListener('touchend', onTouchEnd);
     return () => {
-      document.removeEventListener('click', handler);
+      document.removeEventListener('mousedown', handler);
+      document.removeEventListener('touchend', onTouchEnd);
     };
   }, [open]);
 
@@ -4390,17 +4469,23 @@ function NotificationCenter({ currentUser }) {
     }, 50);
   };
 
-  const [dropdownPos, setDropdownPos] = useState({ top: '60px', right: '12px' });
+  // Compute portal position — right-align to bell, clamp to screen
+  const getPanelStyle = () => {
+    const el = dropdownRef.current;
+    if (!el) return { top: '60px', right: '8px' };
+    const rect    = el.getBoundingClientRect();
+    const panelW  = 300;
+    const rightEdge = window.innerWidth - rect.right;
+    const wouldOverflow = (rect.right - panelW) < 8;
+    return {
+      top: rect.bottom + 8 + 'px',
+      ...(wouldOverflow ? { left: '8px', right: 'auto' } : { right: Math.max(8, rightEdge) + 'px' }),
+    };
+  };
 
-  useEffect(() => {
-    if (open && dropdownRef.current) {
-      const rect = dropdownRef.current.getBoundingClientRect();
-      setDropdownPos({
-        top: rect.bottom + 8 + 'px',
-        left: Math.min(rect.left, document.documentElement.clientWidth - 328) + 'px',
-      });
-    }
-  }, [open]);
+  const visibleNotifs = notifs.filter(n => prefs[n.type] !== false);
+  const unreadCount = visibleNotifs.filter(n => !n.read).length;
+
   return React.createElement(React.Fragment, null,
     React.createElement('div', { className: 'notif-bell-wrap', ref: dropdownRef },
       React.createElement('button', { className: 'notif-bell-btn', onClick: handleOpen },
@@ -4414,18 +4499,38 @@ function NotificationCenter({ currentUser }) {
     open && createPortal(
       React.createElement('div', {
         className: 'notif-dropdown',
-        style: { position: 'fixed', top: dropdownPos.top, left: dropdownPos.left, zIndex: 9999 }
+        ref: panelRef,
+        style: { position: 'fixed', zIndex: 9999, ...getPanelStyle() },
       },
+        // Header
         React.createElement('div', { className: 'notif-dropdown-header' },
           React.createElement('div', { className: 'notif-dropdown-title' }, 'Notifications'),
-          React.createElement('button', { className: 'notif-mark-read-btn', onClick: markAllRead }, 'Mark all read')
+          React.createElement('div', { style: { display: 'flex', gap: '6px', alignItems: 'center' } },
+            React.createElement('button', {
+              className: 'notif-mark-read-btn',
+              style: showFilters ? { color: 'var(--accent)' } : {},
+              onClick: (e) => { e.stopPropagation(); setShowFilters(s => !s); }
+            }, '⚙️'),
+            React.createElement('button', { className: 'notif-mark-read-btn', onClick: markAllRead }, 'Mark all read')
+          )
         ),
+        // Filter pills (collapsible)
+        showFilters && React.createElement('div', { className: 'notif-filter-row' },
+          Object.keys(NOTIF_LABELS).map(key =>
+            React.createElement('button', {
+              key,
+              className: `notif-filter-pill ${prefs[key] !== false ? 'on' : 'off'}`,
+              onClick: (e) => { e.stopPropagation(); togglePref(key); }
+            }, NOTIF_ICONS[key], ' ', NOTIF_LABELS[key])
+          )
+        ),
+        // List
         React.createElement('div', { className: 'notif-list' },
           loading
             ? React.createElement('div', { className: 'notif-empty' }, 'Loading...')
-            : notifs.length === 0
+            : visibleNotifs.length === 0
               ? React.createElement('div', { className: 'notif-empty' }, 'No notifications yet')
-              : notifs.map(n => React.createElement('div', {
+              : visibleNotifs.map(n => React.createElement('div', {
                   key: n.id,
                   className: `notif-item ${!n.read ? 'unread' : ''}`,
                   onClick: () => handleNotifClick(n)
