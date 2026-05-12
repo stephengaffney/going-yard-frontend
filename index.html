@@ -887,183 +887,6 @@ body {
   background: var(--accent);
 }
 
-/* ── Pull to refresh ── */
-.ptr-indicator {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-  height: 0;
-  overflow: hidden;
-  transition: height 0.2s ease;
-  color: var(--muted);
-  font-size: 0.8rem;
-  font-family: 'DM Sans', sans-serif;
-  background: var(--bg);
-}
-
-.ptr-indicator.visible {
-  height: 44px;
-}
-
-.ptr-emoji {
-  font-size: 1.2rem;
-  display: inline-block;
-  transition: transform 0.3s ease;
-}
-
-.ptr-indicator.ready .ptr-emoji {
-  animation: mug-spin 0.6s linear infinite;
-}
-
-/* ── Upload success banner ── */
-.upload-banner {
-  position: fixed;
-  top: 0;
-  left: 50%;
-  transform: translateX(-50%);
-  width: 100%;
-  max-width: 480px;
-  background: #7cb85c;
-  color: #fff;
-  text-align: center;
-  padding: 0.75rem 1rem;
-  font-size: 0.875rem;
-  font-family: 'DM Sans', sans-serif;
-  font-weight: 600;
-  z-index: 9998;
-  animation: banner-in 0.3s ease;
-}
-
-@keyframes banner-in {
-  from { transform: translateX(-50%) translateY(-100%); }
-  to   { transform: translateX(-50%) translateY(0); }
-}
-
-/* ── Sign out confirmation modal ── */
-.signout-overlay {
-  position: fixed;
-  inset: 0;
-  background: rgba(0,0,0,0.7);
-  z-index: 600;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 1.5rem;
-}
-
-.signout-modal {
-  width: 100%;
-  max-width: 320px;
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: 20px;
-  padding: 1.75rem 1.5rem 1.5rem;
-  text-align: center;
-}
-
-.signout-modal h3 {
-  font-family: 'Bebas Neue', sans-serif;
-  font-size: 1.4rem;
-  letter-spacing: 1px;
-  margin-bottom: 0.5rem;
-}
-
-.signout-modal p {
-  font-size: 0.875rem;
-  color: var(--muted);
-  margin-bottom: 1.5rem;
-  line-height: 1.5;
-}
-
-.signout-modal-btns {
-  display: flex;
-  gap: 0.75rem;
-}
-
-/* ── Edit comment ── */
-.comment-edit-input {
-  width: 100%;
-  background: var(--surface2);
-  border: 1px solid var(--accent);
-  border-radius: 8px;
-  padding: 0.4rem 0.75rem;
-  color: var(--text);
-  font-family: 'DM Sans', sans-serif;
-  font-size: 0.875rem;
-  outline: none;
-  resize: none;
-  margin-top: 4px;
-}
-
-.comment-edited-label {
-  font-size: 0.65rem;
-  color: var(--muted);
-  font-style: italic;
-  margin-left: 4px;
-}
-
-.comment-action-btns {
-  display: flex;
-  gap: 6px;
-  margin-top: 2px;
-}
-
-.comment-action-btn {
-  background: none;
-  border: none;
-  font-size: 0.7rem;
-  color: var(--muted);
-  cursor: pointer;
-  padding: 1px 0;
-  font-family: 'DM Sans', sans-serif;
-  transition: color 0.15s;
-}
-
-.comment-action-btn:hover { color: var(--text); }
-.comment-action-btn.edit:hover { color: var(--accent); }
-.comment-action-btn.delete:hover { color: #e84a4a; }
-.comment-action-btn.save:hover { color: #7cb85c; }
-
-/* ── Leaderboard empty state ── */
-.lb-empty {
-  padding: 3rem 2rem;
-  text-align: center;
-  color: var(--muted);
-  font-size: 0.875rem;
-  line-height: 1.6;
-}
-
-.lb-empty-icon { font-size: 2.5rem; margin-bottom: 0.75rem; opacity: 0.4; }
-
-/* ── Splash progress bar ── */
-.splash-progress-wrap {
-  width: 160px;
-  height: 3px;
-  background: rgba(255,255,255,0.1);
-  border-radius: 2px;
-  overflow: hidden;
-  opacity: 0;
-  transition: opacity 0.3s ease;
-}
-
-.splash-progress-wrap.visible { opacity: 1; }
-
-.splash-progress-bar {
-  height: 100%;
-  background: var(--accent);
-  border-radius: 2px;
-  width: 0%;
-  transition: width 0.4s ease;
-}
-
-/* ── Notification empty state ── */
-.notif-empty-icon {
-  font-size: 2rem;
-  margin-bottom: 0.5rem;
-  opacity: 0.4;
-}
-
 /* ── Leaderboard ── */
 .leaderboard-screen { flex: 1; padding: 1rem 1rem 6rem; }
 
@@ -2539,9 +2362,6 @@ body {
     <div class="splash-title">Going Yard</div>
     <div class="splash-sub">&amp; Drinking Hard</div>
   </div>
-  <div class="splash-progress-wrap" id="splash-progress-wrap">
-    <div class="splash-progress-bar" id="splash-progress-bar"></div>
-  </div>
 </div>
 
 <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
@@ -2765,89 +2585,19 @@ function useSwipeDismiss(onDismiss, threshold = 80) {
   return ref;
 }
 
-// App-level tick — a single interval drives all countdown timers
-// Pass `now` as a prop to avoid one interval per card
-function useAppTick() {
+function useCountdown(drinkLog, drinkType) {
   const [now, setNow] = useState(Date.now());
+
   useEffect(() => {
     const id = setInterval(() => setNow(Date.now()), 1000);
     return () => clearInterval(id);
   }, []);
-  return now;
-}
 
-// Pull-to-refresh hook — attaches to a scroll container ref
-// Only triggers when the container is already scrolled to the top
-function usePullToRefresh(onRefresh) {
-  const ref        = useRef(null);
-  const startY     = useRef(null);
-  const readyRef   = useRef(false);
-  const runningRef = useRef(false);
-  const [pulling, setPulling] = useState(false);
-  const [ready,   setReady]   = useState(false);
-  const [running, setRunning] = useState(false);
-  const THRESHOLD = 64;
-
-  useEffect(() => {
-    const el = ref.current;
-    if (!el) return;
-
-    const onTouchStart = (e) => {
-      if (el.scrollTop > 2) return;
-      startY.current = e.touches[0].clientY;
-      setPulling(false); setReady(false); readyRef.current = false;
-    };
-
-    const onTouchMove = (e) => {
-      if (startY.current === null) return;
-      const dy = e.touches[0].clientY - startY.current;
-      if (dy <= 0) { startY.current = null; setPulling(false); setReady(false); readyRef.current = false; return; }
-      const isReady = dy >= THRESHOLD;
-      readyRef.current = isReady;
-      setPulling(dy > 16);
-      setReady(isReady);
-    };
-
-    const onTouchEnd = async () => {
-      const wasReady = readyRef.current;
-      startY.current = null;
-      setPulling(false); setReady(false); readyRef.current = false;
-      if (wasReady && !runningRef.current) {
-        runningRef.current = true;
-        setRunning(true);
-        await onRefresh();
-        runningRef.current = false;
-        setRunning(false);
-      }
-    };
-
-    el.addEventListener('touchstart', onTouchStart, { passive: true });
-    el.addEventListener('touchmove',  onTouchMove,  { passive: true });
-    el.addEventListener('touchend',   onTouchEnd,   { passive: true });
-    return () => {
-      el.removeEventListener('touchstart', onTouchStart);
-      el.removeEventListener('touchmove',  onTouchMove);
-      el.removeEventListener('touchend',   onTouchEnd);
-    };
-  }, [onRefresh]); // stable — only re-attaches if onRefresh identity changes
-
-  return { ref, pulling, ready, running };
-}
-
-// PTR indicator element — rendered at top of scrollable screens
-function PtrIndicator({ pulling, ready, running }) {
-  if (!pulling && !running) return null;
-  return React.createElement('div', { className: `ptr-indicator ${pulling ? 'visible' : ''} ${ready ? 'ready' : ''}` },
-    React.createElement('span', { className: 'ptr-emoji' }, '🍺'),
-    running ? 'Refreshing...' : ready ? 'Release to refresh' : 'Pull to refresh'
-  );
-}
-
-function computeCountdown(drinkLog, now) {
   if (!drinkLog) return null;
   const status = computeStatus(drinkLog);
   if (!['pending', 'awaiting_approval'].includes(status)) return null;
 
+  // Determine clock start
   let clockStart = null;
   if (status === 'awaiting_approval' && drinkLog.assigned_at) {
     clockStart = new Date(drinkLog.assigned_at).getTime();
@@ -2859,21 +2609,21 @@ function computeCountdown(drinkLog, now) {
 
   if (!clockStart) return null;
 
-  const deadline  = clockStart + (24 * 60 * 60 * 1000);
-  const remaining = deadline - now;
+  const deadline   = clockStart + (24 * 60 * 60 * 1000);
+  const remaining  = deadline - now;
 
   if (remaining <= 0) return { label: '0h 0m 0s', urgency: 'urgent' };
 
   const h = Math.floor(remaining / 3600000);
   const m = Math.floor((remaining % 3600000) / 60000);
   const s = Math.floor((remaining % 60000) / 1000);
+  const label = `${h}h ${m}m ${s}s`;
 
-  return {
-    label:   `${h}h ${m}m ${s}s`,
-    urgency: remaining < 2 * 3600000 ? 'urgent'
-           : remaining < 6 * 3600000 ? 'warning'
-           : 'ok',
-  };
+  const urgency = remaining < 2 * 3600000 ? 'urgent'
+                : remaining < 6 * 3600000 ? 'warning'
+                : 'ok';
+
+  return { label, urgency };
 }
 
 /**
@@ -3179,7 +2929,7 @@ function AssignModal({ event, currentUser, onClose, onAssigned, showToast }) {
 
 // ── Upload Modal ─────────────────────────────────────────────────────────
 
-function UploadModal({ event, drinkLog, currentUser, onClose, onUploaded, showToast, onNavigateVideos, onVideoUploaded }) {
+function UploadModal({ event, drinkLog, currentUser, onClose, onUploaded, showToast, onNavigateVideos }) {
   const [file, setFile]             = useState(null);
   const [previewUrl, setPreviewUrl] = useState(null);
   const [uploading, setUploading]   = useState(false);
@@ -3356,9 +3106,12 @@ function UploadModal({ event, drinkLog, currentUser, onClose, onUploaded, showTo
       if (dbErr) throw dbErr;
       setProgress(100);
 
+      showToast('Chug video uploaded! 🍺');
+
       // Notify all other users via backend, passing video_id for deep link
       try {
-        const { data: { session: notifSession } } = await sb.auth.getSession();
+        const { data: { session } } = await sb.auth.getSession();
+        // Fetch the newly inserted video's id for the deep link
         const { data: videoRow } = await sb
           .from('chug_videos')
           .select('id')
@@ -3368,7 +3121,7 @@ function UploadModal({ event, drinkLog, currentUser, onClose, onUploaded, showTo
           .single();
         await fetch(`${BACKEND}/videos/notify`, {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${notifSession.access_token}` },
+          headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${session.access_token}` },
           body: JSON.stringify({
             hr_event_id:    event.id,
             player_name:    event.full_name,
@@ -3380,7 +3133,6 @@ function UploadModal({ event, drinkLog, currentUser, onClose, onUploaded, showTo
         console.error('Video notify failed:', e);
       }
 
-      onVideoUploaded && onVideoUploaded();
       onUploaded();
       onClose();
     } catch (e) {
@@ -3513,9 +3265,7 @@ function VideoCard({ v, currentUser, onNavigateToEvent, highlight }) {
   const [commentText, setCommentText] = useState('');
   const [showComments, setShowComments] = useState(true);
   const [replyingTo, setReplyingTo] = useState(null); // comment id
-  const [replyTexts, setReplyTexts] = useState({}); // { [commentId]: string }
-  const [editingId, setEditingId]   = useState(null);
-  const [editTexts, setEditTexts]   = useState({}); // { [commentId]: string }
+  const [replyText, setReplyText]   = useState('');
 
   const color       = USER_COLORS[v.actual_drinker] || '#888';
   const playerColor = PLAYER_COLORS[v.player_key] || '#888';
@@ -3524,16 +3274,11 @@ function VideoCard({ v, currentUser, onNavigateToEvent, highlight }) {
 
   useEffect(() => {
     loadData();
-    let debounceTimer = null;
-    const debouncedLoad = () => {
-      clearTimeout(debounceTimer);
-      debounceTimer = setTimeout(loadData, 300);
-    };
     const chan = sb.channel(`video-${v.id}`)
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'likes' }, debouncedLoad)
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'comments' }, debouncedLoad)
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'likes' }, loadData)
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'comments' }, loadData)
       .subscribe();
-    return () => { clearTimeout(debounceTimer); sb.removeChannel(chan); };
+    return () => sb.removeChannel(chan);
   }, [v.id]);
 
   const loadData = async () => {
@@ -3561,11 +3306,10 @@ function VideoCard({ v, currentUser, onNavigateToEvent, highlight }) {
 
   const commentSubmitting = useRef(false);
   const addComment = async (parentId = null) => {
-    const text = parentId ? (replyTexts[parentId] || '').trim() : commentText.trim();
+    const text = parentId ? replyText.trim() : commentText.trim();
     if (!text || commentSubmitting.current) return;
     commentSubmitting.current = true;
-    if (parentId) setReplyTexts(prev => ({ ...prev, [parentId]: '' }));
-    else setCommentText('');
+    if (parentId) setReplyText(''); else setCommentText('');
     try {
       const { data: { session } } = await sb.auth.getSession();
       await fetch(`${BACKEND}/video-comments`, {
@@ -3576,19 +3320,6 @@ function VideoCard({ v, currentUser, onNavigateToEvent, highlight }) {
       setReplyingTo(null);
       loadData();
     } finally { commentSubmitting.current = false; }
-  };
-
-  const editComment = async (commentId) => {
-    const text = (editTexts[commentId] || '').trim();
-    if (!text) return;
-    const { data: { session } } = await sb.auth.getSession();
-    await fetch(`${BACKEND}/video-comments/${commentId}/edit`, {
-      method: 'PATCH',
-      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${session.access_token}` },
-      body: JSON.stringify({ body: text })
-    });
-    setEditingId(null);
-    loadData();
   };
 
   const deleteComment = async (commentId) => {
@@ -3605,71 +3336,42 @@ function VideoCard({ v, currentUser, onNavigateToEvent, highlight }) {
   const replies  = comments.filter(c =>  c.parent_comment_id);
   const repliesFor = (id) => replies.filter(r => r.parent_comment_id === id);
 
-  const renderComment = (c, isReply = false) => {
-    const isEditing = editingId === c.id;
-    return React.createElement('div', { key: c.id, className: 'comment' },
-      React.createElement(Avatar, { name: c.username, size: isReply ? 22 : 28 }),
-      React.createElement('div', { style: { flex: 1 } },
-        React.createElement('div', { className: 'comment-body' },
-          React.createElement('div', { className: 'comment-username', style: { color: USER_COLORS[c.username] || '#888' } },
-            cap(c.username),
-            c.edited_at && React.createElement('span', { className: 'comment-edited-label' }, 'edited')
-          ),
-          isEditing
-            ? React.createElement('textarea', {
-                className: 'comment-edit-input',
-                value: editTexts[c.id] ?? c.body,
-                autoFocus: true,
-                onChange: e => setEditTexts(prev => ({ ...prev, [c.id]: e.target.value })),
-                onKeyDown: e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); editComment(c.id); } },
-                rows: 2,
-              })
-            : React.createElement('div', { className: 'comment-text' }, c.body)
-        ),
-        React.createElement('div', { className: 'comment-action-btns' },
-          !isReply && React.createElement('button', {
-            className: 'comment-action-btn reply-btn',
-            onClick: () => { if (replyingTo === c.id) { setReplyingTo(null); setReplyTexts(prev => ({ ...prev, [c.id]: '' })); } else setReplyingTo(c.id); }
-          }, replyingTo === c.id ? 'Cancel' : 'Reply'),
-          c.username === currentUser && !isEditing && React.createElement('button', {
-            className: 'comment-action-btn edit',
-            onClick: () => { setEditingId(c.id); setEditTexts(prev => ({ ...prev, [c.id]: c.body })); }
-          }, 'Edit'),
-          c.username === currentUser && isEditing && React.createElement('button', {
-            className: 'comment-action-btn save',
-            onClick: () => editComment(c.id)
-          }, 'Save'),
-          c.username === currentUser && isEditing && React.createElement('button', {
-            className: 'comment-action-btn',
-            onClick: () => setEditingId(null)
-          }, 'Cancel'),
-          c.username === currentUser && !isEditing && React.createElement('button', {
-            className: 'comment-action-btn delete',
-            onClick: () => deleteComment(c.id)
-          }, 'Delete')
-        ),
-        repliesFor(c.id).length > 0 && React.createElement('div', { className: 'comment-replies' },
-          repliesFor(c.id).map(r => renderComment(r, true))
-        ),
-        replyingTo === c.id && React.createElement('div', { className: 'reply-input-row' },
-          React.createElement('input', {
-            className: 'reply-input',
-            placeholder: `Reply to ${cap(c.username)}...`,
-            value: replyTexts[c.id] || '',
-            autoFocus: true,
-            onChange: e => setReplyTexts(prev => ({ ...prev, [c.id]: e.target.value })),
-            onKeyDown: e => e.key === 'Enter' && addComment(c.id)
-          }),
-          React.createElement('button', { className: 'send-btn', onClick: () => addComment(c.id) },
-            React.createElement('svg', { viewBox: '0 0 24 24', fill: 'none', stroke: '#0a0a0f', strokeWidth: 2.5 },
-              React.createElement('line', { x1: '22', y1: '2', x2: '11', y2: '13' }),
-              React.createElement('polygon', { points: '22 2 15 22 11 13 2 9 22 2' })
-            )
+  const renderComment = (c, isReply = false) => React.createElement('div', { key: c.id, className: 'comment' },
+    React.createElement(Avatar, { name: c.username, size: isReply ? 22 : 28 }),
+    React.createElement('div', { style: { flex: 1 } },
+      React.createElement('div', { className: 'comment-body' },
+        React.createElement('div', { className: 'comment-username', style: { color: USER_COLORS[c.username] || '#888' } }, cap(c.username)),
+        React.createElement('div', { className: 'comment-text' }, c.body)
+      ),
+      !isReply && React.createElement('button', {
+        className: 'reply-btn',
+        onClick: () => { if (replyingTo === c.id) { setReplyingTo(null); setReplyText(''); } else setReplyingTo(c.id); }
+      }, replyingTo === c.id ? 'Cancel' : 'Reply'),
+      repliesFor(c.id).length > 0 && React.createElement('div', { className: 'comment-replies' },
+        repliesFor(c.id).map(r => renderComment(r, true))
+      ),
+      replyingTo === c.id && React.createElement('div', { className: 'reply-input-row' },
+        React.createElement('input', {
+          className: 'reply-input',
+          placeholder: `Reply to ${cap(c.username)}...`,
+          value: replyText,
+          autoFocus: true,
+          onChange: e => setReplyText(e.target.value),
+          onKeyDown: e => e.key === 'Enter' && addComment(c.id)
+        }),
+        React.createElement('button', { className: 'send-btn', onClick: () => addComment(c.id) },
+          React.createElement('svg', { viewBox: '0 0 24 24', fill: 'none', stroke: '#0a0a0f', strokeWidth: 2.5 },
+            React.createElement('line', { x1: '22', y1: '2', x2: '11', y2: '13' }),
+            React.createElement('polygon', { points: '22 2 15 22 11 13 2 9 22 2' })
           )
         )
       )
-    );
-  };
+    ),
+    c.username === currentUser && React.createElement('button', {
+      className: 'comment-delete-btn',
+      onClick: () => deleteComment(c.id)
+    }, '✕')
+  );
 
   return React.createElement('div', { key: v.id, id: `video-card-${v.id}`, className: `video-card${highlight ? ' highlight' : ''}` },
     React.createElement('div', { className: 'video-card-header' },
@@ -3778,12 +3480,9 @@ function VideosScreen({ currentUser, deepLinkVideoId, onDeepLinkHandled, onNavig
 
   const filtered = userFilter ? videos.filter(v => v.actual_drinker === userFilter) : videos;
 
-  const { ref: vidPtrRef, pulling: vidPulling, ready: vidReady, running: vidRunning } = usePullToRefresh(load);
-
   if (loading) return React.createElement('div', { className: 'loading' }, React.createElement('div', { className: 'spinner' }));
 
   return React.createElement(React.Fragment, null,
-    React.createElement(PtrIndicator, { pulling: vidPulling, ready: vidReady, running: vidRunning }),
     React.createElement('div', { className: 'video-filter-row' },
       React.createElement('button', {
         className: `filter-chip ${!userFilter ? 'active' : ''}`,
@@ -3796,7 +3495,7 @@ function VideosScreen({ currentUser, deepLinkVideoId, onDeepLinkHandled, onNavig
         onClick: () => setUserFilter(userFilter === u ? null : u)
       }, cap(u)))
     ),
-    React.createElement('div', { className: 'videos-screen', ref: vidPtrRef },
+    React.createElement('div', { className: 'videos-screen' },
       filtered.length === 0
         ? React.createElement('div', { className: 'empty' },
             React.createElement('div', { className: 'empty-icon' }, '🎥'),
@@ -3816,15 +3515,13 @@ function VideosScreen({ currentUser, deepLinkVideoId, onDeepLinkHandled, onNavig
 
 // ── HR Card ───────────────────────────────────────────────────────────────
 
-function HRCard({ event, currentUser, onAssigned, showToast, videosEnabled, onNavigateVideos, highlight, enterDelay = 0, now = Date.now() }) {
+function HRCard({ event, currentUser, onAssigned, showToast, videosEnabled, onNavigateVideos, highlight, enterDelay = 0 }) {
   const [likes, setLikes]           = useState([]);
   const [comments, setComments]     = useState([]);
   const [showComments, setShowComments] = useState(true);
   const [commentText, setCommentText]   = useState('');
   const [replyingTo, setReplyingTo]     = useState(null);
-  const [replyTexts, setReplyTexts]     = useState({}); // { [commentId]: string }
-  const [editingId, setEditingId]       = useState(null);
-  const [editTexts, setEditTexts]       = useState({}); // { [commentId]: string }
+  const [replyText, setReplyText]       = useState('');
   const [showAssign, setShowAssign]   = useState(false);
   const [showUpload, setShowUpload]   = useState(false);
   const [assignment, setAssignment]   = useState(null);
@@ -3837,7 +3534,7 @@ function HRCard({ event, currentUser, onAssigned, showToast, videosEnabled, onNa
 
   // Compute derived status client-side
   const status       = computeStatus(drinkLog);
-  const countdown    = computeCountdown(drinkLog, now);
+  const countdown    = useCountdown(drinkLog, event.drink_type);
   const canApprove   = canUserApprove(event, drinkLog, currentUser);
   const canAssign    = event.drink_type === 'you_drink'
                         && event.drinker === currentUser
@@ -3868,18 +3565,13 @@ function HRCard({ event, currentUser, onAssigned, showToast, videosEnabled, onNa
 
   useEffect(() => {
     loadData();
-    let debounceTimer = null;
-    const debouncedLoad = () => {
-      clearTimeout(debounceTimer);
-      debounceTimer = setTimeout(loadData, 300);
-    };
     const chan = sb.channel(`hr-${event.id}`)
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'likes' }, debouncedLoad)
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'comments' }, debouncedLoad)
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'drink_assignments' }, debouncedLoad)
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'drink_log' }, debouncedLoad)
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'likes' }, loadData)
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'comments' }, loadData)
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'drink_assignments' }, loadData)
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'drink_log' }, loadData)
       .subscribe();
-    return () => { clearTimeout(debounceTimer); sb.removeChannel(chan); };
+    return () => sb.removeChannel(chan);
   }, [event.id]);
 
   const loadData = async () => {
@@ -3909,11 +3601,10 @@ function HRCard({ event, currentUser, onAssigned, showToast, videosEnabled, onNa
 
   const commentSubmitting = useRef(false);
   const addComment = async (parentId = null) => {
-    const text = parentId ? (replyTexts[parentId] || '').trim() : commentText.trim();
+    const text = parentId ? replyText.trim() : commentText.trim();
     if (!text || commentSubmitting.current) return;
     commentSubmitting.current = true;
-    if (parentId) setReplyTexts(prev => ({ ...prev, [parentId]: '' }));
-    else setCommentText('');
+    if (parentId) setReplyText(''); else setCommentText('');
     try {
       const { data: { session } } = await sb.auth.getSession();
       await fetch(`${BACKEND}/comments`, {
@@ -3926,19 +3617,6 @@ function HRCard({ event, currentUser, onAssigned, showToast, videosEnabled, onNa
     } finally {
       commentSubmitting.current = false;
     }
-  };
-
-  const editComment = async (commentId) => {
-    const text = (editTexts[commentId] || '').trim();
-    if (!text) return;
-    const { data: { session } } = await sb.auth.getSession();
-    await fetch(`${BACKEND}/comments/${commentId}/edit`, {
-      method: 'PATCH',
-      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${session.access_token}` },
-      body: JSON.stringify({ body: text })
-    });
-    setEditingId(null);
-    loadData();
   };
 
   const deleteComment = async (commentId) => {
@@ -4097,71 +3775,43 @@ function HRCard({ event, currentUser, onAssigned, showToast, videosEnabled, onNa
         const replies  = comments.filter(c =>  c.parent_comment_id);
         const repliesFor = (id) => replies.filter(r => r.parent_comment_id === id);
 
-        const renderComment = (c, isReply = false) => {
-          const isEditing = editingId === c.id;
-          return React.createElement('div', { key: c.id, className: 'comment' },
-            React.createElement(Avatar, { name: c.username, size: isReply ? 22 : 28 }),
-            React.createElement('div', { style: { flex: 1 } },
-              React.createElement('div', { className: 'comment-body' },
-                React.createElement('div', { className: 'comment-username', style: { color: USER_COLORS[c.username] || '#888' } },
-                  cap(c.username),
-                  c.edited_at && React.createElement('span', { className: 'comment-edited-label' }, 'edited')
-                ),
-                isEditing
-                  ? React.createElement('textarea', {
-                      className: 'comment-edit-input',
-                      value: editTexts[c.id] ?? c.body,
-                      autoFocus: true,
-                      onChange: e => setEditTexts(prev => ({ ...prev, [c.id]: e.target.value })),
-                      onKeyDown: e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); editComment(c.id); } },
-                      rows: 2,
-                    })
-                  : React.createElement('div', { className: 'comment-text' }, c.body)
-              ),
-              React.createElement('div', { className: 'comment-action-btns' },
-                !isReply && React.createElement('button', {
-                  className: 'comment-action-btn reply-btn',
-                  onClick: () => { if (replyingTo === c.id) { setReplyingTo(null); setReplyTexts(prev => ({ ...prev, [c.id]: '' })); } else setReplyingTo(c.id); }
-                }, replyingTo === c.id ? 'Cancel' : 'Reply'),
-                c.username === currentUser && !isEditing && React.createElement('button', {
-                  className: 'comment-action-btn edit',
-                  onClick: () => { setEditingId(c.id); setEditTexts(prev => ({ ...prev, [c.id]: c.body })); }
-                }, 'Edit'),
-                c.username === currentUser && isEditing && React.createElement('button', {
-                  className: 'comment-action-btn save',
-                  onClick: () => editComment(c.id)
-                }, 'Save'),
-                c.username === currentUser && isEditing && React.createElement('button', {
-                  className: 'comment-action-btn',
-                  onClick: () => setEditingId(null)
-                }, 'Cancel'),
-                c.username === currentUser && !isEditing && React.createElement('button', {
-                  className: 'comment-action-btn delete',
-                  onClick: () => deleteComment(c.id)
-                }, 'Delete')
-              ),
-              repliesFor(c.id).length > 0 && React.createElement('div', { className: 'comment-replies' },
-                repliesFor(c.id).map(r => renderComment(r, true))
-              ),
-              replyingTo === c.id && React.createElement('div', { className: 'reply-input-row' },
-                React.createElement('input', {
-                  className: 'reply-input',
-                  placeholder: `Reply to ${cap(c.username)}...`,
-                  value: replyTexts[c.id] || '',
-                  autoFocus: true,
-                  onChange: e => setReplyTexts(prev => ({ ...prev, [c.id]: e.target.value })),
-                  onKeyDown: e => e.key === 'Enter' && addComment(c.id)
-                }),
-                React.createElement('button', { className: 'send-btn', onClick: () => addComment(c.id) },
-                  React.createElement('svg', { viewBox: '0 0 24 24', fill: 'none', stroke: '#0a0a0f', strokeWidth: 2.5 },
-                    React.createElement('line', { x1: '22', y1: '2', x2: '11', y2: '13' }),
-                    React.createElement('polygon', { points: '22 2 15 22 11 13 2 9 22 2' })
-                  )
+        const renderComment = (c, isReply = false) => React.createElement('div', { key: c.id, className: 'comment' },
+          React.createElement(Avatar, { name: c.username, size: isReply ? 22 : 28 }),
+          React.createElement('div', { style: { flex: 1 } },
+            React.createElement('div', { className: 'comment-body' },
+              React.createElement('div', { className: 'comment-username', style: { color: USER_COLORS[c.username] || '#888' } }, cap(c.username)),
+              React.createElement('div', { className: 'comment-text' }, c.body)
+            ),
+            !isReply && React.createElement('button', {
+              className: 'reply-btn',
+              onClick: () => { if (replyingTo === c.id) { setReplyingTo(null); setReplyText(''); } else setReplyingTo(c.id); }
+            }, replyingTo === c.id ? 'Cancel' : 'Reply'),
+            repliesFor(c.id).length > 0 && React.createElement('div', { className: 'comment-replies' },
+              repliesFor(c.id).map(r => renderComment(r, true))
+            ),
+            replyingTo === c.id && React.createElement('div', { className: 'reply-input-row' },
+              React.createElement('input', {
+                className: 'reply-input',
+                placeholder: `Reply to ${cap(c.username)}...`,
+                value: replyText,
+                autoFocus: true,
+                onChange: e => setReplyText(e.target.value),
+                onKeyDown: e => e.key === 'Enter' && addComment(c.id)
+              }),
+              React.createElement('button', { className: 'send-btn', onClick: () => addComment(c.id) },
+                React.createElement('svg', { viewBox: '0 0 24 24', fill: 'none', stroke: '#0a0a0f', strokeWidth: 2.5 },
+                  React.createElement('line', { x1: '22', y1: '2', x2: '11', y2: '13' }),
+                  React.createElement('polygon', { points: '22 2 15 22 11 13 2 9 22 2' })
                 )
               )
             )
-          );
-        };
+          ),
+          c.username === currentUser && React.createElement('button', {
+            className: 'comment-delete-btn',
+            title: 'Delete comment',
+            onClick: () => deleteComment(c.id)
+          }, '✕')
+        );
 
         return React.createElement(React.Fragment, null,
           topLevel.length > 0 && React.createElement('div', { className: 'comments-section' },
@@ -4197,8 +3847,7 @@ function HRCard({ event, currentUser, onAssigned, showToast, videosEnabled, onNa
       onClose: () => setShowUpload(false),
       onUploaded: loadData,
       showToast,
-      onNavigateVideos,
-      onVideoUploaded: window.__showUploadBanner,
+      onNavigateVideos
     })
   );
 }
@@ -4397,16 +4046,29 @@ function SearchFilterBar({ search, onSearch, filters, onFilter, dateOptions, all
 // ── Feed Screen ───────────────────────────────────────────────────────────
 
 function FeedScreen({ currentUser, showToast, videosEnabled, onNavigateVideos, deepLinkEventId, onDeepLinkHandled, hasUnread, onClearUnread }) {
-  const [events, setEvents]       = useState([]);
-  const [loading, setLoading]     = useState(true);
-  const [search, setSearch]       = useState('');
-  const [filters, setFilters]     = useState({});
+  const [events, setEvents]   = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [search, setSearch]   = useState('');
+  const [filters, setFilters] = useState({});
   const [highlightId, setHighlightId] = useState(deepLinkEventId || null);
-  const [drinkLogs, setDrinkLogs] = useState({});
-  const now = useAppTick(); // single tick for all countdowns
-
   useEffect(() => {
     if (deepLinkEventId) setHighlightId(deepLinkEventId);
+  }, [deepLinkEventId]);
+  const [drinkLogs, setDrinkLogs] = useState({});
+
+
+
+  useEffect(() => {
+    if (deepLinkEventId && !loading) {
+      setTimeout(() => {
+        const el = document.getElementById(`hr-card-${deepLinkEventId}`);
+        if (el) {
+          el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          setHighlightId(deepLinkEventId);
+          setTimeout(() => { setHighlightId(null); onDeepLinkHandled && onDeepLinkHandled(); }, 2000);
+        }
+      }, 400);
+    }
   }, [deepLinkEventId]);
 
   useEffect(() => {
@@ -4415,6 +4077,7 @@ function FeedScreen({ currentUser, showToast, videosEnabled, onNavigateVideos, d
       .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'hr_events' }, loadEvents)
       .subscribe();
 
+    // Clear unread dot when user scrolls back to top of the feed
     const feedEl = document.querySelector('.feed');
     const handleScroll = () => {
       if (feedEl && feedEl.scrollTop < 20 && hasUnread) {
@@ -4429,8 +4092,6 @@ function FeedScreen({ currentUser, showToast, videosEnabled, onNavigateVideos, d
     };
   }, []);
 
-  const { ref: ptrContainerRef, pulling: ptrPulling, ready: ptrReady, running: ptrRunning } = usePullToRefresh(loadEvents);
-
   const loadEvents = async () => {
     const [evRes, dlRes] = await Promise.all([
       sb.from('hr_events').select('*').order('created_at', { ascending: false }).limit(50),
@@ -4444,6 +4105,7 @@ function FeedScreen({ currentUser, showToast, videosEnabled, onNavigateVideos, d
     }
     setLoading(false);
 
+    // Scroll to and highlight deep-linked card after data loads
     if (deepLinkEventId) {
       setTimeout(() => {
         const el = document.getElementById(`hr-card-${deepLinkEventId}`);
@@ -4456,12 +4118,17 @@ function FeedScreen({ currentUser, showToast, videosEnabled, onNavigateVideos, d
     }
   };
 
+
+
+  // Unique dates for the date dropdown
+  // Build set of YYYY-MM-DD strings for calendar dot indicators
   const allEventDates = new Set(events.map(e => e.created_at?.slice(0, 10)).filter(Boolean));
 
   const anyStatusFilter = ['pending','awaiting_approval','completed','completed_late','late'].some(k => filters[k]);
   const anyTypeFilter   = ['i_drink','you_drink'].some(k => filters[k]);
 
   const filtered = events.filter(e => {
+    // Search: player name, assigner, or actual drinker (given_to for you_drink)
     if (search) {
       const q       = search.toLowerCase();
       const dl      = drinkLogs[e.id];
@@ -4472,21 +4139,26 @@ function FeedScreen({ currentUser, showToast, videosEnabled, onNavigateVideos, d
         givenTo.includes(q);
       if (!matches) return false;
     }
+    // Date range filter
     if (filters.dateStart) {
       const d = e.created_at?.slice(0, 10);
       if (!d) return false;
       if (d < filters.dateStart) return false;
       if (filters.dateEnd && d > filters.dateEnd) return false;
     }
+    // Status filter
     if (anyStatusFilter) {
       const dl     = drinkLogs[e.id];
       const status = computeStatus(dl);
+      // For filter purposes, i_drink pending = "awaiting" (To Be Drank),
+      // only you_drink pending = "pending" (To Be Assigned)
       const filterKey = (status === 'pending' && e.drink_type === 'i_drink')
         ? 'awaiting_approval'
         : status === 'vacated' ? 'late'
         : status;
       if (!filters[filterKey]) return false;
     }
+    // Type filter
     if (anyTypeFilter && !filters[e.drink_type]) return false;
     return true;
   });
@@ -4495,7 +4167,6 @@ function FeedScreen({ currentUser, showToast, videosEnabled, onNavigateVideos, d
 
   return React.createElement(React.Fragment, null,
     React.createElement(SearchFilterBar, { search, onSearch: setSearch, filters, onFilter: setFilters, dateOptions: [], allEventDates }),
-    React.createElement(PtrIndicator, { pulling: ptrPulling, ready: ptrReady, running: ptrRunning }),
     !events.length
       ? React.createElement('div', { className: 'empty' },
           React.createElement('div', { className: 'empty-icon' }, '⚾'),
@@ -4503,14 +4174,8 @@ function FeedScreen({ currentUser, showToast, videosEnabled, onNavigateVideos, d
         )
       : filtered.length === 0
         ? React.createElement('div', { className: 'no-results' }, 'No events match your search.')
-        : React.createElement('div', { className: 'feed', ref: ptrContainerRef },
-            filtered.map((e, i) => React.createElement(HRCard, {
-              key: e.id, event: e, currentUser, onAssigned: loadEvents,
-              showToast, videosEnabled, onNavigateVideos,
-              highlight: highlightId === e.id,
-              enterDelay: Math.min(i * 0.06, 0.5),
-              now,
-            }))
+        : React.createElement('div', { className: 'feed' },
+            filtered.map((e, i) => React.createElement(HRCard, { key: e.id, event: e, currentUser, onAssigned: loadEvents, showToast, videosEnabled, onNavigateVideos, highlight: highlightId === e.id, enterDelay: Math.min(i * 0.06, 0.5) }))
           )
   );
 }
@@ -4533,67 +4198,61 @@ function LeaderboardScreen() {
     { key: 'combined', label: 'Combined Leaderboard' },
   ];
 
-  const load = useCallback(async () => {
-    setLoading(true);
-    const [hr, dl, allDrinkLogs] = await Promise.all([
-      sb.from('hr_totals').select('*'),
-      sb.from('leaderboard').select('*'),
-      sb.from('drink_log').select('*'),
-    ]);
+  useEffect(() => {
+    const load = async () => {
+      const [hr, dl, allDrinkLogs] = await Promise.all([
+        sb.from('hr_totals').select('*'),
+        sb.from('leaderboard').select('*'),
+        sb.from('drink_log').select('*'),
+      ]);
 
-    if (hr.data) {
-      setHrTotals(hr.data.sort((a, b) => b.current_hrs - a.current_hrs));
-      const hrMap = {};
-      hr.data.forEach(p => { hrMap[p.player_key] = p.current_hrs || 0; });
-      setIDrinkHRs(hrMap);
-    }
-    if (dl.data) setDrinkTotals(dl.data.sort((a, b) => b.total_drinks - a.total_drinks));
+      if (hr.data) {
+        setHrTotals(hr.data.sort((a, b) => b.current_hrs - a.current_hrs));
+        const hrMap = {};
+        hr.data.forEach(p => { hrMap[p.player_key] = p.current_hrs || 0; });
+        setIDrinkHRs(hrMap);
+      }
+      if (dl.data) setDrinkTotals(dl.data.sort((a, b) => b.total_drinks - a.total_drinks));
 
-    const counts = {};
-    ALL_USERS.forEach(u => { counts[u] = { drinks: 0, late: 0, vacated: 0 }; });
+      const counts = {};
+      ALL_USERS.forEach(u => { counts[u] = { drinks: 0, late: 0, vacated: 0 }; });
 
-    if (allDrinkLogs.data) {
-      allDrinkLogs.data.forEach(log => {
-        let drinker;
-        if (log.drink_type === 'i_drink') {
-          drinker = log.username;
-        } else {
-          if (!log.given_to) return;
-          drinker = log.given_to;
-        }
-        const key = drinker.toLowerCase();
-        if (counts[key] === undefined) return;
-        counts[key].drinks++;
-        const status = computeStatus(log);
-        if (status === 'late') counts[key].late++;
-        if (status === 'vacated') counts[key].vacated = (counts[key].vacated || 0) + 1;
-      });
-    }
+      if (allDrinkLogs.data) {
+        allDrinkLogs.data.forEach(log => {
+          let drinker;
+          if (log.drink_type === 'i_drink') {
+            drinker = log.username;
+          } else {
+            if (!log.given_to) return;
+            drinker = log.given_to;
+          }
+          const key = drinker.toLowerCase();
+          if (counts[key] === undefined) return;
+          counts[key].drinks++;
+          const status = computeStatus(log);
+          if (status === 'late') counts[key].late++;
+          if (status === 'vacated') counts[key].vacated = (counts[key].vacated || 0) + 1;
+        });
+      }
 
-    const lb = Object.entries(counts)
-      .map(([username, { drinks, late, vacated }]) => ({ username, drinks, late, vacated }))
-      .sort((a, b) => b.drinks - a.drinks);
-    setDrinkLB(lb);
-    setLoading(false);
+      const lb = Object.entries(counts)
+        .map(([username, { drinks, late, vacated }]) => ({ username, drinks, late, vacated }))
+        .sort((a, b) => b.drinks - a.drinks);
+      setDrinkLB(lb);
+
+      setLoading(false);
+    };
+    load();
   }, []);
 
-  useEffect(() => { load(); }, [load]);
-
   const rankClass = (i) => i === 0 ? 'gold' : i === 1 ? 'silver' : i === 2 ? 'bronze' : '';
-
-  const { ref: lbPtrRef, pulling: lbPulling, ready: lbReady, running: lbRunning } = usePullToRefresh(load);
 
   if (loading) return React.createElement('div', { className: 'loading' }, React.createElement('div', { className: 'spinner' }));
 
   // ── Tab content renderers ──
 
   const renderDrinks = () => drinkLB.every(u => u.drinks === 0)
-    ? React.createElement('div', { className: 'lb-empty' },
-        React.createElement('div', { className: 'lb-empty-icon' }, '🍺'),
-        'No drinks logged yet.',
-        React.createElement('br', null),
-        'First homer incoming...'
-      )
+    ? React.createElement('div', { className: 'lb-card', style: { padding: '2rem', textAlign: 'center', color: 'var(--muted)' } }, 'No drinks logged yet')
     : React.createElement(React.Fragment, null,
         drinkLB.length >= 1 && React.createElement('div', { className: 'podium-wrap' },
           [drinkLB[1], drinkLB[0], drinkLB[2]].filter(Boolean).map((u, idx) => {
@@ -4721,8 +4380,7 @@ function LeaderboardScreen() {
 
   const contentMap = { drinks: renderDrinks, slugger: renderSlugger, hitter: renderHitter, mlb: renderMLB, combined: renderCombined };
 
-  return React.createElement('div', { className: 'leaderboard-screen', ref: lbPtrRef },
-    React.createElement(PtrIndicator, { pulling: lbPulling, ready: lbReady, running: lbRunning }),
+  return React.createElement('div', { className: 'leaderboard-screen' },
     // Pill tabs
     React.createElement('div', { className: 'lb-pills' },
       TABS.map(t => React.createElement('button', {
@@ -4744,33 +4402,34 @@ function LogScreen({ currentUser, videosEnabled, onNavigateVideos }) {
   const [search, setSearch]   = useState('');
   const [filters, setFilters] = useState({});
 
-  const load = useCallback(async () => {
-    const [logRes, vidRes] = await Promise.all([
-      sb.from('drink_log').select('*, hr_events(created_at)').order('event_date', { ascending: false }),
-      sb.from('chug_videos').select('id, hr_event_id, actual_drinker'),
-    ]);
-    if (logRes.error) console.error('[LOG] fetch error:', logRes.error);
-    if (logRes.data) {
-      const videoSet   = new Set((vidRes.data || []).map(v => v.hr_event_id));
-      const videoIdMap = {};
-      (vidRes.data || []).forEach(v => { videoIdMap[v.hr_event_id] = v.id; });
-      const annotated = logRes.data.map(l => {
-        const actualDrinker = (l.drink_type === 'you_drink' && l.given_to) ? l.given_to : l.username;
-        return {
-          ...l,
-          _hasVideo:  videoSet.has(l.hr_event_id),
-          _videoId:   videoIdMap[l.hr_event_id] || null,
-          _isMyDrink: actualDrinker === currentUser && !videoSet.has(l.hr_event_id)
-                        && !['completed', 'done', 'completed_late'].includes(computeStatus(l))
-                        && (l.drink_type === 'i_drink' || (l.drink_type === 'you_drink' && l.given_to)),
-        };
-      });
-      setLogs(annotated);
-    }
-    setLoading(false);
-  }, [currentUser]);
-
-  useEffect(() => { load(); }, [load]);
+  useEffect(() => {
+    const load = async () => {
+      const [logRes, vidRes] = await Promise.all([
+        sb.from('drink_log').select('*, hr_events(created_at)').order('event_date', { ascending: false }),
+        sb.from('chug_videos').select('hr_event_id, actual_drinker'),
+      ]);
+      if (logRes.error) console.error('[LOG] fetch error:', logRes.error);
+      if (logRes.data) {
+        // Annotate each log row with video info
+        const videoSet = new Set((vidRes.data || []).map(v => v.hr_event_id));
+        const videoOwner = {};
+        (vidRes.data || []).forEach(v => { videoOwner[v.hr_event_id] = v.actual_drinker; });
+        const annotated = logRes.data.map(l => {
+          const actualDrinker = (l.drink_type === 'you_drink' && l.given_to) ? l.given_to : l.username;
+          return {
+            ...l,
+            _hasVideo:  videoSet.has(l.hr_event_id),
+            _isMyDrink: actualDrinker === currentUser && !videoSet.has(l.hr_event_id)
+                          && !['completed', 'done', 'completed_late'].includes(computeStatus(l))
+                          && (l.drink_type === 'i_drink' || (l.drink_type === 'you_drink' && l.given_to)),
+          };
+        });
+        setLogs(annotated);
+      }
+      setLoading(false);
+    };
+    load();
+  }, []);
 
   // Unique dates for dropdown
   const allEventDates = new Set(logs.map(l => {
@@ -4789,10 +4448,9 @@ function LogScreen({ currentUser, videosEnabled, onNavigateVideos }) {
 
     if (search) {
       const q = search.toLowerCase();
-      const matchesPlayer  = l.mlb_player?.toLowerCase().includes(q);
-      const matchesDrinker = actualDrinker?.toLowerCase().includes(q);
-      const matchesAssigner = l.username?.toLowerCase().includes(q); // assigner on you_drink
-      if (!matchesPlayer && !matchesDrinker && !matchesAssigner) return false;
+      const matchesPlayer = l.mlb_player?.toLowerCase().includes(q);
+      const matchesDrinker = l.username?.toLowerCase().includes(q) || actualDrinker?.toLowerCase().includes(q);
+      if (!matchesPlayer && !matchesDrinker) return false;
     }
     if (filters.dateStart) {
       const rawStr = l.hr_events?.created_at?.slice(0, 10) || l.event_date || '';
@@ -4856,24 +4514,21 @@ function LogScreen({ currentUser, videosEnabled, onNavigateVideos }) {
             : 'To Be Assigned'
           )
         ),
-        videosEnabled && l._hasVideo && React.createElement('button', { className: 'log-video-link', onClick: () => onNavigateVideos && onNavigateVideos(l._videoId) },
+        videosEnabled && l._hasVideo && React.createElement('button', { className: 'log-video-link', onClick: onNavigateVideos },
           '🎥 View'
         ),
-        videosEnabled && !l._hasVideo && l._isMyDrink && React.createElement('button', { className: 'log-video-link', onClick: () => onNavigateVideos && onNavigateVideos(null) },
+        videosEnabled && !l._hasVideo && l._isMyDrink && React.createElement('button', { className: 'log-video-link', onClick: onNavigateVideos },
           '🎥 Record'
         )
       )
     );
   };
 
-  const { ref: logPtrRef, pulling: logPulling, ready: logReady, running: logRunning } = usePullToRefresh(load);
-
   if (loading) return React.createElement('div', { className: 'loading' }, React.createElement('div', { className: 'spinner' }));
 
   return React.createElement(React.Fragment, null,
     React.createElement(SearchFilterBar, { search, onSearch: setSearch, filters, onFilter: setFilters, dateOptions: [], allEventDates }),
-    React.createElement(PtrIndicator, { pulling: logPulling, ready: logReady, running: logRunning }),
-    React.createElement('div', { className: 'log-screen', ref: logPtrRef },
+    React.createElement('div', { className: 'log-screen' },
       React.createElement('div', { className: 'log-table' },
         React.createElement('div', { className: 'log-header' },
           React.createElement('div', null, 'Date'),
@@ -4997,12 +4652,12 @@ function NotificationCenter({ currentUser }) {
 
   // Realtime: re-fetch when new notifications arrive
   useEffect(() => {
-    load(); // initial load
     const chan = sb.channel('notif-watch')
       .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'notifications' }, () => {
         load();
       })
       .subscribe();
+    load();
     return () => sb.removeChannel(chan);
   }, []);
 
@@ -5075,10 +4730,7 @@ function NotificationCenter({ currentUser }) {
           loading
             ? React.createElement('div', { className: 'notif-empty' }, 'Loading...')
             : visibleNotifs.length === 0
-              ? React.createElement('div', { className: 'notif-empty' },
-                  React.createElement('div', { className: 'notif-empty-icon' }, '🔔'),
-                  'No notifications yet'
-                )
+              ? React.createElement('div', { className: 'notif-empty' }, 'No notifications yet')
               : visibleNotifs.map(n => React.createElement('div', {
                   key: n.id,
                   className: `notif-item ${!n.read ? 'unread' : ''}`,
@@ -5218,8 +4870,6 @@ function App() {
   const [tab, setTab]                 = useState('feed');
   const [tabAnimating, setTabAnimating] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
-  const [showSignOutConfirm, setShowSignOutConfirm] = useState(false);
-  const [uploadBanner, setUploadBanner] = useState(false);
   const prevTab = useRef('feed');
   const [toast, showToast]            = useToast();
   const [authChecked, setAuthChecked] = useState(false);
@@ -5227,11 +4877,6 @@ function App() {
   const [deepLink, setDeepLink]           = useState(() => getDeepLink());
   const [hasUnread, setHasUnread]         = useState(false);
   const latestEventId                     = useRef(null);
-
-  const showUploadBanner = () => {
-    setUploadBanner(true);
-    setTimeout(() => setUploadBanner(false), 2000);
-  };
 
   useEffect(() => {
     window.__navigateToEvent = (eventId) => {
@@ -5246,7 +4891,6 @@ function App() {
       setTabAnimating(true);
       setTimeout(() => setTabAnimating(false), 260);
     };
-    window.__showUploadBanner = showUploadBanner;
     // Handle deep link on first load
     const dl = getDeepLink();
     if (dl.tab === 'videos' || dl.videoId) {
@@ -5305,14 +4949,11 @@ function App() {
   };
 
   const onAuth = (u, uname) => { setUser(u); setUsername(uname); };
-  const onSignOut = () => setShowSignOutConfirm(true);
-
-  const doSignOut = async () => {
-    setShowSignOutConfirm(false);
-    setShowSettings(false);
+  const onSignOut = async () => {
     await sb.auth.signOut();
     setUser(null);
     setUsername('');
+    // Reset team theming back to default gold
     document.documentElement.style.setProperty('--accent',         '#e8c14a');
     document.documentElement.style.setProperty('--team-primary',   '#e8c14a');
     document.documentElement.style.setProperty('--team-secondary', '#e8c14a');
@@ -5394,30 +5035,6 @@ function App() {
     ),
     toast && React.createElement(Toast, { msg: toast }),
 
-    // Upload success banner
-    uploadBanner && React.createElement('div', { className: 'upload-banner' },
-      '✅ Video uploaded successfully!'
-    ),
-
-    // Sign out confirmation modal
-    showSignOutConfirm && React.createElement('div', { className: 'signout-overlay' },
-      React.createElement('div', { className: 'signout-modal' },
-        React.createElement('h3', null, 'Sign Out'),
-        React.createElement('p', null, 'Are you sure you want to sign out of Going Yard?'),
-        React.createElement('div', { className: 'signout-modal-btns' },
-          React.createElement('button', {
-            className: 'btn-cancel',
-            onClick: () => setShowSignOutConfirm(false)
-          }, 'Cancel'),
-          React.createElement('button', {
-            className: 'btn-confirm',
-            style: { background: '#e84a4a', flex: 1 },
-            onClick: doSignOut
-          }, 'Sign Out')
-        )
-      )
-    ),
-
     // Settings modal
     showSettings && React.createElement('div', {
       style: { position: 'fixed', inset: 0, zIndex: 500, display: 'flex', flexDirection: 'column', background: 'var(--bg)' }
@@ -5443,33 +5060,16 @@ ReactDOM.createRoot(document.getElementById('root')).render(React.createElement(
 
 // ── Splash ────────────────────────────────────────────────────────────────
 (function () {
-  const splashEl   = document.getElementById('splash');
-  const progressWrap = document.getElementById('splash-progress-wrap');
-  const progressBar  = document.getElementById('splash-progress-bar');
+  const splashEl = document.getElementById('splash');
   if (!splashEl) return;
 
-  const MIN_MS = 2000;
+  const MIN_MS = 2000; // always visible for at least 2 s
   const start  = Date.now();
   let dismissed = false;
-
-  // Show progress bar only if auth takes > 2s
-  let progressInterval = null;
-  const progressTimer = setTimeout(() => {
-    if (dismissed) return;
-    progressWrap.classList.add('visible');
-    let pct = 0;
-    progressInterval = setInterval(() => {
-      pct = Math.min(pct + 2, 90); // animate to 90%, snap to 100% on dismiss
-      progressBar.style.width = pct + '%';
-    }, 100);
-  }, 2000);
 
   function dismiss() {
     if (dismissed) return;
     dismissed = true;
-    clearTimeout(progressTimer);
-    clearInterval(progressInterval);
-    progressBar.style.width = '100%';
     const elapsed = Date.now() - start;
     const delay   = Math.max(0, MIN_MS - elapsed);
     setTimeout(() => {
@@ -5480,6 +5080,7 @@ ReactDOM.createRoot(document.getElementById('root')).render(React.createElement(
     }, delay);
   }
 
+  // Expose so App can call it after auth check + first render
   window._dismissSplash = dismiss;
 })();
 
