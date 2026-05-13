@@ -2088,6 +2088,28 @@ body {
 
 @keyframes fadeOut { to { opacity: 0; } }
 
+/* ── Splash progress bar ── */
+.splash-progress-wrap {
+  width: 160px;
+  height: 3px;
+  background: rgba(255,255,255,0.1);
+  border-radius: 2px;
+  overflow: hidden;
+  opacity: 0;
+  transition: opacity 0.4s ease;
+  margin-top: 0.5rem;
+}
+
+.splash-progress-wrap.visible { opacity: 1; }
+
+.splash-progress-bar {
+  height: 100%;
+  background: #e8c14a;
+  border-radius: 2px;
+  width: 0%;
+  transition: width 0.4s ease;
+}
+
 /* ── Splash Screen ── */
 #splash {
   position: fixed;
@@ -2361,6 +2383,9 @@ body {
   <div>
     <div class="splash-title">Going Yard</div>
     <div class="splash-sub">&amp; Drinking Hard</div>
+  </div>
+  <div class="splash-progress-wrap" id="splash-progress-wrap">
+    <div class="splash-progress-bar" id="splash-progress-bar"></div>
   </div>
 </div>
 
@@ -5060,16 +5085,48 @@ ReactDOM.createRoot(document.getElementById('root')).render(React.createElement(
 
 // ── Splash ────────────────────────────────────────────────────────────────
 (function () {
-  const splashEl = document.getElementById('splash');
+  const splashEl     = document.getElementById('splash');
+  const progressWrap = document.getElementById('splash-progress-wrap');
+  const progressBar  = document.getElementById('splash-progress-bar');
+  const mugEl        = splashEl ? splashEl.querySelector('.splash-mug') : null;
   if (!splashEl) return;
 
-  const MIN_MS = 2000; // always visible for at least 2 s
+  const MIN_MS = 1500; // minimum splash visible time
   const start  = Date.now();
   let dismissed = false;
+  let progressInterval = null;
+  let progressTimer    = null;
+  let safetyTimer      = null;
+
+  // Show progress bar after 2s if still loading
+  progressTimer = setTimeout(() => {
+    if (dismissed) return;
+    if (progressWrap) progressWrap.classList.add('visible');
+    let pct = 5;
+    progressInterval = setInterval(() => {
+      pct = Math.min(pct + 1.5, 90);
+      if (progressBar) progressBar.style.width = pct + '%';
+    }, 150);
+  }, 2000);
+
+  // Safety valve — dismiss after 15s no matter what
+  safetyTimer = setTimeout(() => {
+    window._dismissSplash && window._dismissSplash();
+  }, 15000);
 
   function dismiss() {
     if (dismissed) return;
     dismissed = true;
+    clearTimeout(progressTimer);
+    clearTimeout(safetyTimer);
+    clearInterval(progressInterval);
+
+    // Snap progress to 100%
+    if (progressBar) progressBar.style.width = '100%';
+
+    // Stop mug spinning
+    if (mugEl) mugEl.style.animation = 'none';
+
     const elapsed = Date.now() - start;
     const delay   = Math.max(0, MIN_MS - elapsed);
     setTimeout(() => {
@@ -5080,7 +5137,6 @@ ReactDOM.createRoot(document.getElementById('root')).render(React.createElement(
     }, delay);
   }
 
-  // Expose so App can call it after auth check + first render
   window._dismissSplash = dismiss;
 })();
 
