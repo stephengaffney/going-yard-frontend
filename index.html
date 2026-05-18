@@ -2095,19 +2095,25 @@ body {
   background: rgba(255,255,255,0.1);
   border-radius: 2px;
   overflow: hidden;
-  opacity: 0;
-  transition: opacity 0.4s ease;
+  opacity: 1;
   margin-top: 0.5rem;
 }
-
-.splash-progress-wrap.visible { opacity: 1; }
 
 .splash-progress-bar {
   height: 100%;
   background: #e8c14a;
   border-radius: 2px;
   width: 0%;
-  transition: width 0.4s ease;
+  transition: width 0.3s ease;
+  animation: splash-load 3s ease forwards;
+}
+
+@keyframes splash-load {
+  0%   { width: 0%; }
+  30%  { width: 40%; }
+  60%  { width: 70%; }
+  85%  { width: 88%; }
+  100% { width: 90%; }
 }
 
 /* ── Splash Screen ── */
@@ -2372,6 +2378,79 @@ body {
 }
 
 .log-row.tappable:hover { background: var(--surface2); }
+
+/* ── Pull to Refresh ── */
+.ptr-indicator {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  height: 0;
+  overflow: hidden;
+  transition: height 0.2s ease;
+  color: var(--muted);
+  font-size: 0.75rem;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  background: var(--bg);
+}
+
+.ptr-indicator.visible {
+  height: 48px;
+}
+
+.ptr-spinner {
+  width: 16px; height: 16px;
+  border: 2px solid var(--border);
+  border-top-color: var(--accent);
+  border-radius: 50%;
+  animation: spin 0.7s linear infinite;
+  flex-shrink: 0;
+}
+
+.ptr-arrow {
+  font-size: 1rem;
+  transition: transform 0.2s ease;
+}
+
+.ptr-arrow.ready { transform: rotate(180deg); }
+
+/* ── Comment edit ── */
+.comment-edit-btn {
+  background: none;
+  border: none;
+  color: #555;
+  cursor: pointer;
+  padding: 2px 4px;
+  border-radius: 4px;
+  font-size: 0.65rem;
+  font-family: 'DM Sans', sans-serif;
+  transition: color 0.15s;
+  line-height: 1;
+}
+
+.comment-edit-btn:hover { color: var(--accent); }
+
+.comment-edit-input {
+  flex: 1;
+  background: var(--surface2);
+  border: 1px solid var(--accent);
+  border-radius: 8px;
+  padding: 0.35rem 0.75rem;
+  color: var(--text);
+  font-family: 'DM Sans', sans-serif;
+  font-size: 0.875rem;
+  outline: none;
+  width: 100%;
+  margin-top: 4px;
+}
+
+.comment-action-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 2px;
+}
 
 </style>
 </head>
@@ -3356,6 +3435,22 @@ function VideoCard({ v, currentUser, onNavigateToEvent, highlight }) {
     loadData();
   };
 
+  const [editingCommentId, setEditingCommentId] = useState(null);
+  const [editText, setEditText] = useState('');
+  const startEdit = (c) => { setEditingCommentId(c.id); setEditText(c.body); };
+  const cancelEdit = () => { setEditingCommentId(null); setEditText(''); };
+  const saveEdit = async (commentId) => {
+    if (!editText.trim()) return;
+    const { data: { session } } = await sb.auth.getSession();
+    await fetch(`${BACKEND}/video-comments/${commentId}/edit`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${session.access_token}` },
+      body: JSON.stringify({ body: editText.trim() })
+    });
+    cancelEdit();
+    loadData();
+  };
+
   // Build threaded comment tree
   const topLevel = comments.filter(c => !c.parent_comment_id);
   const replies  = comments.filter(c =>  c.parent_comment_id);
@@ -3364,14 +3459,37 @@ function VideoCard({ v, currentUser, onNavigateToEvent, highlight }) {
   const renderComment = (c, isReply = false) => React.createElement('div', { key: c.id, className: 'comment' },
     React.createElement(Avatar, { name: c.username, size: isReply ? 22 : 28 }),
     React.createElement('div', { style: { flex: 1 } },
-      React.createElement('div', { className: 'comment-body' },
-        React.createElement('div', { className: 'comment-username', style: { color: USER_COLORS[c.username] || '#888' } }, cap(c.username)),
-        React.createElement('div', { className: 'comment-text' }, c.body)
-      ),
-      !isReply && React.createElement('button', {
-        className: 'reply-btn',
-        onClick: () => { if (replyingTo === c.id) { setReplyingTo(null); setReplyText(''); } else setReplyingTo(c.id); }
-      }, replyingTo === c.id ? 'Cancel' : 'Reply'),
+      editingCommentId === c.id
+        ? React.createElement('div', null,
+            React.createElement('input', {
+              className: 'comment-edit-input',
+              value: editText,
+              autoFocus: true,
+              onChange: e => setEditText(e.target.value),
+              onKeyDown: e => { if (e.key === 'Enter') saveEdit(c.id); if (e.key === 'Escape') cancelEdit(); }
+            }),
+            React.createElement('div', { className: 'comment-action-row', style: { marginTop: '4px' } },
+              React.createElement('button', { className: 'comment-edit-btn', onClick: () => saveEdit(c.id) }, '✓ Save'),
+              React.createElement('button', { className: 'comment-edit-btn', onClick: cancelEdit }, 'Cancel')
+            )
+          )
+        : React.createElement(React.Fragment, null,
+            React.createElement('div', { className: 'comment-body' },
+              React.createElement('div', { className: 'comment-username', style: { color: USER_COLORS[c.username] || '#888' } }, cap(c.username)),
+              React.createElement('div', { className: 'comment-text' }, c.body),
+              c.edited_at && React.createElement('div', { style: { fontSize: '0.6rem', color: 'var(--muted)', marginTop: '2px' } }, '(edited)')
+            ),
+            React.createElement('div', { className: 'comment-action-row' },
+              !isReply && React.createElement('button', {
+                className: 'reply-btn',
+                onClick: () => { if (replyingTo === c.id) { setReplyingTo(null); setReplyText(''); } else setReplyingTo(c.id); }
+              }, replyingTo === c.id ? 'Cancel' : 'Reply'),
+              c.username === currentUser && React.createElement('button', {
+                className: 'comment-edit-btn',
+                onClick: () => startEdit(c)
+              }, '✏️ Edit')
+            )
+          ),
       repliesFor(c.id).length > 0 && React.createElement('div', { className: 'comment-replies' },
         repliesFor(c.id).map(r => renderComment(r, true))
       ),
@@ -3392,7 +3510,7 @@ function VideoCard({ v, currentUser, onNavigateToEvent, highlight }) {
         )
       )
     ),
-    c.username === currentUser && React.createElement('button', {
+    c.username === currentUser && editingCommentId !== c.id && React.createElement('button', {
       className: 'comment-delete-btn',
       onClick: () => deleteComment(c.id)
     }, '✕')
@@ -3653,6 +3771,24 @@ function HRCard({ event, currentUser, onAssigned, showToast, videosEnabled, onNa
     loadData();
   };
 
+  const [editingCommentId, setEditingCommentId] = useState(null);
+  const [editText, setEditText] = useState('');
+
+  const startEdit = (c) => { setEditingCommentId(c.id); setEditText(c.body); };
+  const cancelEdit = () => { setEditingCommentId(null); setEditText(''); };
+
+  const saveEdit = async (commentId) => {
+    if (!editText.trim()) return;
+    const { data: { session } } = await sb.auth.getSession();
+    await fetch(`${BACKEND}/comments/${commentId}/edit`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${session.access_token}` },
+      body: JSON.stringify({ body: editText.trim() })
+    });
+    cancelEdit();
+    loadData();
+  };
+
   const approveDrink = async () => {
     if (!drinkLog) return;
     const { data: { session } } = await sb.auth.getSession();
@@ -3803,14 +3939,37 @@ function HRCard({ event, currentUser, onAssigned, showToast, videosEnabled, onNa
         const renderComment = (c, isReply = false) => React.createElement('div', { key: c.id, className: 'comment' },
           React.createElement(Avatar, { name: c.username, size: isReply ? 22 : 28 }),
           React.createElement('div', { style: { flex: 1 } },
-            React.createElement('div', { className: 'comment-body' },
-              React.createElement('div', { className: 'comment-username', style: { color: USER_COLORS[c.username] || '#888' } }, cap(c.username)),
-              React.createElement('div', { className: 'comment-text' }, c.body)
-            ),
-            !isReply && React.createElement('button', {
-              className: 'reply-btn',
-              onClick: () => { if (replyingTo === c.id) { setReplyingTo(null); setReplyText(''); } else setReplyingTo(c.id); }
-            }, replyingTo === c.id ? 'Cancel' : 'Reply'),
+            editingCommentId === c.id
+              ? React.createElement('div', null,
+                  React.createElement('input', {
+                    className: 'comment-edit-input',
+                    value: editText,
+                    autoFocus: true,
+                    onChange: e => setEditText(e.target.value),
+                    onKeyDown: e => { if (e.key === 'Enter') saveEdit(c.id); if (e.key === 'Escape') cancelEdit(); }
+                  }),
+                  React.createElement('div', { className: 'comment-action-row', style: { marginTop: '4px' } },
+                    React.createElement('button', { className: 'comment-edit-btn', onClick: () => saveEdit(c.id) }, '✓ Save'),
+                    React.createElement('button', { className: 'comment-edit-btn', onClick: cancelEdit }, 'Cancel')
+                  )
+                )
+              : React.createElement(React.Fragment, null,
+                  React.createElement('div', { className: 'comment-body' },
+                    React.createElement('div', { className: 'comment-username', style: { color: USER_COLORS[c.username] || '#888' } }, cap(c.username)),
+                    React.createElement('div', { className: 'comment-text' }, c.body),
+                    c.edited_at && React.createElement('div', { style: { fontSize: '0.6rem', color: 'var(--muted)', marginTop: '2px' } }, '(edited)')
+                  ),
+                  React.createElement('div', { className: 'comment-action-row' },
+                    !isReply && React.createElement('button', {
+                      className: 'reply-btn',
+                      onClick: () => { if (replyingTo === c.id) { setReplyingTo(null); setReplyText(''); } else setReplyingTo(c.id); }
+                    }, replyingTo === c.id ? 'Cancel' : 'Reply'),
+                    c.username === currentUser && React.createElement('button', {
+                      className: 'comment-edit-btn',
+                      onClick: () => startEdit(c)
+                    }, '✏️ Edit')
+                  )
+                ),
             repliesFor(c.id).length > 0 && React.createElement('div', { className: 'comment-replies' },
               repliesFor(c.id).map(r => renderComment(r, true))
             ),
@@ -3831,7 +3990,7 @@ function HRCard({ event, currentUser, onAssigned, showToast, videosEnabled, onNa
               )
             )
           ),
-          c.username === currentUser && React.createElement('button', {
+          c.username === currentUser && editingCommentId !== c.id && React.createElement('button', {
             className: 'comment-delete-btn',
             title: 'Delete comment',
             onClick: () => deleteComment(c.id)
@@ -4073,50 +4232,15 @@ function SearchFilterBar({ search, onSearch, filters, onFilter, dateOptions, all
 function FeedScreen({ currentUser, showToast, videosEnabled, onNavigateVideos, deepLinkEventId, onDeepLinkHandled, hasUnread, onClearUnread }) {
   const [events, setEvents]   = useState([]);
   const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
   const [search, setSearch]   = useState('');
   const [filters, setFilters] = useState({});
   const [highlightId, setHighlightId] = useState(deepLinkEventId || null);
-  useEffect(() => {
-    if (deepLinkEventId) setHighlightId(deepLinkEventId);
-  }, [deepLinkEventId]);
   const [drinkLogs, setDrinkLogs] = useState({});
+  const [ptrState, setPtrState] = useState('idle'); // 'idle' | 'pulling' | 'ready' | 'refreshing'
+  const ptrRef = useRef({ startY: 0, pulling: false });
 
-
-
-  useEffect(() => {
-    if (deepLinkEventId && !loading) {
-      setTimeout(() => {
-        const el = document.getElementById(`hr-card-${deepLinkEventId}`);
-        if (el) {
-          el.scrollIntoView({ behavior: 'smooth', block: 'center' });
-          setHighlightId(deepLinkEventId);
-          setTimeout(() => { setHighlightId(null); onDeepLinkHandled && onDeepLinkHandled(); }, 2000);
-        }
-      }, 400);
-    }
-  }, [deepLinkEventId]);
-
-  useEffect(() => {
-    loadEvents();
-    const chan = sb.channel('feed')
-      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'hr_events' }, loadEvents)
-      .subscribe();
-
-    // Clear unread dot when user scrolls back to top of the feed
-    const feedEl = document.querySelector('.feed');
-    const handleScroll = () => {
-      if (feedEl && feedEl.scrollTop < 20 && hasUnread) {
-        onClearUnread && onClearUnread();
-      }
-    };
-    if (feedEl) feedEl.addEventListener('scroll', handleScroll, { passive: true });
-
-    return () => {
-      sb.removeChannel(chan);
-      if (feedEl) feedEl.removeEventListener('scroll', handleScroll);
-    };
-  }, []);
-
+  // Define loadEvents BEFORE useEffects so closures always have the current reference
   const loadEvents = async () => {
     const [evRes, dlRes] = await Promise.all([
       sb.from('hr_events').select('*').order('created_at', { ascending: false }).limit(50),
@@ -4142,6 +4266,78 @@ function FeedScreen({ currentUser, showToast, videosEnabled, onNavigateVideos, d
       }, 400);
     }
   };
+
+  useEffect(() => {
+    if (deepLinkEventId) setHighlightId(deepLinkEventId);
+  }, [deepLinkEventId]);
+
+  useEffect(() => {
+    if (deepLinkEventId && !loading) {
+      setTimeout(() => {
+        const el = document.getElementById(`hr-card-${deepLinkEventId}`);
+        if (el) {
+          el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          setHighlightId(deepLinkEventId);
+          setTimeout(() => { setHighlightId(null); onDeepLinkHandled && onDeepLinkHandled(); }, 2000);
+        }
+      }, 400);
+    }
+  }, [deepLinkEventId]);
+
+  useEffect(() => {
+    loadEvents();
+    const chan = sb.channel('feed')
+      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'hr_events' }, loadEvents)
+      .subscribe();
+
+    // Pull-to-refresh touch handlers on the feed container
+    const THRESHOLD = 65;
+    const onTouchStart = (e) => {
+      const feedEl = document.querySelector('.feed');
+      if (!feedEl || feedEl.scrollTop > 0) return;
+      ptrRef.current.startY = e.touches[0].clientY;
+      ptrRef.current.pulling = true;
+    };
+    const onTouchMove = (e) => {
+      if (!ptrRef.current.pulling) return;
+      const dy = e.touches[0].clientY - ptrRef.current.startY;
+      if (dy > 10) setPtrState(dy >= THRESHOLD ? 'ready' : 'pulling');
+    };
+    const onTouchEnd = () => {
+      if (!ptrRef.current.pulling) return;
+      ptrRef.current.pulling = false;
+      setPtrState(prev => {
+        if (prev === 'ready') {
+          setPtrState('refreshing');
+          loadEvents().then(() => setPtrState('idle'));
+        } else {
+          setPtrState('idle');
+        }
+        return prev;
+      });
+    };
+
+    document.addEventListener('touchstart', onTouchStart, { passive: true });
+    document.addEventListener('touchmove',  onTouchMove,  { passive: true });
+    document.addEventListener('touchend',   onTouchEnd,   { passive: true });
+
+    // Clear unread dot when user scrolls back to top of the feed
+    const handleScroll = () => {
+      const feedEl = document.querySelector('.feed');
+      if (feedEl && feedEl.scrollTop < 20 && hasUnread) {
+        onClearUnread && onClearUnread();
+      }
+    };
+    document.addEventListener('scroll', handleScroll, { passive: true, capture: true });
+
+    return () => {
+      sb.removeChannel(chan);
+      document.removeEventListener('touchstart', onTouchStart);
+      document.removeEventListener('touchmove',  onTouchMove);
+      document.removeEventListener('touchend',   onTouchEnd);
+      document.removeEventListener('scroll', handleScroll, { capture: true });
+    };
+  }, []);
 
 
 
@@ -4192,6 +4388,16 @@ function FeedScreen({ currentUser, showToast, videosEnabled, onNavigateVideos, d
 
   return React.createElement(React.Fragment, null,
     React.createElement(SearchFilterBar, { search, onSearch: setSearch, filters, onFilter: setFilters, dateOptions: [], allEventDates }),
+    React.createElement('div', {
+      className: `ptr-indicator ${ptrState !== 'idle' ? 'visible' : ''}`
+    },
+      ptrState === 'refreshing'
+        ? React.createElement(React.Fragment, null, React.createElement('div', { className: 'ptr-spinner' }), 'Refreshing...')
+        : React.createElement(React.Fragment, null,
+            React.createElement('span', { className: `ptr-arrow ${ptrState === 'ready' ? 'ready' : ''}` }, '↓'),
+            ptrState === 'ready' ? 'Release to refresh' : 'Pull to refresh'
+          )
+    ),
     !events.length
       ? React.createElement('div', { className: 'empty' },
           React.createElement('div', { className: 'empty-icon' }, '⚾'),
@@ -4942,6 +5148,10 @@ function App() {
               setTeamIcon(data.username);
             }
           });
+        // Re-register push on every app load (handles PWA re-launches)
+        if (session.access_token) {
+          setTimeout(() => window.registerPush(session.access_token), 1000);
+        }
       }
       setAuthChecked(true);
       window._dismissSplash && window._dismissSplash();
@@ -5085,51 +5295,36 @@ ReactDOM.createRoot(document.getElementById('root')).render(React.createElement(
 
 // ── Splash ────────────────────────────────────────────────────────────────
 (function () {
-  const splashEl     = document.getElementById('splash');
-  const progressWrap = document.getElementById('splash-progress-wrap');
-  const progressBar  = document.getElementById('splash-progress-bar');
-  const mugEl        = splashEl ? splashEl.querySelector('.splash-mug') : null;
+  const splashEl  = document.getElementById('splash');
+  const progressBar = document.getElementById('splash-progress-bar');
+  const mugEl     = splashEl ? splashEl.querySelector('.splash-mug') : null;
   if (!splashEl) return;
 
-  const MIN_MS = 1500; // minimum splash visible time
+  const MIN_MS = 1200;
   const start  = Date.now();
   let dismissed = false;
-  let progressInterval = null;
-  let progressTimer    = null;
-  let safetyTimer      = null;
 
-  // Show progress bar after 2s if still loading
-  progressTimer = setTimeout(() => {
-    if (dismissed) return;
-    if (progressWrap) progressWrap.classList.add('visible');
-    let pct = 5;
-    progressInterval = setInterval(() => {
-      pct = Math.min(pct + 1.5, 90);
-      if (progressBar) progressBar.style.width = pct + '%';
-    }, 150);
-  }, 2000);
-
-  // Safety valve — dismiss after 15s no matter what
-  safetyTimer = setTimeout(() => {
+  // Safety valve — dismiss after 12s no matter what
+  const safetyTimer = setTimeout(() => {
     window._dismissSplash && window._dismissSplash();
-  }, 15000);
+  }, 12000);
 
   function dismiss() {
     if (dismissed) return;
     dismissed = true;
-    clearTimeout(progressTimer);
     clearTimeout(safetyTimer);
-    clearInterval(progressInterval);
 
-    // Snap progress to 100%
-    if (progressBar) progressBar.style.width = '100%';
-
-    // Stop mug spinning
-    if (mugEl) mugEl.style.animation = 'none';
+    // Snap progress bar to 100%
+    if (progressBar) {
+      progressBar.style.animation = 'none';
+      progressBar.style.width = '100%';
+    }
 
     const elapsed = Date.now() - start;
     const delay   = Math.max(0, MIN_MS - elapsed);
     setTimeout(() => {
+      // Stop mug just before fade so it doesn't freeze mid-spin visibly
+      if (mugEl) mugEl.style.animation = 'none';
       splashEl.classList.add('fade-out');
       splashEl.addEventListener('transitionend', () => {
         splashEl.classList.add('hidden');
