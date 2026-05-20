@@ -4372,12 +4372,15 @@ function FeedScreen({ currentUser, showToast, videosEnabled, onNavigateVideos, d
       const dl     = drinkLogs[e.id];
       const status = computeStatus(dl);
       // For filter purposes, i_drink pending = "awaiting" (To Be Drank),
-      // only you_drink pending = "pending" (To Be Assigned)
+      // only you_drink pending = "pending" (To Be Assigned).
+      // Late drinks still need to be drank, so they match both "Late" AND "To Be Drank".
       const filterKey = (status === 'pending' && e.drink_type === 'i_drink')
         ? 'awaiting_approval'
         : status === 'vacated' ? 'late'
         : status;
-      if (!filters[filterKey]) return false;
+      const matchesFilter = filters[filterKey]
+        || (status === 'late' && filters['awaiting_approval']);
+      if (!matchesFilter) return false;
     }
     // Type filter
     if (anyTypeFilter && !filters[e.drink_type]) return false;
@@ -4688,12 +4691,15 @@ function LogScreen({ currentUser, videosEnabled, onNavigateVideos }) {
       if (!rawStr || rawStr < filters.dateStart) return false;
       if (filters.dateEnd && rawStr > filters.dateEnd) return false;
     }
-    // Same logic: i_drink pending maps to awaiting_approval for filtering
+    // Same logic: i_drink pending maps to awaiting_approval for filtering.
+    // Late drinks still need to be drank, so they match both "Late" AND "To Be Drank".
     const filterKey = (status === 'pending' && l.drink_type === 'i_drink')
       ? 'awaiting_approval'
       : status === 'vacated' ? 'late'
       : status;
-    if (anyStatusFilter && !filters[filterKey]) return false;
+    const matchesFilter = filters[filterKey]
+      || (status === 'late' && filters['awaiting_approval']);
+    if (anyStatusFilter && !matchesFilter) return false;
     if (anyTypeFilter && !filters[l.drink_type]) return false;
     return true;
   });
