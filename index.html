@@ -4239,7 +4239,6 @@ function FeedScreen({ currentUser, showToast, videosEnabled, onNavigateVideos, d
   const [drinkLogs, setDrinkLogs] = useState({});
   const [ptrState, setPtrState] = useState('idle'); // 'idle' | 'pulling' | 'ready' | 'refreshing'
   const ptrRef = useRef({ startY: 0, pulling: false });
-  const ptrLockedUntil = useRef(0); // timestamp — PTR blocked while < Date.now()
 
   // Define loadEvents BEFORE useEffects so closures always have the current reference
   const loadEvents = async () => {
@@ -4262,12 +4261,7 @@ function FeedScreen({ currentUser, showToast, videosEnabled, onNavigateVideos, d
         if (el) {
           el.scrollIntoView({ behavior: 'smooth', block: 'center' });
           setHighlightId(deepLinkEventId);
-          // Clear deep link immediately so the useEffect stops re-firing and
-          // the PTR guard doesn't fight the user's scroll
-          onDeepLinkHandled && onDeepLinkHandled();
-          // Lock PTR for 1.5s to stop the first upward swipe triggering a refresh
-          ptrLockedUntil.current = Date.now() + 1500;
-          setTimeout(() => setHighlightId(null), 1800);
+          setTimeout(() => { setHighlightId(null); onDeepLinkHandled && onDeepLinkHandled(); }, 2000);
         }
       }, 400);
     }
@@ -4284,9 +4278,7 @@ function FeedScreen({ currentUser, showToast, videosEnabled, onNavigateVideos, d
         if (el) {
           el.scrollIntoView({ behavior: 'smooth', block: 'center' });
           setHighlightId(deepLinkEventId);
-          onDeepLinkHandled && onDeepLinkHandled();
-          ptrLockedUntil.current = Date.now() + 1500;
-          setTimeout(() => setHighlightId(null), 1800);
+          setTimeout(() => { setHighlightId(null); onDeepLinkHandled && onDeepLinkHandled(); }, 2000);
         }
       }, 400);
     }
@@ -4303,7 +4295,6 @@ function FeedScreen({ currentUser, showToast, videosEnabled, onNavigateVideos, d
     const onTouchStart = (e) => {
       const feedEl = document.querySelector('.feed');
       if (!feedEl || feedEl.scrollTop > 0) return;
-      if (Date.now() < ptrLockedUntil.current) return; // locked after programmatic scroll
       ptrRef.current.startY = e.touches[0].clientY;
       ptrRef.current.pulling = true;
     };
@@ -4381,12 +4372,15 @@ function FeedScreen({ currentUser, showToast, videosEnabled, onNavigateVideos, d
       const dl     = drinkLogs[e.id];
       const status = computeStatus(dl);
       // For filter purposes, i_drink pending = "awaiting" (To Be Drank),
-      // only you_drink pending = "pending" (To Be Assigned)
+      // only you_drink pending = "pending" (To Be Assigned).
+      // Late drinks still need to be drank, so they match both "Late" AND "To Be Drank".
       const filterKey = (status === 'pending' && e.drink_type === 'i_drink')
         ? 'awaiting_approval'
         : status === 'vacated' ? 'late'
         : status;
-      if (!filters[filterKey]) return false;
+      const matchesFilter = filters[filterKey]
+        || (status === 'late' && filters['awaiting_approval']); // late = still needs drinking
+      if (!matchesFilter) return false;
     }
     // Type filter
     if (anyTypeFilter && !filters[e.drink_type]) return false;
@@ -4697,12 +4691,15 @@ function LogScreen({ currentUser, videosEnabled, onNavigateVideos }) {
       if (!rawStr || rawStr < filters.dateStart) return false;
       if (filters.dateEnd && rawStr > filters.dateEnd) return false;
     }
-    // Same logic: i_drink pending maps to awaiting_approval for filtering
+    // Same logic: i_drink pending maps to awaiting_approval for filtering.
+    // Late drinks still need to be drank, so they match both "Late" AND "To Be Drank".
     const filterKey = (status === 'pending' && l.drink_type === 'i_drink')
       ? 'awaiting_approval'
       : status === 'vacated' ? 'late'
       : status;
-    if (anyStatusFilter && !filters[filterKey]) return false;
+    const matchesFilter = filters[filterKey]
+      || (status === 'late' && filters['awaiting_approval']); // late = still needs drinking
+    if (anyStatusFilter && !matchesFilter) return false;
     if (anyTypeFilter && !filters[l.drink_type]) return false;
     return true;
   });
