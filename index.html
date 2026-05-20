@@ -4636,7 +4636,7 @@ function LogScreen({ currentUser, videosEnabled, onNavigateVideos }) {
   useEffect(() => {
     const load = async () => {
       const [logRes, vidRes] = await Promise.all([
-        sb.from('drink_log').select('*, hr_events(created_at)').order('event_date', { ascending: false }),
+        sb.from('drink_log').select('*, hr_events(created_at)').order('hr_triggered_at', { ascending: false }),
         sb.from('chug_videos').select('hr_event_id, actual_drinker'),
       ]);
       if (logRes.error) console.error('[LOG] fetch error:', logRes.error);
