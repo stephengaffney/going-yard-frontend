@@ -4239,6 +4239,7 @@ function FeedScreen({ currentUser, showToast, videosEnabled, onNavigateVideos, d
   const [drinkLogs, setDrinkLogs] = useState({});
   const [ptrState, setPtrState] = useState('idle'); // 'idle' | 'pulling' | 'ready' | 'refreshing'
   const ptrRef = useRef({ startY: 0, pulling: false });
+  const ptrLockedUntil = useRef(0); // timestamp — PTR blocked while < Date.now()
 
   // Define loadEvents BEFORE useEffects so closures always have the current reference
   const loadEvents = async () => {
@@ -4261,7 +4262,12 @@ function FeedScreen({ currentUser, showToast, videosEnabled, onNavigateVideos, d
         if (el) {
           el.scrollIntoView({ behavior: 'smooth', block: 'center' });
           setHighlightId(deepLinkEventId);
-          setTimeout(() => { setHighlightId(null); onDeepLinkHandled && onDeepLinkHandled(); }, 2000);
+          // Clear deep link immediately so the useEffect stops re-firing and
+          // the PTR guard doesn't fight the user's scroll
+          onDeepLinkHandled && onDeepLinkHandled();
+          // Lock PTR for 1.5s to stop the first upward swipe triggering a refresh
+          ptrLockedUntil.current = Date.now() + 1500;
+          setTimeout(() => setHighlightId(null), 1800);
         }
       }, 400);
     }
@@ -4278,7 +4284,9 @@ function FeedScreen({ currentUser, showToast, videosEnabled, onNavigateVideos, d
         if (el) {
           el.scrollIntoView({ behavior: 'smooth', block: 'center' });
           setHighlightId(deepLinkEventId);
-          setTimeout(() => { setHighlightId(null); onDeepLinkHandled && onDeepLinkHandled(); }, 2000);
+          onDeepLinkHandled && onDeepLinkHandled();
+          ptrLockedUntil.current = Date.now() + 1500;
+          setTimeout(() => setHighlightId(null), 1800);
         }
       }, 400);
     }
@@ -4295,6 +4303,7 @@ function FeedScreen({ currentUser, showToast, videosEnabled, onNavigateVideos, d
     const onTouchStart = (e) => {
       const feedEl = document.querySelector('.feed');
       if (!feedEl || feedEl.scrollTop > 0) return;
+      if (Date.now() < ptrLockedUntil.current) return; // locked after programmatic scroll
       ptrRef.current.startY = e.touches[0].clientY;
       ptrRef.current.pulling = true;
     };
@@ -4461,7 +4470,7 @@ function LeaderboardScreen() {
           if (counts[key] === undefined) return;
           counts[key].drinks++;
           const status = computeStatus(log);
-          if (status === 'late' || status === 'completed_late') counts[key].late++;
+          if (status === 'late') counts[key].late++;
           if (status === 'vacated') counts[key].vacated = (counts[key].vacated || 0) + 1;
         });
       }
@@ -4636,7 +4645,7 @@ function LogScreen({ currentUser, videosEnabled, onNavigateVideos }) {
   useEffect(() => {
     const load = async () => {
       const [logRes, vidRes] = await Promise.all([
-        sb.from('drink_log').select('*, hr_events(created_at)').order('hr_triggered_at', { ascending: false }),
+        sb.from('drink_log').select('*, hr_events(created_at)').order('event_date', { ascending: false }),
         sb.from('chug_videos').select('hr_event_id, actual_drinker'),
       ]);
       if (logRes.error) console.error('[LOG] fetch error:', logRes.error);
