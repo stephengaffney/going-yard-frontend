@@ -4372,15 +4372,12 @@ function FeedScreen({ currentUser, showToast, videosEnabled, onNavigateVideos, d
       const dl     = drinkLogs[e.id];
       const status = computeStatus(dl);
       // For filter purposes, i_drink pending = "awaiting" (To Be Drank),
-      // only you_drink pending = "pending" (To Be Assigned).
-      // Late drinks still need to be drank, so they match both "Late" AND "To Be Drank".
+      // only you_drink pending = "pending" (To Be Assigned)
       const filterKey = (status === 'pending' && e.drink_type === 'i_drink')
         ? 'awaiting_approval'
         : status === 'vacated' ? 'late'
         : status;
-      const matchesFilter = filters[filterKey]
-        || (status === 'late' && filters['awaiting_approval']); // late = still needs drinking
-      if (!matchesFilter) return false;
+      if (!filters[filterKey]) return false;
     }
     // Type filter
     if (anyTypeFilter && !filters[e.drink_type]) return false;
@@ -4464,7 +4461,7 @@ function LeaderboardScreen() {
           if (counts[key] === undefined) return;
           counts[key].drinks++;
           const status = computeStatus(log);
-          if (status === 'late') counts[key].late++;
+          if (status === 'late' || status === 'completed_late') counts[key].late++;
           if (status === 'vacated') counts[key].vacated = (counts[key].vacated || 0) + 1;
         });
       }
@@ -4639,7 +4636,7 @@ function LogScreen({ currentUser, videosEnabled, onNavigateVideos }) {
   useEffect(() => {
     const load = async () => {
       const [logRes, vidRes] = await Promise.all([
-        sb.from('drink_log').select('*, hr_events(created_at)').order('event_date', { ascending: false }),
+        sb.from('drink_log').select('*, hr_events(created_at)').order('hr_triggered_at', { ascending: false }),
         sb.from('chug_videos').select('hr_event_id, actual_drinker'),
       ]);
       if (logRes.error) console.error('[LOG] fetch error:', logRes.error);
@@ -4691,15 +4688,12 @@ function LogScreen({ currentUser, videosEnabled, onNavigateVideos }) {
       if (!rawStr || rawStr < filters.dateStart) return false;
       if (filters.dateEnd && rawStr > filters.dateEnd) return false;
     }
-    // Same logic: i_drink pending maps to awaiting_approval for filtering.
-    // Late drinks still need to be drank, so they match both "Late" AND "To Be Drank".
+    // Same logic: i_drink pending maps to awaiting_approval for filtering
     const filterKey = (status === 'pending' && l.drink_type === 'i_drink')
       ? 'awaiting_approval'
       : status === 'vacated' ? 'late'
       : status;
-    const matchesFilter = filters[filterKey]
-      || (status === 'late' && filters['awaiting_approval']); // late = still needs drinking
-    if (anyStatusFilter && !matchesFilter) return false;
+    if (anyStatusFilter && !filters[filterKey]) return false;
     if (anyTypeFilter && !filters[l.drink_type]) return false;
     return true;
   });
