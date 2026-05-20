@@ -44,8 +44,9 @@ self.addEventListener('notificationclick', e => {
   // Build deep link URL based on notification type
   let url = '/';
 
-  if (type === 'video' && videoId) {
-    // Video upload → open Chugs tab scrolled to that video
+  if (videoId) {
+    // Any notification carrying a video_id → open Chugs tab scrolled to that video
+    // Covers: type='video' (upload), type='comment' on video, type='like' on video
     url = `/?tab=videos&video=${videoId}`;
   } else if (eventId) {
     // Everything else with an hr_event_id → open Feed scrolled to that card

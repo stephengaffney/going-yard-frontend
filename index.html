@@ -4461,7 +4461,7 @@ function LeaderboardScreen() {
           if (counts[key] === undefined) return;
           counts[key].drinks++;
           const status = computeStatus(log);
-          if (status === 'late') counts[key].late++;
+          if (status === 'late' || status === 'completed_late') counts[key].late++;
           if (status === 'vacated') counts[key].vacated = (counts[key].vacated || 0) + 1;
         });
       }
