@@ -3601,20 +3601,40 @@ function VideosScreen({ currentUser, deepLinkVideoId, onDeepLinkHandled, onNavig
   const [loading, setLoading]       = useState(true);
   const [userFilter, setUserFilter] = useState(null);
   const [highlightVideoId, setHighlightVideoId] = useState(null);
+  const pendingScrollId = React.useRef(null);
 
   useEffect(() => { load(); }, []);
 
-  // React to deepLinkVideoId changes (e.g. clicking a notification while already on Videos tab)
+  // Once loading finishes, scroll to any pending deep-link card
+  useEffect(() => {
+    if (loading || !pendingScrollId.current) return;
+    const targetId = pendingScrollId.current;
+    pendingScrollId.current = null;
+    setHighlightVideoId(targetId);
+    onDeepLinkHandled && onDeepLinkHandled();
+    setTimeout(() => {
+      const el = document.getElementById(`video-card-${targetId}`);
+      if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      setTimeout(() => setHighlightVideoId(null), 2000);
+    }, 100);
+  }, [loading]);
+
+  // React to deepLinkVideoId changes
   useEffect(() => {
     if (!deepLinkVideoId) return;
-    setHighlightVideoId(deepLinkVideoId);
-    setTimeout(() => {
-      const el = document.getElementById(`video-card-${deepLinkVideoId}`);
-      if (el) {
-        el.scrollIntoView({ behavior: 'smooth', block: 'center' });
-        setTimeout(() => { setHighlightVideoId(null); onDeepLinkHandled && onDeepLinkHandled(); }, 2000);
-      }
-    }, 400);
+    if (loading) {
+      // Videos not in DOM yet — store and handle after load completes
+      pendingScrollId.current = deepLinkVideoId;
+    } else {
+      // Already loaded — scroll immediately
+      setHighlightVideoId(deepLinkVideoId);
+      onDeepLinkHandled && onDeepLinkHandled();
+      setTimeout(() => {
+        const el = document.getElementById(`video-card-${deepLinkVideoId}`);
+        if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        setTimeout(() => setHighlightVideoId(null), 2000);
+      }, 100);
+    }
   }, [deepLinkVideoId]);
 
   const load = async () => {
