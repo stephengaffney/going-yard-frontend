@@ -2623,7 +2623,10 @@ function computeStatus(drinkLog) {
 
   if (clockStart) {
     const ageHours = (Date.now() - clockStart.getTime()) / 36e5;
-    if (ageHours > LATE_HOURS) return 'late';
+    if (ageHours > LATE_HOURS) {
+      if (drinkLog.drink_type === 'you_drink' && !drinkLog.given_to) return 'vacated';
+      return 'late';
+    }
   }
 
   return s; // 'pending' or 'awaiting_approval'
@@ -4253,35 +4256,20 @@ function FeedScreen({ currentUser, showToast, videosEnabled, onNavigateVideos, d
       setDrinkLogs(map);
     }
     setLoading(false);
-
-    // Scroll to and highlight deep-linked card after data loads
-    if (deepLinkEventId) {
-      setTimeout(() => {
-        const el = document.getElementById(`hr-card-${deepLinkEventId}`);
-        if (el) {
-          el.scrollIntoView({ behavior: 'smooth', block: 'center' });
-          setHighlightId(deepLinkEventId);
-          setTimeout(() => { setHighlightId(null); onDeepLinkHandled && onDeepLinkHandled(); }, 2000);
-        }
-      }, 400);
-    }
   };
 
   useEffect(() => {
-    if (deepLinkEventId) setHighlightId(deepLinkEventId);
-  }, [deepLinkEventId]);
-
-  useEffect(() => {
-    if (deepLinkEventId && !loading) {
-      setTimeout(() => {
-        const el = document.getElementById(`hr-card-${deepLinkEventId}`);
-        if (el) {
-          el.scrollIntoView({ behavior: 'smooth', block: 'center' });
-          setHighlightId(deepLinkEventId);
-          setTimeout(() => { setHighlightId(null); onDeepLinkHandled && onDeepLinkHandled(); }, 2000);
-        }
-      }, 400);
-    }
+    if (!deepLinkEventId) return;
+    setHighlightId(deepLinkEventId);
+    // Clear the deep link immediately so re-renders / refreshes don't re-scroll
+    onDeepLinkHandled && onDeepLinkHandled();
+    setTimeout(() => {
+      const el = document.getElementById(`hr-card-${deepLinkEventId}`);
+      if (el) {
+        el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }
+      setTimeout(() => setHighlightId(null), 2000);
+    }, 400);
   }, [deepLinkEventId]);
 
   useEffect(() => {
@@ -5347,8 +5335,10 @@ async function registerPush(accessToken) {
     return;
   }
   try {
+    // Register SW and wait until it is active before subscribing
     const reg = await navigator.serviceWorker.register('/sw.js');
-    // Request permission — works on desktop Chrome/Firefox too
+    await navigator.serviceWorker.ready;
+
     const permission = await Notification.requestPermission();
     if (permission !== 'granted') {
       console.log('[PUSH] Notification permission denied');
@@ -5359,13 +5349,36 @@ async function registerPush(accessToken) {
     const { key } = await keyRes.json();
     const vapidKey = Uint8Array.from(atob(key.replace(/-/g,'+').replace(/_/g,'/')), c => c.charCodeAt(0));
 
-    const sub = await reg.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: vapidKey });
+    // Check for an existing subscription first
+    let sub = await reg.pushManager.getSubscription();
 
+    if (sub) {
+      // iOS can silently rotate the endpoint — detect by comparing applicationServerKey
+      const existingKeyBuffer = sub.options && sub.options.applicationServerKey;
+      if (existingKeyBuffer) {
+        const existingKey = btoa(String.fromCharCode(...new Uint8Array(existingKeyBuffer)))
+          .replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+        const incomingKey = key.replace(/=+$/, '');
+        if (existingKey !== incomingKey) {
+          // VAPID key mismatch — unsubscribe and re-subscribe with fresh keys
+          console.log('[PUSH] VAPID key mismatch, resubscribing');
+          await sub.unsubscribe();
+          sub = null;
+        }
+      }
+    }
+
+    if (!sub) {
+      sub = await reg.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: vapidKey });
+    }
+
+    // Always save to backend — ensures any rotated endpoint is updated in DB
     await fetch(`${BACKEND}/push/subscribe`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${accessToken}` },
       body: JSON.stringify(sub.toJSON())
     });
+    console.log('[PUSH] Subscription registered');
   } catch (e) {
     console.error('Push registration failed:', e);
   }
