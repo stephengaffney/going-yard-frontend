@@ -3601,47 +3601,41 @@ function VideosScreen({ currentUser, deepLinkVideoId, onDeepLinkHandled, onNavig
   const [loading, setLoading]       = useState(true);
   const [userFilter, setUserFilter] = useState(null);
   const [highlightVideoId, setHighlightVideoId] = useState(null);
-  const pendingScrollId = React.useRef(null);
+  // Capture deepLinkVideoId at mount and whenever it changes so load() can use it
+  const pendingVideoId = React.useRef(deepLinkVideoId || null);
 
   useEffect(() => { load(); }, []);
 
-  // Once loading finishes, scroll to any pending deep-link card
+  // If deepLinkVideoId changes after mount (e.g. notification tap while already on Videos tab)
+  // and loading is already done, scroll immediately. Otherwise update the ref for load() to handle.
   useEffect(() => {
-    if (loading || !pendingScrollId.current) return;
-    const targetId = pendingScrollId.current;
-    pendingScrollId.current = null;
-    setHighlightVideoId(targetId);
+    if (!deepLinkVideoId) return;
+    pendingVideoId.current = deepLinkVideoId;
+    if (!loading) scrollToVideo(deepLinkVideoId);
+  }, [deepLinkVideoId]);
+
+  const scrollToVideo = (id) => {
+    setHighlightVideoId(id);
     onDeepLinkHandled && onDeepLinkHandled();
+    // Small delay to let React render the cards before measuring DOM positions
     setTimeout(() => {
-      const el = document.getElementById(`video-card-${targetId}`);
+      const el = document.getElementById(`video-card-${id}`);
       if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' });
       setTimeout(() => setHighlightVideoId(null), 2000);
     }, 100);
-  }, [loading]);
-
-  // React to deepLinkVideoId changes
-  useEffect(() => {
-    if (!deepLinkVideoId) return;
-    if (loading) {
-      // Videos not in DOM yet — store and handle after load completes
-      pendingScrollId.current = deepLinkVideoId;
-    } else {
-      // Already loaded — scroll immediately
-      setHighlightVideoId(deepLinkVideoId);
-      onDeepLinkHandled && onDeepLinkHandled();
-      setTimeout(() => {
-        const el = document.getElementById(`video-card-${deepLinkVideoId}`);
-        if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' });
-        setTimeout(() => setHighlightVideoId(null), 2000);
-      }, 100);
-    }
-  }, [deepLinkVideoId]);
+  };
 
   const load = async () => {
     const { data, error } = await sb.from('chug_videos').select('*').order('created_at', { ascending: false });
     if (error) console.error('[VIDEOS]', error);
     if (data) setVideos(data);
     setLoading(false);
+    // After data is in state and cards will render, scroll to any pending deep link
+    if (pendingVideoId.current) {
+      const id = pendingVideoId.current;
+      pendingVideoId.current = null;
+      scrollToVideo(id);
+    }
   };
 
   const filtered = userFilter ? videos.filter(v => v.actual_drinker === userFilter) : videos;
