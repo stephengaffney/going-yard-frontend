@@ -1755,126 +1755,7 @@ body {
   text-underline-offset: 2px;
 }
 
-/* ── In-app recording (FULLSCREEN) ── */
-
-/* Full-screen recorder overlay — covers the entire viewport */
-.recorder-fullscreen {
-  position: fixed;
-  inset: 0;
-  z-index: 600;
-  background: #000;
-  display: flex;
-  flex-direction: column;
-}
-
-.recorder-fullscreen video {
-  flex: 1;
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  display: block;
-  transform: scaleX(-1);
-}
-
-/* HUD overlaid on top of the live preview */
-.recorder-hud {
-  position: absolute;
-  inset: 0;
-  pointer-events: none;
-  display: flex;
-  flex-direction: column;
-  justify-content: space-between;
-  padding: env(safe-area-inset-top, 16px) 0 env(safe-area-inset-bottom, 16px);
-}
-
-/* Top bar: close + countdown */
-.recorder-hud-top {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 12px 16px 0;
-  pointer-events: all;
-}
-
-.recorder-close-btn {
-  background: rgba(0,0,0,0.5);
-  border: none;
-  border-radius: 50%;
-  width: 40px; height: 40px;
-  display: flex; align-items: center; justify-content: center;
-  cursor: pointer;
-  color: #fff;
-  font-size: 1.2rem;
-  line-height: 1;
-  backdrop-filter: blur(4px);
-  -webkit-backdrop-filter: blur(4px);
-}
-
-.recorder-close-btn:hover { background: rgba(0,0,0,0.7); }
-
-.record-dot {
-  width: 10px; height: 10px;
-  border-radius: 50%;
-  background: #e84a4a;
-  animation: live-pulse 1s ease infinite;
-  flex-shrink: 0;
-}
-
-.record-countdown {
-  background: rgba(0,0,0,0.55);
-  color: #fff;
-  font-family: 'Bebas Neue', sans-serif;
-  font-size: 1.6rem;
-  letter-spacing: 2px;
-  padding: 4px 14px;
-  border-radius: 20px;
-  min-width: 64px;
-  text-align: center;
-  backdrop-filter: blur(4px);
-  -webkit-backdrop-filter: blur(4px);
-}
-
-.record-countdown.urgent { color: #e84a4a; }
-
-/* Bottom bar: big record button + label */
-.recorder-hud-bottom {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 10px;
-  padding: 0 16px 24px;
-  pointer-events: all;
-}
-
-.record-btn {
-  width: 80px; height: 80px;
-  border-radius: 50%;
-  border: 5px solid #fff;
-  background: #e84a4a;
-  cursor: pointer;
-  transition: transform 0.15s;
-  flex-shrink: 0;
-  box-shadow: 0 4px 24px rgba(0,0,0,0.5);
-}
-
-.record-btn:hover { transform: scale(1.06); }
-.record-btn.recording {
-  background: #fff;
-  border-color: #e84a4a;
-  border-radius: 14px;
-  width: 60px; height: 60px;
-}
-
-.record-label {
-  font-size: 0.8rem;
-  color: rgba(255,255,255,0.85);
-  text-transform: uppercase;
-  letter-spacing: 1px;
-  font-family: 'DM Sans', sans-serif;
-  text-shadow: 0 1px 4px rgba(0,0,0,0.7);
-}
-
-/* Older non-fullscreen helpers kept for library tab layout */
+/* ── In-app recording ── */
 .record-zone {
   position: relative;
   border-radius: 12px;
@@ -1896,12 +1777,59 @@ body {
   transform: scaleX(-1);
 }
 
+.record-countdown {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  background: rgba(0,0,0,0.6);
+  color: #fff;
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 1.4rem;
+  letter-spacing: 2px;
+  padding: 4px 10px;
+  border-radius: 8px;
+  min-width: 48px;
+  text-align: center;
+}
+
+.record-countdown.urgent { color: #e84a4a; }
+
+.record-dot {
+  position: absolute;
+  top: 14px;
+  left: 12px;
+  width: 10px; height: 10px;
+  border-radius: 50%;
+  background: #e84a4a;
+  animation: live-pulse 1s ease infinite;
+}
+
+.record-btn {
+  width: 64px; height: 64px;
+  border-radius: 50%;
+  border: 4px solid #fff;
+  background: #e84a4a;
+  cursor: pointer;
+  transition: transform 0.15s;
+  flex-shrink: 0;
+}
+
+.record-btn:hover { transform: scale(1.06); }
+.record-btn.recording { background: #fff; border-color: #e84a4a; border-radius: 10px; width: 44px; height: 44px; }
+
 .record-controls {
   display: flex;
   flex-direction: column;
   align-items: center;
   gap: 0.5rem;
   padding: 1rem 0 0.5rem;
+}
+
+.record-label {
+  font-size: 0.75rem;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 1px;
 }
 
 .record-tabs {
@@ -3346,19 +3274,14 @@ function UploadModal({ event, drinkLog, currentUser, onClose, onUploaded, showTo
   // Step 2: preview screen after recording/selecting
   if (previewUrl) {
     return React.createElement('div', { className: 'modal-overlay', onClick: e => e.target === e.currentTarget && onClose() },
-      React.createElement('div', { className: 'upload-modal', ref: swipeRef, style: { maxHeight: '92vh', display: 'flex', flexDirection: 'column' } },
+      React.createElement('div', { className: 'upload-modal', ref: swipeRef },
         React.createElement('div', { className: 'modal-handle' }),
-        React.createElement('h3', { style: { fontFamily: "'Bebas Neue', sans-serif", fontSize: '1.5rem', letterSpacing: '1px', marginBottom: '1rem', flexShrink: 0 } }, 'Preview'),
-        React.createElement('video', {
-          src: previewUrl,
-          controls: true,
-          playsInline: true,
-          style: { width: '100%', flex: 1, minHeight: 0, maxHeight: '60vh', borderRadius: '10px', marginBottom: '1rem', background: '#000', objectFit: 'contain', display: 'block' }
-        }),
-        uploading && React.createElement('div', { className: 'upload-progress', style: { flexShrink: 0 } },
+        React.createElement('h3', { style: { fontFamily: "'Bebas Neue', sans-serif", fontSize: '1.5rem', letterSpacing: '1px', marginBottom: '1rem' } }, 'Preview'),
+        React.createElement('video', { className: 'upload-preview', src: previewUrl, controls: true, playsInline: true, style: { width: '100%', borderRadius: '10px', marginBottom: '1rem' } }),
+        uploading && React.createElement('div', { className: 'upload-progress' },
           React.createElement('div', { className: 'upload-progress-fill', style: { width: `${progress}%` } })
         ),
-        React.createElement('div', { className: 'modal-actions', style: { flexShrink: 0 } },
+        React.createElement('div', { className: 'modal-actions' },
           React.createElement('button', { className: 'btn-cancel', onClick: () => {
             setFile(null); setPreviewUrl(null);
             if (mode === 'record' && supportsRecording) startCamera();
@@ -3373,65 +3296,14 @@ function UploadModal({ event, drinkLog, currentUser, onClose, onUploaded, showTo
     );
   }
 
-  // Step 3a: fullscreen recorder (record mode + supported)
-  if (mode === 'record' && supportsRecording) {
-    return React.createElement('div', { className: 'recorder-fullscreen' },
-      // Live camera feed fills entire screen
-      React.createElement('video', {
-        ref: videoRef,
-        autoPlay: true,
-        muted: true,
-        playsInline: true,
-      }),
-      // HUD overlay
-      React.createElement('div', { className: 'recorder-hud' },
-        // Top bar: close button + recording indicator / countdown
-        React.createElement('div', { className: 'recorder-hud-top' },
-          React.createElement('button', {
-            className: 'recorder-close-btn',
-            onClick: () => { stopCamera(); onClose(); }
-          }, '✕'),
-          recording
-            ? React.createElement('div', { style: { display: 'flex', alignItems: 'center', gap: '8px' } },
-                React.createElement('div', { className: 'record-dot' }),
-                React.createElement('div', {
-                  className: `record-countdown ${timeLeft <= 5 ? 'urgent' : ''}`,
-                }, `${timeLeft}s`)
-              )
-            : React.createElement('div', { style: { display: 'flex', gap: '0' } },
-                React.createElement('button', {
-                  style: {
-                    background: 'rgba(0,0,0,0.5)', border: '1px solid rgba(255,255,255,0.2)',
-                    borderRadius: '20px', padding: '6px 14px', color: '#fff',
-                    fontFamily: "'DM Sans', sans-serif", fontSize: '0.75rem', cursor: 'pointer',
-                    backdropFilter: 'blur(4px)', WebkitBackdropFilter: 'blur(4px)'
-                  },
-                  onClick: () => { stopCamera(); setMode('library'); }
-                }, '📷 Camera Roll')
-              )
-        ),
-        // Bottom bar: record button
-        React.createElement('div', { className: 'recorder-hud-bottom' },
-          React.createElement('button', {
-            className: `record-btn ${recording ? 'recording' : ''}`,
-            onClick: () => recording ? stopRecording() : startRecording(),
-          }),
-          React.createElement('div', { className: 'record-label' },
-            recording ? 'Tap to stop' : 'Tap to record'
-          )
-        )
-      )
-    );
-  }
-
-  // Step 3b: bottom-sheet for library / unsupported browsers
+  // Step 3: record / library tabs
   return React.createElement('div', { className: 'modal-overlay', onClick: e => e.target === e.currentTarget && onClose() },
     React.createElement('div', { className: 'upload-modal', ref: swipeRef },
       React.createElement('div', { className: 'modal-handle' }),
 
       // Mode tabs
       React.createElement('div', { className: 'record-tabs' },
-        supportsRecording && React.createElement('button', {
+        React.createElement('button', {
           className: `record-tab ${mode === 'record' ? 'active' : ''}`,
           onClick: () => { setMode('record'); }
         }, '🎥 Record'),
@@ -3442,13 +3314,39 @@ function UploadModal({ event, drinkLog, currentUser, onClose, onUploaded, showTo
       ),
 
       // Browser warning only shown if MediaRecorder not supported at all
-      !supportsRecording &&
+      mode === 'record' && !supportsRecording &&
         React.createElement('div', { className: 'browser-warning' },
           '⚠️ Your browser does not support in-app recording. Please use the Camera Roll tab to upload a video instead.'
         ),
 
+      // Record tab — Safari only
+      mode === 'record' && supportsRecording && React.createElement('div', null,
+        React.createElement('div', { className: 'record-zone' },
+          React.createElement('video', {
+            ref: videoRef,
+            className: 'record-preview',
+            autoPlay: true,
+            muted: true,
+            playsInline: true,
+          }),
+          recording && React.createElement('div', { className: 'record-dot' }),
+          recording && React.createElement('div', {
+            className: `record-countdown ${timeLeft <= 5 ? 'urgent' : ''}`,
+          }, `${timeLeft}s`)
+        ),
+        React.createElement('div', { className: 'record-controls' },
+          React.createElement('button', {
+            className: `record-btn ${recording ? 'recording' : ''}`,
+            onClick: () => recording ? stopRecording() : startRecording(),
+          }),
+          React.createElement('div', { className: 'record-label' },
+            recording ? `Recording — tap to stop` : 'Tap to record'
+          )
+        )
+      ),
+
       // Library tab
-      React.createElement('div', { className: 'upload-zone' },
+      mode === 'library' && React.createElement('div', { className: 'upload-zone' },
         React.createElement('input', {
           type: 'file', accept: 'video/*',
           onChange: e => handleFile(e.target.files[0])
@@ -3803,14 +3701,16 @@ function HRCard({ event, currentUser, onAssigned, showToast, videosEnabled, onNa
                         && !assignment;
 
   // Who is the actual drinker for this event?
-  const actualDrinker = event.drink_type === 'you_drink' && drinkLog?.given_to
-    ? drinkLog.given_to : event.drinker;
-  // Show upload button only if: it's the drinker's card and no video yet
-  // Only show record link if: no video yet, it's my drink, drink is not completed,
-  // and for you_drink it must already be assigned to me
+  // Always normalise to lowercase so DB casing differences don't silently break the check.
+  const actualDrinker = (
+    event.drink_type === 'you_drink' && drinkLog?.given_to
+      ? drinkLog.given_to : event.drinker
+  ).toLowerCase();
+  // Show upload button if: no video yet, it's my drink, drink not completed/vacated,
+  // and for you_drink the drink must already be assigned (given_to is set).
   const canUploadVideo = !chugVideo
-    && currentUser === actualDrinker
-    && !['completed', 'done', 'completed_late'].includes(status)
+    && currentUser.toLowerCase() === actualDrinker
+    && !['completed', 'done', 'completed_late', 'vacated'].includes(status)
     && (event.drink_type === 'i_drink' || (event.drink_type === 'you_drink' && drinkLog?.given_to));
   // Show view video link if video exists
   const hasVideo = !!chugVideo;
@@ -3836,7 +3736,7 @@ function HRCard({ event, currentUser, onAssigned, showToast, videosEnabled, onNa
     return () => sb.removeChannel(chan);
   }, [event.id]);
 
-  const loadData = async () => {
+  const loadData = async (retryCount = 0) => {
     const [l, c, a, dl, cv] = await Promise.all([
       sb.from('likes').select('*').eq('target_type', 'hr_event').eq('target_id', event.id),
       sb.from('comments').select('*').eq('hr_event_id', event.id).order('created_at'),
@@ -3849,6 +3749,18 @@ function HRCard({ event, currentUser, onAssigned, showToast, videosEnabled, onNa
     if (a.data !== undefined) setAssignment(a.data);
     if (dl.data !== undefined) setDrinkLog(dl.data);
     if (cv.data !== undefined) setChugVideo(cv.data);
+
+    // Guard against Supabase replication lag: if the drink_log was just updated
+    // (assignment came in via realtime) but given_to is still null, retry once
+    // after a short delay so the assignee sees their Record Chug button promptly.
+    if (
+      retryCount < 2 &&
+      event.drink_type === 'you_drink' &&
+      dl.data && !dl.data.given_to &&
+      a.data  // assignment row exists, so given_to should be set
+    ) {
+      setTimeout(() => loadData(retryCount + 1), 1500);
+    }
   };
 
   const toggleLike = async () => {
