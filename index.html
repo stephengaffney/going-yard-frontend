@@ -4739,7 +4739,7 @@ function LogScreen({ currentUser, videosEnabled, onNavigateVideos }) {
 
     return React.createElement('div', {
       key: l.id,
-      className: `log-row tappable status-${status}`,
+      className: `log-row tappable status-${status === 'awaiting_approval' ? 'awaiting' : status}`,
       onClick: (e) => {
         if (e.target.closest('.log-video-link')) return;
         if (l.hr_event_id) {
@@ -4760,7 +4760,7 @@ function LogScreen({ currentUser, videosEnabled, onNavigateVideos }) {
       React.createElement('div', { style: { fontSize: '0.78rem', color: 'var(--muted)' } }, l.mlb_player),
       React.createElement('div', { style: { display: 'flex', flexDirection: 'column', gap: '4px' } },
         React.createElement('div', { style: { display: 'flex', alignItems: 'center', gap: '4px' } },
-          React.createElement('span', { className: `log-status-dot ${status}` }),
+          React.createElement('span', { className: `log-status-dot ${status === 'awaiting_approval' ? 'awaiting' : status}` }),
           React.createElement('span', { style: {
             fontSize: '0.7rem',
             color: status === 'vacated' ? '#e84a4a'
