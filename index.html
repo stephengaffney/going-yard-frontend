@@ -1011,7 +1011,7 @@ body {
 .log-row.status-late,
 .log-row.status-vacated        { border-left-color: #e84a4a; }
 .log-row.status-completed_late { border-left-color: #e88c4a; }
-.log-row.status-awaiting { border-left-color: var(--accent); }
+.log-row.status-awaiting { border-left-color: rgba(180,180,180,0.45); }
 .log-row.status-completed { border-left-color: #7cb85c; }
 .log-row.status-pending { border-left-color: rgba(136,136,136,0.3); }
 
@@ -1024,7 +1024,7 @@ body {
 }
 
 .log-status-dot.pending   { background: #666; }
-.log-status-dot.awaiting  { background: var(--accent); }
+.log-status-dot.awaiting  { background: #999; }
 .log-status-dot.completed { background: #7cb85c; }
 .log-status-dot.late,
 .log-status-dot.vacated        { background: #e84a4a; }
@@ -4739,7 +4739,7 @@ function LogScreen({ currentUser, videosEnabled, onNavigateVideos }) {
 
     return React.createElement('div', {
       key: l.id,
-      className: `log-row tappable status-${status === 'awaiting_approval' ? 'awaiting' : status}`,
+      className: `log-row tappable status-${status === 'awaiting_approval' || (status === 'pending' && l.drink_type === 'i_drink') ? 'awaiting' : status}`,
       onClick: (e) => {
         if (e.target.closest('.log-video-link')) return;
         if (l.hr_event_id) {
@@ -4760,22 +4760,21 @@ function LogScreen({ currentUser, videosEnabled, onNavigateVideos }) {
       React.createElement('div', { style: { fontSize: '0.78rem', color: 'var(--muted)' } }, l.mlb_player),
       React.createElement('div', { style: { display: 'flex', flexDirection: 'column', gap: '4px' } },
         React.createElement('div', { style: { display: 'flex', alignItems: 'center', gap: '4px' } },
-          React.createElement('span', { className: `log-status-dot ${status === 'awaiting_approval' ? 'awaiting' : status}` }),
+          React.createElement('span', { className: `log-status-dot ${status === 'awaiting_approval' || (status === 'pending' && l.drink_type === 'i_drink') ? 'awaiting' : status}` }),
           React.createElement('span', { style: {
             fontSize: '0.7rem',
             color: status === 'vacated' ? '#e84a4a'
                  : status === 'late' ? '#e84a4a'
                  : status === 'completed' ? '#7cb85c'
                  : status === 'completed_late' ? '#e88c4a'
-                 : status === 'awaiting_approval' ? 'var(--accent)'
+                 : (status === 'awaiting_approval' || (status === 'pending' && l.drink_type === 'i_drink')) ? '#999'
                  : '#888'
           } },
             status === 'vacated' ? 'Vacated'
             : status === 'late' ? 'Late'
             : status === 'completed' ? 'Done'
             : status === 'completed_late' ? 'Done (Late)'
-            : status === 'awaiting_approval' ? 'To Be Drank'
-            : l.drink_type === 'i_drink' ? 'To Be Drank'
+            : (status === 'awaiting_approval' || (status === 'pending' && l.drink_type === 'i_drink')) ? 'To Be Drank'
             : 'To Be Assigned'
           )
         ),
