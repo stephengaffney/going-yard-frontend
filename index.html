@@ -423,6 +423,12 @@ body {
   animation: pulse-yellow 2.2s ease-in-out infinite;
 }
 
+/* Pending — gold pulse */
+.hr-card.pending {
+  border-color: rgba(232,193,74,0.6);
+  animation: pulse-yellow 2.2s ease-in-out infinite;
+}
+
 /* Late — red pulse */
 .hr-card.late {
   border-color: rgba(232,74,74,0.7);
@@ -3720,7 +3726,7 @@ function HRCard({ event, currentUser, onAssigned, showToast, videosEnabled, onNa
     ? 'hr-card late'
     : status === 'completed_late'
       ? 'hr-card completed-late'
-      : status === 'awaiting_approval'
+      : (status === 'awaiting_approval' || status === 'pending')
         ? 'hr-card awaiting-approval'
         : 'hr-card';
   const cardClass = highlight ? baseClass + ' highlight' : baseClass;
