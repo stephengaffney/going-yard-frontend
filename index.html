@@ -3697,7 +3697,7 @@ function HRCard({ event, currentUser, onAssigned, showToast, videosEnabled, onNa
   const countdown    = useCountdown(drinkLog, event.drink_type);
   const canApprove   = canUserApprove(event, drinkLog, currentUser);
   const canAssign    = event.drink_type === 'you_drink'
-                        && event.drinker === currentUser
+                        && event.drinker.toLowerCase() === currentUser.toLowerCase()
                         && !assignment;
 
   // Who is the actual drinker for this event?
@@ -3730,7 +3730,13 @@ function HRCard({ event, currentUser, onAssigned, showToast, videosEnabled, onNa
     const chan = sb.channel(`hr-${event.id}`)
       .on('postgres_changes', { event: '*', schema: 'public', table: 'likes' }, loadData)
       .on('postgres_changes', { event: '*', schema: 'public', table: 'comments' }, loadData)
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'drink_assignments' }, loadData)
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'drink_assignments' }, () => {
+        // When an assignment lands, drink_log.given_to may not be replicated yet.
+        // Load immediately, then retry with backoff so the assignee's UI updates.
+        loadData(0);
+        setTimeout(() => loadData(0), 1000);
+        setTimeout(() => loadData(0), 3000);
+      })
       .on('postgres_changes', { event: '*', schema: 'public', table: 'drink_log' }, loadData)
       .subscribe();
     return () => sb.removeChannel(chan);
@@ -3751,15 +3757,15 @@ function HRCard({ event, currentUser, onAssigned, showToast, videosEnabled, onNa
     if (cv.data !== undefined) setChugVideo(cv.data);
 
     // Guard against Supabase replication lag: if the drink_log was just updated
-    // (assignment came in via realtime) but given_to is still null, retry once
-    // after a short delay so the assignee sees their Record Chug button promptly.
+    // (assignment came in via realtime) but given_to is still null, retry with backoff.
     if (
-      retryCount < 2 &&
+      retryCount < 4 &&
       event.drink_type === 'you_drink' &&
       dl.data && !dl.data.given_to &&
       a.data  // assignment row exists, so given_to should be set
     ) {
-      setTimeout(() => loadData(retryCount + 1), 1500);
+      const delay = [1500, 2500, 4000, 6000][retryCount] || 6000;
+      setTimeout(() => loadData(retryCount + 1), delay);
     }
   };
 
@@ -4669,7 +4675,7 @@ function LogScreen({ currentUser, videosEnabled, onNavigateVideos }) {
           return {
             ...l,
             _hasVideo:  videoSet.has(l.hr_event_id),
-            _isMyDrink: actualDrinker === currentUser && !videoSet.has(l.hr_event_id)
+            _isMyDrink: actualDrinker.toLowerCase() === currentUser.toLowerCase() && !videoSet.has(l.hr_event_id)
                           && !['completed', 'done', 'completed_late'].includes(computeStatus(l))
                           && (l.drink_type === 'i_drink' || (l.drink_type === 'you_drink' && l.given_to)),
           };
