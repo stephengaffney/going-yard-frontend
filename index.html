@@ -4286,7 +4286,7 @@ function FeedScreen({ currentUser, showToast, videosEnabled, onNavigateVideos, d
   // Define loadEvents BEFORE useEffects so closures always have the current reference
   const loadEvents = async () => {
     const [evRes, dlRes] = await Promise.all([
-      sb.from('hr_events').select('*').order('created_at', { ascending: false }).limit(50),
+      sb.from('hr_events').select('*').order('created_at', { ascending: false }).limit(500),
       sb.from('drink_log').select('*'),
     ]);
     if (evRes.data) setEvents(evRes.data);
