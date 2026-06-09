@@ -11,7 +11,7 @@ The Progressive Web App (PWA) frontend for [Going Yard & Drinking Hard](https://
 
 Going Yard & Drinking Hard is a real-time drinking game tied to live MLB home run data. When a tracked player hits a home run, the app instantly notifies all players, creates a feed card with drink instructions, starts a 24-hour countdown timer, and tracks completion. The frontend is a mobile-first PWA installable on iOS and Android — it behaves like a native app with push notifications, offline caching, and deep linking from notifications.
 
-For full game mechanics, see [GAME_MECHANICS.md](./GAME_MECHANICS.md).
+For full game mechanics, see [./GAME_MECHANICS.md](https://github.com/stephengaffney/hr-game/blob/main/GAME_MECHANICS.md).
 
 ---
 
