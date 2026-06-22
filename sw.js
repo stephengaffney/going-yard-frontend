@@ -58,8 +58,7 @@ self.addEventListener('notificationclick', e => {
       // If the app is already open, focus it and navigate
       for (const client of windowClients) {
         if (client.url.startsWith(self.location.origin) && 'focus' in client) {
-          client.navigate(url);
-          return client.focus();
+          return client.focus().then(() => client.navigate(url));
         }
       }
       // Otherwise open a new window

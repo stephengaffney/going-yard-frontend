@@ -4856,8 +4856,11 @@ function NotificationCenter({ currentUser }) {
       if (res.ok) {
         const all = await res.json();
         const filtered = all.filter(n => {
-          const body = (n.body || '').toLowerCase();
-          return !body.startsWith(currentUser.toLowerCase() + ' ');
+          // Suppress notifications where the current user was the sole actor.
+          // HR alerts (actor: null) are always shown to everyone.
+          const actor = n.data?.actor;
+          if (!actor) return true;  // no actor means system-generated (HR alert etc.) — always show
+          return actor.toLowerCase() !== currentUser.toLowerCase();
         });
         setNotifs(filtered);
       }
