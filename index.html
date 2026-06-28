@@ -3178,6 +3178,18 @@ function UploadModal({ event, drinkLog, currentUser, onClose, onUploaded, showTo
     setUploading(true);
     setProgress(10);
     try {
+      // Duplicate guard — block upload if a video already exists for this HR event
+      const { data: existing } = await sb.from('chug_videos')
+        .select('id')
+        .eq('hr_event_id', event.id)
+        .maybeSingle();
+      if (existing) {
+        showToast('A chug video already exists for this homer!');
+        setUploading(false);
+        onClose();
+        return;
+      }
+
       const { data: { session } } = await sb.auth.getSession();
       const ext  = file.name.split('.').pop();
       const path = `${event.id}/${currentUser}_${Date.now()}.${ext}`;
@@ -4273,126 +4285,52 @@ function SearchFilterBar({ search, onSearch, filters, onFilter, dateOptions, all
 // ── Feed Screen ───────────────────────────────────────────────────────────
 
 function FeedScreen({ currentUser, showToast, videosEnabled, onNavigateVideos, deepLinkEventId, onDeepLinkHandled, hasUnread, onClearUnread }) {
-  const PAGE_SIZE = 10;
-
-  const [events, setEvents]           = useState([]);
-  const [loading, setLoading]         = useState(true);
-  const [loadingMore, setLoadingMore] = useState(false);
-  const [hasMore, setHasMore]         = useState(true);
-  const [offset, setOffset]           = useState(0);
-  const [search, setSearch]           = useState('');
-  const [filters, setFilters]         = useState({});
+  const [events, setEvents]   = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
+  const [search, setSearch]   = useState('');
+  const [filters, setFilters] = useState({});
   const [highlightId, setHighlightId] = useState(deepLinkEventId || null);
-  const [drinkLogs, setDrinkLogs]     = useState({});
-  const [ptrState, setPtrState]       = useState('idle'); // 'idle' | 'pulling' | 'ready' | 'refreshing'
-  const ptrRef    = useRef({ startY: 0, pulling: false });
-  const bottomRef = useRef(null);
-  // Track offset in a ref too so loadMore closure always sees current value
-  const offsetRef = useRef(0);
+  const [drinkLogs, setDrinkLogs] = useState({});
+  const [ptrState, setPtrState] = useState('idle'); // 'idle' | 'pulling' | 'ready' | 'refreshing'
+  const ptrRef = useRef({ startY: 0, pulling: false });
 
-  // Merge new drink_log rows into the existing map
-  const mergeDrinkLogs = (data) => {
-    setDrinkLogs(prev => {
-      const map = { ...prev };
-      (data || []).forEach(dl => { map[dl.hr_event_id] = dl; });
-      return map;
-    });
-  };
-
-  // Initial load / pull-to-refresh — always fetches page 0
+  // Define loadEvents BEFORE useEffects so closures always have the current reference
   const loadEvents = async () => {
-    const evRes = await sb.from('hr_events')
-      .select('*')
-      .order('created_at', { ascending: false })
-      .range(0, PAGE_SIZE - 1);
-
-    const newEvents = evRes.data || [];
-    setEvents(newEvents);
-    offsetRef.current = PAGE_SIZE;
-    setOffset(PAGE_SIZE);
-    setHasMore(newEvents.length === PAGE_SIZE);
-
-    if (newEvents.length > 0) {
-      const ids = newEvents.map(e => e.id);
-      const dlRes = await sb.from('drink_log').select('*').in('hr_event_id', ids);
+    const [evRes, dlRes] = await Promise.all([
+      sb.from('hr_events').select('*').order('created_at', { ascending: false }).limit(500),
+      sb.from('drink_log').select('*'),
+    ]);
+    if (evRes.data) setEvents(evRes.data);
+    if (dlRes.data) {
       const map = {};
-      (dlRes.data || []).forEach(dl => { map[dl.hr_event_id] = dl; });
+      dlRes.data.forEach(dl => { map[dl.hr_event_id] = dl; });
       setDrinkLogs(map);
     }
-
     setLoading(false);
   };
 
-  // Append next page
-  const loadMore = async () => {
-    if (loadingMore || !hasMore) return;
-    setLoadingMore(true);
-    const currentOffset = offsetRef.current;
-
-    const evRes = await sb.from('hr_events')
-      .select('*')
-      .order('created_at', { ascending: false })
-      .range(currentOffset, currentOffset + PAGE_SIZE - 1);
-
-    const newEvents = evRes.data || [];
-    if (newEvents.length > 0) {
-      setEvents(prev => [...prev, ...newEvents]);
-      const newOffset = currentOffset + PAGE_SIZE;
-      offsetRef.current = newOffset;
-      setOffset(newOffset);
-
-      const ids = newEvents.map(e => e.id);
-      const dlRes = await sb.from('drink_log').select('*').in('hr_event_id', ids);
-      mergeDrinkLogs(dlRes.data);
-    }
-    setHasMore(newEvents.length === PAGE_SIZE);
-    setLoadingMore(false);
-  };
-
-  // Reset to page 0 when search or filters change
-  useEffect(() => {
-    setLoading(true);
-    setEvents([]);
-    setDrinkLogs({});
-    offsetRef.current = 0;
-    setOffset(0);
-    setHasMore(true);
-    loadEvents();
-  }, [search, filters]);
-
-  // Deep link scroll
   useEffect(() => {
     if (!deepLinkEventId) return;
     setHighlightId(deepLinkEventId);
+    // Clear the deep link immediately so re-renders / refreshes don't re-scroll
     onDeepLinkHandled && onDeepLinkHandled();
     setTimeout(() => {
       const el = document.getElementById(`hr-card-${deepLinkEventId}`);
-      if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      if (el) {
+        el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }
       setTimeout(() => setHighlightId(null), 2000);
     }, 400);
   }, [deepLinkEventId]);
 
-  // Realtime + pull-to-refresh + scroll listeners
   useEffect(() => {
     loadEvents();
-
-    // New HR events: prepend to top without re-fetching everything
     const chan = sb.channel('feed')
-      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'hr_events' },
-        async (payload) => {
-          setEvents(prev => [payload.new, ...prev]);
-          offsetRef.current = offsetRef.current + 1;
-          setOffset(prev => prev + 1);
-          // Fetch its drink_log row once it exists (slight delay for backend insert)
-          setTimeout(async () => {
-            const dlRes = await sb.from('drink_log').select('*').eq('hr_event_id', payload.new.id).maybeSingle();
-            if (dlRes.data) mergeDrinkLogs([dlRes.data]);
-          }, 2000);
-        }
-      )
+      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'hr_events' }, loadEvents)
       .subscribe();
 
-    // Pull-to-refresh
+    // Pull-to-refresh touch handlers on the feed container
     const THRESHOLD = 65;
     const onTouchStart = (e) => {
       const feedEl = document.querySelector('.feed');
@@ -4423,7 +4361,7 @@ function FeedScreen({ currentUser, showToast, videosEnabled, onNavigateVideos, d
     document.addEventListener('touchmove',  onTouchMove,  { passive: true });
     document.addEventListener('touchend',   onTouchEnd,   { passive: true });
 
-    // Clear unread dot when scrolled to top
+    // Clear unread dot when user scrolls back to top of the feed
     const handleScroll = () => {
       const feedEl = document.querySelector('.feed');
       if (feedEl && feedEl.scrollTop < 20 && hasUnread) {
@@ -4441,25 +4379,17 @@ function FeedScreen({ currentUser, showToast, videosEnabled, onNavigateVideos, d
     };
   }, []);
 
-  // Intersection observer — fires loadMore when sentinel scrolls into view
-  useEffect(() => {
-    const observer = new IntersectionObserver(
-      (entries) => {
-        if (entries[0].isIntersecting) loadMore();
-      },
-      { threshold: 0.1 }
-    );
-    if (bottomRef.current) observer.observe(bottomRef.current);
-    return () => observer.disconnect();
-  }, [hasMore, loadingMore, offset]);
 
-  // Calendar dot indicators
+
+  // Unique dates for the date dropdown
+  // Build set of YYYY-MM-DD strings for calendar dot indicators
   const allEventDates = new Set(events.map(e => e.created_at?.slice(0, 10)).filter(Boolean));
 
   const anyStatusFilter = ['pending','awaiting_approval','completed','completed_late','late'].some(k => filters[k]);
   const anyTypeFilter   = ['i_drink','you_drink'].some(k => filters[k]);
 
   const filtered = events.filter(e => {
+    // Search: player name, assigner, or actual drinker (given_to for you_drink)
     if (search) {
       const q       = search.toLowerCase();
       const dl      = drinkLogs[e.id];
@@ -4470,15 +4400,20 @@ function FeedScreen({ currentUser, showToast, videosEnabled, onNavigateVideos, d
         givenTo.includes(q);
       if (!matches) return false;
     }
+    // Date range filter
     if (filters.dateStart) {
       const d = e.created_at?.slice(0, 10);
       if (!d) return false;
       if (d < filters.dateStart) return false;
       if (filters.dateEnd && d > filters.dateEnd) return false;
     }
+    // Status filter
     if (anyStatusFilter) {
-      const dl      = drinkLogs[e.id];
-      const status  = computeStatus(dl);
+      const dl     = drinkLogs[e.id];
+      const status = computeStatus(dl);
+      // For filter purposes, i_drink pending = "awaiting" (To Be Drank),
+      // only you_drink pending = "pending" (To Be Assigned).
+      // Late drinks still need to be drank, so they match both "Late" AND "To Be Drank".
       const filterKey = (status === 'pending' && e.drink_type === 'i_drink')
         ? 'awaiting_approval'
         : status === 'vacated' ? 'late'
@@ -4487,6 +4422,7 @@ function FeedScreen({ currentUser, showToast, videosEnabled, onNavigateVideos, d
         || (status === 'late' && filters['awaiting_approval']);
       if (!matchesFilter) return false;
     }
+    // Type filter
     if (anyTypeFilter && !filters[e.drink_type]) return false;
     return true;
   });
@@ -4513,30 +4449,7 @@ function FeedScreen({ currentUser, showToast, videosEnabled, onNavigateVideos, d
       : filtered.length === 0
         ? React.createElement('div', { className: 'no-results' }, 'No events match your search.')
         : React.createElement('div', { className: 'feed' },
-            filtered.map((e, i) => React.createElement(HRCard, {
-              key: e.id, event: e, currentUser,
-              onAssigned: () => {
-                // Refresh just this card's drink_log rather than reloading everything
-                sb.from('drink_log').select('*').eq('hr_event_id', e.id).maybeSingle()
-                  .then(({ data }) => { if (data) mergeDrinkLogs([data]); });
-              },
-              showToast, videosEnabled, onNavigateVideos,
-              highlight: highlightId === e.id,
-              enterDelay: Math.min(i * 0.06, 0.5)
-            })),
-
-            // Sentinel div — IntersectionObserver watches this to trigger loadMore
-            React.createElement('div', { ref: bottomRef, style: { height: '1px' } }),
-
-            // Loading spinner for next page
-            loadingMore && React.createElement('div', {
-              className: 'loading', style: { padding: '1.5rem' }
-            }, React.createElement('div', { className: 'spinner' })),
-
-            // End of feed
-            !hasMore && events.length > 0 && React.createElement('div', {
-              style: { textAlign: 'center', padding: '2rem 1rem', color: 'var(--muted)', fontSize: '0.78rem', letterSpacing: '1px' }
-            }, '⚾ All caught up')
+            filtered.map((e, i) => React.createElement(HRCard, { key: e.id, event: e, currentUser, onAssigned: loadEvents, showToast, videosEnabled, onNavigateVideos, highlight: highlightId === e.id, enterDelay: Math.min(i * 0.06, 0.5) }))
           )
   );
 }
