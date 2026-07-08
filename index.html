@@ -549,6 +549,13 @@ body {
   animation: pulse-red 1.5s ease infinite;
 }
 
+.drink-countdown.overdue {
+  background: rgba(232,74,74,0.18);
+  color: #e84a4a;
+  border: 1px solid rgba(232,74,74,0.45);
+  font-weight: 700;
+}
+
 /* ── Drink status badge ── */
 .drink-status-row {
   display: flex;
@@ -1528,6 +1535,16 @@ body {
   text-transform: uppercase;
   letter-spacing: 0.5px;
   white-space: nowrap;
+}
+
+.my-drinks-sub {
+  font-size: 0.65rem;
+  color: #e84a4a;
+  font-weight: 600;
+  margin-top: 2px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 /* ── Search & Filter Bar ── */
@@ -2695,8 +2712,40 @@ function computeStatus(drinkLog) {
 }
 
 /**
+ * Resolve the 24h-clock start time for a drink_log row, in ms since epoch.
+ * Mirrors the backend's refresh_late_statuses() logic so overdue calculations
+ * line up whether status was flipped to 'late' server-side or is only
+ * apparent client-side.
+ */
+function getClockStart(drinkLog) {
+  if (!drinkLog) return null;
+  let clockStart = null;
+  if (drinkLog.status === 'awaiting_approval' && drinkLog.assigned_at) {
+    clockStart = drinkLog.assigned_at;
+  } else if (drinkLog.given_to && drinkLog.assigned_at) {
+    clockStart = drinkLog.assigned_at;
+  } else if (drinkLog.hr_triggered_at) {
+    clockStart = drinkLog.hr_triggered_at;
+  } else if (drinkLog.event_date) {
+    clockStart = drinkLog.event_date + 'T12:00:00';
+  }
+  return clockStart ? new Date(clockStart).getTime() : null;
+}
+
+/** Format a millisecond duration as "1d 4h", "5h 12m", or "8m". */
+function formatDuration(ms) {
+  if (!ms || ms <= 0) return '0m';
+  const days  = Math.floor(ms / 86400000);
+  const hours = Math.floor((ms % 86400000) / 3600000);
+  const mins  = Math.floor((ms % 3600000) / 60000);
+  if (days > 0)  return `${days}d ${hours}h`;
+  if (hours > 0) return `${hours}h ${mins}m`;
+  return `${mins}m`;
+}
+
+/**
  * Countdown hook — returns { label, urgency } updating every second.
- * urgency: 'ok' | 'warning' (< 6h) | 'urgent' (< 2h) | null (not applicable)
+ * urgency: 'ok' | 'warning' (< 6h) | 'urgent' (< 2h) | 'overdue' (past deadline) | null (not applicable)
  */
 /**
  * Swipe-to-dismiss hook.
@@ -2764,24 +2813,20 @@ function useCountdown(drinkLog, drinkType) {
 
   if (!drinkLog) return null;
   const status = computeStatus(drinkLog);
-  if (!['pending', 'awaiting_approval'].includes(status)) return null;
+  // 'late' is included so overdue drinks show how long they've been overdue
+  // instead of showing no timer at all once the deadline passes.
+  if (!['pending', 'awaiting_approval', 'late'].includes(status)) return null;
 
-  // Determine clock start
-  let clockStart = null;
-  if (status === 'awaiting_approval' && drinkLog.assigned_at) {
-    clockStart = new Date(drinkLog.assigned_at).getTime();
-  } else if (drinkLog.hr_triggered_at) {
-    clockStart = new Date(drinkLog.hr_triggered_at).getTime();
-  } else if (drinkLog.event_date) {
-    clockStart = new Date(drinkLog.event_date + 'T12:00:00').getTime();
-  }
-
+  const clockStart = getClockStart(drinkLog);
   if (!clockStart) return null;
 
   const deadline   = clockStart + (24 * 60 * 60 * 1000);
   const remaining  = deadline - now;
 
-  if (remaining <= 0) return { label: '0h 0m 0s', urgency: 'urgent' };
+  if (remaining <= 0) {
+    const overdueMs = now - deadline;
+    return { label: `Overdue ${formatDuration(overdueMs)}`, urgency: 'overdue', overdueMs };
+  }
 
   const h = Math.floor(remaining / 3600000);
   const m = Math.floor((remaining % 3600000) / 60000);
@@ -4350,6 +4395,13 @@ function FeedScreen({ currentUser, showToast, videosEnabled, onNavigateVideos, d
   const [drinkLogs, setDrinkLogs] = useState({});
   const [ptrState, setPtrState] = useState('idle'); // 'idle' | 'pulling' | 'ready' | 'refreshing'
   const ptrRef = useRef({ startY: 0, pulling: false });
+  // Ticks once a minute so the "up to Xh overdue" text in the My Drinks
+  // summary keeps growing without needing a page refresh.
+  const [, setOverdueTick] = useState(0);
+  useEffect(() => {
+    const id = setInterval(() => setOverdueTick(t => t + 1), 60000);
+    return () => clearInterval(id);
+  }, []);
 
   // Define loadEvents BEFORE useEffects so closures always have the current reference
   const loadEvents = async () => {
@@ -4486,19 +4538,35 @@ function FeedScreen({ currentUser, showToast, videosEnabled, onNavigateVideos, d
   // Count drinks the current user personally owes (late or still pending/awaiting to be drunk),
   // and drinks the current user still needs to assign (you_drink they own, not yet assigned,
   // excluding ones that already expired unassigned — those are "vacated", not actionable).
-  const myOwedCount = events.reduce((count, e) => {
+  // Among the owed drinks, also track how many are already late and how overdue the
+  // worst one is, so the summary can distinguish "just triggered" from "overdue for days".
+  let myOwedCount     = 0;
+  let myLateOwedCount = 0;
+  let myMaxOverdueMs  = 0;
+
+  events.forEach(e => {
     const dl     = drinkLogs[e.id];
     const status = computeStatus(dl);
-    if (e.drink_type === 'i_drink') {
-      if (e.drinker.toLowerCase() === currentUser.toLowerCase()
-          && ['pending', 'awaiting_approval', 'late'].includes(status)) return count + 1;
-    } else {
-      if (dl?.given_to
-          && dl.given_to.toLowerCase() === currentUser.toLowerCase()
-          && ['awaiting_approval', 'late'].includes(status)) return count + 1;
+    const isMine = e.drink_type === 'i_drink'
+      ? e.drinker.toLowerCase() === currentUser.toLowerCase()
+      : !!(dl?.given_to && dl.given_to.toLowerCase() === currentUser.toLowerCase());
+    if (!isMine) return;
+
+    const relevantStatuses = e.drink_type === 'i_drink'
+      ? ['pending', 'awaiting_approval', 'late']
+      : ['awaiting_approval', 'late'];
+    if (!relevantStatuses.includes(status)) return;
+
+    myOwedCount++;
+    if (status === 'late') {
+      myLateOwedCount++;
+      const clockStart = getClockStart(dl);
+      if (clockStart) {
+        const overdueMs = Date.now() - (clockStart + 24 * 3600 * 1000);
+        if (overdueMs > myMaxOverdueMs) myMaxOverdueMs = overdueMs;
+      }
     }
-    return count;
-  }, 0);
+  });
 
   const myToAssignCount = events.reduce((count, e) => {
     if (e.drink_type !== 'you_drink') return count;
@@ -4517,7 +4585,10 @@ function FeedScreen({ currentUser, showToast, videosEnabled, onNavigateVideos, d
         React.createElement('span', { className: 'my-drinks-icon' }, '🍺'),
         React.createElement('div', { className: 'my-drinks-text' },
           React.createElement('span', { className: 'my-drinks-count' }, myOwedCount),
-          React.createElement('span', { className: 'my-drinks-label' }, myOwedCount === 1 ? 'Drink You Owe' : 'Drinks You Owe')
+          React.createElement('span', { className: 'my-drinks-label' }, myOwedCount === 1 ? 'Drink You Owe' : 'Drinks You Owe'),
+          myLateOwedCount > 0 && React.createElement('span', { className: 'my-drinks-sub' },
+            `${myLateOwedCount} late \u00b7 up to ${formatDuration(myMaxOverdueMs)} overdue`
+          )
         )
       ),
       React.createElement('div', { className: 'my-drinks-stat assign' },
