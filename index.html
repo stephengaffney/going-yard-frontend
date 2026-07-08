@@ -940,9 +940,14 @@ body {
   padding: 0.875rem 1rem;
   border-bottom: 1px solid var(--border);
   gap: 0.75rem;
+  transition: background 0.25s var(--ease-premium);
 }
 
 .lb-row:last-child { border-bottom: none; }
+
+@media (hover: hover) {
+  .lb-row:hover { background: var(--surface2); }
+}
 
 .lb-rank {
   font-family: 'Bebas Neue', sans-serif;
@@ -1007,16 +1012,17 @@ body {
 .log-header {
   display: grid;
   grid-template-columns: 72px 1fr 1fr 68px;
-  padding: 0.75rem 1rem;
+  padding: 0.8rem 1rem;
   background: var(--surface2);
-  font-size: 0.65rem;
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 0.75rem;
   color: var(--muted);
   text-transform: uppercase;
-  letter-spacing: 1px;
+  letter-spacing: 1.5px;
   border-bottom: 1px solid var(--border);
 }
 
-/* Log rows get a left-border color based on status */
+/* Log rows get a soft inset accent based on status instead of a hard border */
 .log-row {
   display: grid;
   grid-template-columns: 72px 1fr 1fr 68px;
@@ -1024,17 +1030,17 @@ body {
   border-bottom: 1px solid var(--border);
   font-size: 0.8rem;
   align-items: center;
-  border-left: 3px solid transparent;
-  transition: border-color 0.2s;
+  box-shadow: inset 3px 0 0 0 transparent;
+  transition: box-shadow 0.3s var(--ease-premium), background 0.25s var(--ease-premium);
 }
 
 .log-row:last-child { border-bottom: none; }
 .log-row.status-late,
-.log-row.status-vacated        { border-left-color: #e84a4a; }
-.log-row.status-completed_late { border-left-color: #e88c4a; }
-.log-row.status-awaiting { border-left-color: rgba(180,180,180,0.45); }
-.log-row.status-completed { border-left-color: #7cb85c; }
-.log-row.status-pending { border-left-color: rgba(136,136,136,0.3); }
+.log-row.status-vacated        { box-shadow: inset 3px 0 0 0 rgba(232,74,74,0.55); }
+.log-row.status-completed_late { box-shadow: inset 3px 0 0 0 rgba(232,140,74,0.55); }
+.log-row.status-awaiting       { box-shadow: inset 3px 0 0 0 rgba(180,180,180,0.35); }
+.log-row.status-completed      { box-shadow: inset 3px 0 0 0 rgba(124,184,92,0.55); }
+.log-row.status-pending        { box-shadow: inset 3px 0 0 0 rgba(136,136,136,0.25); }
 
 .log-status-dot {
   width: 7px; height: 7px;
@@ -1240,23 +1246,39 @@ body {
 .progress-bar-track {
   height: 8px;
   background: var(--surface2);
-  border-radius: 4px;
+  border-radius: 6px;
   overflow: hidden;
 }
 
 .progress-bar-fill {
   height: 100%;
-  border-radius: 4px;
-  transition: width 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+  border-radius: 6px;
+  transition: width 0.6s var(--ease-premium);
   position: relative;
+  transform-origin: left center;
+  animation: fill-grow 0.9s var(--ease-premium) both;
+  box-shadow: 0 0 10px rgba(255,255,255,0.12);
 }
+
+@keyframes fill-grow {
+  from { transform: scaleX(0); }
+  to   { transform: scaleX(1); }
+}
+
+.progress-row:nth-child(1) .progress-bar-fill { animation-delay: 0.02s; }
+.progress-row:nth-child(2) .progress-bar-fill { animation-delay: 0.08s; }
+.progress-row:nth-child(3) .progress-bar-fill { animation-delay: 0.14s; }
+.progress-row:nth-child(4) .progress-bar-fill { animation-delay: 0.2s; }
+.progress-row:nth-child(5) .progress-bar-fill { animation-delay: 0.26s; }
+.progress-row:nth-child(6) .progress-bar-fill { animation-delay: 0.32s; }
+.progress-row:nth-child(7) .progress-bar-fill { animation-delay: 0.38s; }
 
 .progress-bar-fill::after {
   content: '';
   position: absolute;
   inset: 0;
   background: linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.15) 50%, transparent 100%);
-  border-radius: 4px;
+  border-radius: 6px;
 }
 
 /* ── Reaction Emojis ── */
@@ -1789,9 +1811,9 @@ body {
 }
 
 .upload-warning {
-  background: rgba(232,193,74,0.08);
-  border: 1px solid rgba(232,193,74,0.3);
-  border-radius: 10px;
+  background: rgba(232,193,74,0.06);
+  border: 1px solid rgba(232,193,74,0.2);
+  border-radius: 14px;
   padding: 0.875rem 1rem;
   font-size: 0.825rem;
   color: var(--accent);
@@ -1803,16 +1825,16 @@ body {
 
 .upload-zone {
   border: 2px dashed var(--border);
-  border-radius: 12px;
+  border-radius: 16px;
   padding: 2rem 1rem;
   text-align: center;
   cursor: pointer;
-  transition: border-color 0.2s;
+  transition: border-color 0.25s var(--ease-premium), background 0.25s var(--ease-premium);
   margin-bottom: 1rem;
   position: relative;
 }
 
-.upload-zone:hover { border-color: #c97de8; }
+.upload-zone:hover { border-color: #c97de8; background: rgba(201,125,232,0.03); }
 .upload-zone input[type=file] {
   position: absolute; inset: 0; opacity: 0; cursor: pointer; width: 100%; height: 100%;
 }
@@ -1825,9 +1847,10 @@ body {
   width: 100%;
   max-height: 200px;
   object-fit: cover;
-  border-radius: 10px;
+  border-radius: 16px;
   margin-bottom: 1rem;
   display: block;
+  box-shadow: var(--shadow-sm);
 }
 
 .upload-progress {
@@ -1842,7 +1865,7 @@ body {
   height: 100%;
   background: #c97de8;
   border-radius: 2px;
-  transition: width 0.3s ease;
+  transition: width 0.3s var(--ease-premium);
 }
 
 /* Log tab video link */
@@ -1864,7 +1887,7 @@ body {
 /* ── In-app recording ── */
 .record-zone {
   position: relative;
-  border-radius: 12px;
+  border-radius: 20px;
   overflow: hidden;
   background: #000;
   margin-bottom: 1rem;
@@ -1873,6 +1896,7 @@ body {
   display: flex;
   align-items: center;
   justify-content: center;
+  box-shadow: var(--shadow-card);
 }
 
 .record-preview {
@@ -1887,15 +1911,18 @@ body {
   position: absolute;
   top: 12px;
   right: 12px;
-  background: rgba(0,0,0,0.6);
+  background: rgba(0,0,0,0.45);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
   color: #fff;
   font-family: 'Bebas Neue', sans-serif;
   font-size: 1.4rem;
-  letter-spacing: 2px;
+  letter-spacing: 1.5px;
   padding: 4px 10px;
-  border-radius: 8px;
+  border-radius: 10px;
   min-width: 48px;
   text-align: center;
+  border: 1px solid rgba(255,255,255,0.08);
 }
 
 .record-countdown.urgent { color: #e84a4a; }
@@ -1907,7 +1934,7 @@ body {
   width: 10px; height: 10px;
   border-radius: 50%;
   background: #e84a4a;
-  animation: live-pulse 1s ease infinite;
+  animation: live-pulse 1.2s var(--ease-premium) infinite;
 }
 
 .record-btn {
@@ -1948,16 +1975,18 @@ body {
 .record-tab {
   flex: 1;
   padding: 0.6rem;
-  border-radius: 8px;
+  border-radius: 10px;
   border: 1px solid var(--border);
   background: var(--surface2);
   color: var(--muted);
   font-family: 'DM Sans', sans-serif;
   font-size: 0.8rem;
   cursor: pointer;
-  transition: all 0.15s;
+  transition: border-color 0.25s var(--ease-premium), color 0.25s var(--ease-premium), background 0.25s var(--ease-premium), transform 0.15s var(--ease-premium);
   text-align: center;
 }
+
+.record-tab:active { transform: scale(0.97); }
 
 .record-tab.active {
   border-color: var(--accent);
@@ -2040,10 +2069,20 @@ body {
   gap: 4px;
 }
 
+.podium-slot.first .avatar {
+  animation: trophy-glow 2.6s var(--ease-premium) infinite;
+}
+
+@keyframes trophy-glow {
+  0%, 100% { box-shadow: 0 0 0 4px rgba(232,193,74,0.12), 0 0 20px rgba(232,193,74,0.28); }
+  50%      { box-shadow: 0 0 0 4px rgba(232,193,74,0.18), 0 0 30px rgba(232,193,74,0.42); }
+}
+
 .podium-crown {
   font-size: 1.1rem;
   line-height: 1;
   margin-bottom: 2px;
+  filter: drop-shadow(0 2px 5px rgba(232,193,74,0.35));
 }
 
 .podium-name {
@@ -2483,7 +2522,7 @@ body {
 /* ── Log row tappable ── */
 .log-row.tappable {
   cursor: pointer;
-  transition: background 0.15s, border-color 0.2s;
+  transition: background 0.25s var(--ease-premium), box-shadow 0.3s var(--ease-premium);
 }
 
 .log-row.tappable:hover { background: var(--surface2); }
