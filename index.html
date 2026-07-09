@@ -5408,6 +5408,23 @@ function App() {
       setTabAnimating(true);
       setTimeout(() => setTabAnimating(false), 260);
     };
+
+    // Handle deep-link messages from the service worker. When a notification
+    // is tapped while the app is already open, sw.js posts the target here
+    // instead of forcing a full page reload (which would re-fetch index.html
+    // over the network every time). We just re-use the same navigate helpers
+    // a fresh page load would have used.
+    const handleSWMessage = (event) => {
+      const msg = event.data;
+      if (!msg || msg.type !== 'DEEP_LINK') return;
+      const { eventId, videoId } = msg.deepLink || {};
+      if (videoId) window.__navigateToVideo(videoId);
+      else if (eventId) window.__navigateToEvent(eventId);
+    };
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.addEventListener('message', handleSWMessage);
+    }
+
     // Handle deep link on first load
     const dl = getDeepLink();
     if (dl.tab === 'videos' || dl.videoId) {
@@ -5457,6 +5474,9 @@ function App() {
     return () => {
       subscription.unsubscribe();
       sb.removeChannel(hrChan);
+      if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.removeEventListener('message', handleSWMessage);
+      }
     };
   }, []);
 
