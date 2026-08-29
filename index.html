@@ -1542,7 +1542,18 @@ body {
   border-radius: 20px;
   padding: 0.75rem 0.9rem;
   box-shadow: var(--shadow-sm);
+  font-family: 'DM Sans', sans-serif;
+  text-align: left;
+  cursor: default;
 }
+
+.my-drinks-stat.clickable {
+  cursor: pointer;
+  transition: background 0.2s, transform 0.15s, border-color 0.2s;
+}
+
+.my-drinks-stat.clickable:hover { background: var(--surface2); }
+.my-drinks-stat.clickable:active { transform: scale(0.98); }
 
 .my-drinks-stat.owe {
   border-color: rgba(232,74,74,0.2);
@@ -1590,6 +1601,220 @@ body {
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+}
+
+/* ── My Drinks Sheet (tap-through list) ── */
+.my-drinks-sheet-empty {
+  text-align: center;
+  padding: 2rem 1rem;
+  color: var(--muted);
+  font-size: 0.9rem;
+}
+
+.my-drinks-sheet-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  max-height: 50vh;
+  overflow-y: auto;
+  margin-bottom: 1rem;
+}
+
+.my-drinks-sheet-row {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  width: 100%;
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 0.6rem 0.75rem;
+  font-family: 'DM Sans', sans-serif;
+  text-align: left;
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s;
+}
+
+.my-drinks-sheet-row:hover { border-color: var(--accent); }
+
+.my-drinks-sheet-row-info {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+
+.my-drinks-sheet-row-name {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 1.05rem;
+  letter-spacing: 0.5px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.my-drinks-sheet-row-sub {
+  font-size: 0.7rem;
+  color: var(--muted);
+}
+
+/* ── Weekly Recap Banner (Feed tab) ── */
+.recap-banner {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  margin: 0.85rem 1rem 0;
+  padding: 0.75rem 0.9rem;
+  background: linear-gradient(135deg, rgba(232,193,74,0.14), rgba(232,193,74,0.05));
+  border: 1px solid rgba(232,193,74,0.3);
+  border-radius: 16px;
+  cursor: pointer;
+  transition: background 0.2s, transform 0.15s;
+}
+
+.recap-banner:hover { background: linear-gradient(135deg, rgba(232,193,74,0.2), rgba(232,193,74,0.08)); }
+.recap-banner:active { transform: scale(0.99); }
+
+.recap-banner-icon {
+  font-size: 1.4rem;
+  line-height: 1;
+  flex-shrink: 0;
+}
+
+.recap-banner-text {
+  flex: 1;
+  min-width: 0;
+}
+
+.recap-banner-title {
+  font-size: 0.85rem;
+  color: var(--text);
+  line-height: 1.3;
+}
+
+.recap-banner-sub {
+  font-size: 0.68rem;
+  color: var(--muted);
+  margin-top: 2px;
+}
+
+.recap-banner-close {
+  background: none;
+  border: none;
+  color: var(--muted);
+  font-size: 0.9rem;
+  cursor: pointer;
+  padding: 4px 6px;
+  flex-shrink: 0;
+  line-height: 1;
+}
+
+.recap-banner-close:hover { color: var(--text); }
+
+/* ── Weekly Recap tab (Leaderboard screen) ── */
+.recap-week-label {
+  text-align: center;
+  font-size: 0.75rem;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  margin-bottom: 1rem;
+}
+
+.recap-lb-card {
+  margin-bottom: 1.25rem;
+}
+
+/* ── Admin Drink Log Editor (Settings, Steve only) ── */
+.admin-search-input {
+  margin-bottom: 0.75rem;
+}
+
+.admin-log-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.admin-log-row {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  overflow: hidden;
+}
+
+.admin-log-row-summary {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.65rem 0.85rem;
+  cursor: pointer;
+}
+
+.admin-log-row-summary:hover { background: var(--surface2); }
+
+.admin-log-date {
+  font-size: 0.7rem;
+  color: var(--muted);
+  width: 52px;
+  flex-shrink: 0;
+}
+
+.admin-log-names {
+  flex: 1;
+  min-width: 0;
+  font-size: 0.82rem;
+}
+
+.admin-log-chevron {
+  font-size: 0.6rem;
+  color: var(--muted);
+  flex-shrink: 0;
+}
+
+.admin-log-edit {
+  padding: 0.75rem 0.85rem 1rem;
+  border-top: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  gap: 0.65rem;
+  background: var(--surface2);
+}
+
+.admin-field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+}
+
+.admin-field label {
+  font-size: 0.65rem;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--muted);
+}
+
+.admin-field select,
+.admin-field input {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 0.5rem 0.65rem;
+  color: var(--text);
+  font-family: 'DM Sans', sans-serif;
+  font-size: 0.85rem;
+}
+
+.admin-edit-actions {
+  display: flex;
+  gap: 0.5rem;
+  margin-top: 0.25rem;
+}
+
+.admin-edit-actions .btn-cancel,
+.admin-edit-actions .btn-confirm {
+  flex: 1;
 }
 
 /* ── Search & Filter Bar ── */
@@ -2621,7 +2846,7 @@ body {
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
 
 <script>
-const { useState, useEffect, useCallback, useRef } = React;
+const { useState, useEffect, useCallback, useRef, useMemo } = React;
 const { createPortal } = ReactDOM;
 const { createClient } = supabase;
 
@@ -2810,6 +3035,116 @@ function formatDuration(ms) {
   if (days > 0)  return `${days}d ${hours}h`;
   if (hours > 0) return `${hours}h ${mins}m`;
   return `${mins}m`;
+}
+
+// ---------------------------------------------------------------------------
+// Weekly Recap helpers
+// ---------------------------------------------------------------------------
+
+/** Monday-at-midnight (local time) for a given date. */
+function getMonday(d) {
+  const date = new Date(d);
+  date.setHours(0, 0, 0, 0);
+  const day  = date.getDay(); // 0 = Sun .. 6 = Sat
+  const diff = (day === 0 ? -6 : 1) - day;
+  date.setDate(date.getDate() + diff);
+  return date;
+}
+
+/** { start, end } for the week `offsetWeeks` back from the current week. end is exclusive. */
+function getWeekRange(offsetWeeks = 0) {
+  const start = getMonday(new Date());
+  start.setDate(start.getDate() - offsetWeeks * 7);
+  const end = new Date(start);
+  end.setDate(end.getDate() + 7);
+  return { start, end };
+}
+
+function formatWeekLabel(start, end) {
+  const endInclusive = new Date(end.getTime() - 86400000);
+  const opts = { month: 'short', day: 'numeric' };
+  return `Week of ${start.toLocaleDateString('en-US', opts)} \u2013 ${endInclusive.toLocaleDateString('en-US', opts)}`;
+}
+
+/**
+ * Tally two weekly stats from drink_log rows, grouped by event_date (the
+ * date the underlying HR happened):
+ *  - assigned: you_drink obligations the owner handed off to someone else
+ *  - drunk:    completed drinks physically consumed (i_drink owner, or the
+ *              given_to assignee for you_drink), completed and completed_late
+ *              counted the same
+ */
+function summarizeWeek(rows, start, end) {
+  const startStr = start.toISOString().slice(0, 10);
+  const endStr   = end.toISOString().slice(0, 10);
+  const assigned = {};
+  const drunk    = {};
+  ALL_USERS.forEach(u => { assigned[u] = 0; drunk[u] = 0; });
+
+  let any = false;
+  rows.forEach(row => {
+    const d = row.event_date;
+    if (!d || d < startStr || d >= endStr) return;
+
+    if (row.drink_type === 'you_drink' && row.given_to) {
+      const owner = row.username?.toLowerCase();
+      if (owner && assigned[owner] !== undefined) { assigned[owner]++; any = true; }
+    }
+    if (row.status === 'completed' || row.status === 'completed_late') {
+      const drinker = (row.drink_type === 'you_drink' ? row.given_to : row.username)?.toLowerCase();
+      if (drinker && drunk[drinker] !== undefined) { drunk[drinker]++; any = true; }
+    }
+  });
+
+  return { assigned, drunk, any };
+}
+
+function rankCounts(obj) {
+  return Object.entries(obj)
+    .map(([username, count]) => ({ username, count }))
+    .sort((a, b) => b.count - a.count);
+}
+
+/**
+ * Loads drink_log and resolves the weekly recap. Tries the current week
+ * first; if it's completely empty (e.g. the group had a bye week), falls
+ * back one week rather than searching further into the past.
+ */
+function useWeeklyRecap() {
+  const [rows, setRows]       = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  const load = async () => {
+    const { data } = await sb.from('drink_log')
+      .select('event_date, drink_type, username, given_to, status');
+    if (data) setRows(data);
+    setLoading(false);
+  };
+
+  useEffect(() => {
+    load();
+    const chan = sb.channel('weekly-recap-watch')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'drink_log' }, load)
+      .subscribe();
+    return () => sb.removeChannel(chan);
+  }, []);
+
+  return useMemo(() => {
+    if (loading) return { loading: true };
+    for (const offset of [0, 1]) {
+      const { start, end } = getWeekRange(offset);
+      const summary = summarizeWeek(rows, start, end);
+      if (summary.any || offset === 1) {
+        return {
+          loading:     false,
+          weekLabel:   formatWeekLabel(start, end),
+          any:         summary.any,
+          topDrunk:    rankCounts(summary.drunk),
+          topAssigned: rankCounts(summary.assigned),
+        };
+      }
+    }
+  }, [rows, loading]);
 }
 
 /**
@@ -3553,10 +3888,13 @@ function UploadModal({ event, drinkLog, currentUser, onClose, onUploaded, showTo
 
 // ── Videos Screen ─────────────────────────────────────────────────────────
 
-function VideoCard({ v, currentUser, onNavigateToEvent, highlight }) {
+function VideoCard({ v, currentUser, onNavigateToEvent, highlight, showToast }) {
   const [likes, setLikes]           = useState([]);
   const [comments, setComments]     = useState([]);
   const [assignment, setAssignment] = useState(null);
+  const [hrEvent, setHrEvent]       = useState(null);
+  const [drinkLog, setDrinkLog]     = useState(null);
+  const [approving, setApproving]   = useState(false);
   const [commentText, setCommentText] = useState('');
   const [showComments, setShowComments] = useState(true);
   const [replyingTo, setReplyingTo] = useState(null); // comment id
@@ -3567,26 +3905,64 @@ function VideoCard({ v, currentUser, onNavigateToEvent, highlight }) {
   const userLiked   = likes.some(l => l.username === currentUser);
   const timeAgo     = relativeTime(v.created_at);
 
+  // Same approval eligibility rule used on the feed card — lets people
+  // confirm a drink right from the chug they just watched, no need to
+  // jump back to the Feed tab to find the matching card.
+  const drinkStatus = computeStatus(drinkLog);
+  const canApprove  = hrEvent && canUserApprove(hrEvent, drinkLog, currentUser);
+  const isCompleted = drinkStatus === 'completed' || drinkStatus === 'completed_late';
+
   useEffect(() => {
     loadData();
     const chan = sb.channel(`video-${v.id}`)
       .on('postgres_changes', { event: '*', schema: 'public', table: 'likes' }, loadData)
       .on('postgres_changes', { event: '*', schema: 'public', table: 'comments' }, loadData)
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'drink_log' }, loadData)
       .subscribe();
     return () => sb.removeChannel(chan);
   }, [v.id]);
 
   const loadData = async () => {
-    const [l, c, a] = await Promise.all([
+    const [l, c, a, he, dl] = await Promise.all([
       sb.from('likes').select('*').eq('target_type', 'chug_video').eq('target_id', v.id),
       sb.from('comments').select('*').eq('video_id', v.id).order('created_at'),
       v.hr_event_id
         ? sb.from('drink_assignments').select('*').eq('hr_event_id', v.hr_event_id).maybeSingle()
         : Promise.resolve({ data: null }),
+      v.hr_event_id
+        ? sb.from('hr_events').select('*').eq('id', v.hr_event_id).maybeSingle()
+        : Promise.resolve({ data: null }),
+      v.hr_event_id
+        ? sb.from('drink_log').select('*').eq('hr_event_id', v.hr_event_id).maybeSingle()
+        : Promise.resolve({ data: null }),
     ]);
     if (l.data) setLikes(l.data);
     if (c.data) setComments(c.data);
     if (a.data !== undefined) setAssignment(a.data);
+    if (he.data !== undefined) setHrEvent(he.data);
+    if (dl.data !== undefined) setDrinkLog(dl.data);
+  };
+
+  const approveDrink = async () => {
+    if (!drinkLog || approving) return;
+    setApproving(true);
+    try {
+      const { data: { session } } = await sb.auth.getSession();
+      const res = await fetch(`${BACKEND}/drinks/approve`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${session.access_token}` },
+        body: JSON.stringify({ drink_log_id: drinkLog.id })
+      });
+      if (res.ok) {
+        showToast && showToast('Drink approved! 🍺');
+        loadData();
+      } else {
+        const err = await res.json();
+        showToast && showToast(err.error || 'Failed to approve');
+      }
+    } finally {
+      setApproving(false);
+    }
   };
 
   const toggleLike = async () => {
@@ -3758,7 +4134,17 @@ function VideoCard({ v, currentUser, onNavigateToEvent, highlight }) {
           React.createElement('path', { d: 'M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z M9 22V12h6v10' })
         ),
         '⚾ View Feed Card'
-      )
+      ),
+      canApprove && React.createElement('button', {
+        className: 'approve-btn',
+        style: { marginLeft: 'auto' },
+        onClick: approveDrink,
+        disabled: approving
+      }, approving ? 'Approving...' : '✅ I Saw Them Drink'),
+      isCompleted && React.createElement(DrinkStatusBadge, {
+        status: drinkStatus,
+        drinkType: hrEvent?.drink_type
+      })
     ),
 
     showComments && React.createElement('div', null,
@@ -3784,7 +4170,7 @@ function VideoCard({ v, currentUser, onNavigateToEvent, highlight }) {
   );
 }
 
-function VideosScreen({ currentUser, deepLinkVideoId, onDeepLinkHandled, onNavigateToEvent }) {
+function VideosScreen({ currentUser, deepLinkVideoId, onDeepLinkHandled, onNavigateToEvent, showToast }) {
   const [videos, setVideos]         = useState([]);
   const [loading, setLoading]       = useState(true);
   const [userFilter, setUserFilter] = useState(null);
@@ -3855,6 +4241,7 @@ function VideosScreen({ currentUser, deepLinkVideoId, onDeepLinkHandled, onNavig
             currentUser,
             onNavigateToEvent,
             highlight: highlightVideoId === v.id,
+            showToast,
           }))
     )
   );
@@ -4452,9 +4839,80 @@ function SearchFilterBar({ search, onSearch, filters, onFilter, dateOptions, all
   );
 }
 
+// ── My Drinks Sheet — tapping "Drinks You Owe" / "Drinks To Assign" ────────
+
+function MyDrinksSheet({ type, items, onClose, onNavigate }) {
+  const title = type === 'owe' ? 'Drinks You Owe' : 'Drinks To Assign';
+  const swipeRef = useSwipeDismiss(onClose);
+
+  return React.createElement('div', { className: 'modal-overlay', onClick: e => e.target === e.currentTarget && onClose() },
+    React.createElement('div', { className: 'modal', ref: swipeRef },
+      React.createElement('div', { className: 'modal-handle' }),
+      React.createElement('h3', null, title),
+      items.length === 0
+        ? React.createElement('div', { className: 'my-drinks-sheet-empty' }, "Nothing here right now \u2014 you're all caught up! \ud83c\udf89")
+        : React.createElement('div', { className: 'my-drinks-sheet-list' },
+            items.map(({ event, status }) => {
+              const playerColor = PLAYER_COLORS[event.player_key] || '#888';
+              return React.createElement('button', {
+                key: event.id,
+                className: 'my-drinks-sheet-row',
+                onClick: () => { onNavigate(event.id); onClose(); }
+              },
+                React.createElement(PlayerHeadshot, { playerKey: event.player_key, playerColor, size: 40 }),
+                React.createElement('div', { className: 'my-drinks-sheet-row-info' },
+                  React.createElement('div', { className: 'my-drinks-sheet-row-name', style: { color: playerColor } }, event.full_name),
+                  React.createElement('div', { className: 'my-drinks-sheet-row-sub' }, relativeTime(event.created_at))
+                ),
+                React.createElement(DrinkStatusBadge, { status, drinkType: event.drink_type })
+              );
+            })
+          ),
+      React.createElement('div', { className: 'modal-actions' },
+        React.createElement('button', { className: 'btn-cancel', style: { flex: 1 }, onClick: onClose }, 'Close')
+      )
+    )
+  );
+}
+
+// ── Weekly Recap Banner — Feed tab teaser for the leaderboard recap tab ────
+
+function WeeklyRecapBanner({ onNavigateRecap }) {
+  const recap = useWeeklyRecap();
+  const [dismissed, setDismissed] = useState(false);
+
+  if (!recap || recap.loading || !recap.any) return null;
+
+  const storageKey = `recap_banner_dismissed_${recap.weekLabel}`;
+  let alreadyDismissed = dismissed;
+  try { alreadyDismissed = alreadyDismissed || localStorage.getItem(storageKey) === '1'; } catch {}
+  if (alreadyDismissed) return null;
+
+  const topDrinker = recap.topDrunk[0];
+  if (!topDrinker || topDrinker.count === 0) return null;
+
+  const dismiss = (e) => {
+    e.stopPropagation();
+    setDismissed(true);
+    try { localStorage.setItem(storageKey, '1'); } catch {}
+  };
+
+  return React.createElement('div', { className: 'recap-banner', onClick: onNavigateRecap },
+    React.createElement('span', { className: 'recap-banner-icon' }, '\ud83c\udfc6'),
+    React.createElement('div', { className: 'recap-banner-text' },
+      React.createElement('div', { className: 'recap-banner-title' },
+        React.createElement('strong', { style: { color: USER_COLORS[topDrinker.username] } }, cap(topDrinker.username)),
+        ` leads the week with ${topDrinker.count} ${topDrinker.count === 1 ? 'beer' : 'beers'}!`
+      ),
+      React.createElement('div', { className: 'recap-banner-sub' }, `${recap.weekLabel} \u00b7 tap for full recap`)
+    ),
+    React.createElement('button', { className: 'recap-banner-close', onClick: dismiss }, '\u2715')
+  );
+}
+
 // ── Feed Screen ───────────────────────────────────────────────────────────
 
-function FeedScreen({ currentUser, showToast, videosEnabled, onNavigateVideos, deepLinkEventId, onDeepLinkHandled, hasUnread, onClearUnread }) {
+function FeedScreen({ currentUser, showToast, videosEnabled, onNavigateVideos, onNavigateRecap, deepLinkEventId, onDeepLinkHandled, hasUnread, onClearUnread }) {
   const [events, setEvents]   = useState([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -4462,6 +4920,7 @@ function FeedScreen({ currentUser, showToast, videosEnabled, onNavigateVideos, d
   const [filters, setFilters] = useState({});
   const [highlightId, setHighlightId] = useState(deepLinkEventId || null);
   const [drinkLogs, setDrinkLogs] = useState({});
+  const [drinkListSheet, setDrinkListSheet] = useState(null); // null | 'owe' | 'assign'
   const [ptrState, setPtrState] = useState('idle'); // 'idle' | 'pulling' | 'ready' | 'refreshing'
   const ptrRef = useRef({ startY: 0, pulling: false });
   // Ticks once a minute so the "up to Xh overdue" text in the My Drinks
@@ -4501,10 +4960,28 @@ function FeedScreen({ currentUser, showToast, videosEnabled, onNavigateVideos, d
     }, 400);
   }, [deepLinkEventId]);
 
+  // Applies a drink_log realtime change directly to local state instead of
+  // re-querying everything, so the My Drinks counts/lists and card statuses
+  // stay live the moment someone assigns/approves a drink — not just after
+  // the next full loadEvents() (new HR, pull-to-refresh, or mount).
+  const handleDrinkLogChange = (payload) => {
+    setDrinkLogs(prev => {
+      const next = { ...prev };
+      if (payload.eventType === 'DELETE') {
+        const hrId = payload.old?.hr_event_id;
+        if (hrId != null) delete next[hrId];
+      } else if (payload.new) {
+        next[payload.new.hr_event_id] = payload.new;
+      }
+      return next;
+    });
+  };
+
   useEffect(() => {
     loadEvents();
     const chan = sb.channel('feed')
       .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'hr_events' }, loadEvents)
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'drink_log' }, handleDrinkLogChange)
       .subscribe();
 
     // Pull-to-refresh touch handlers on the feed container
@@ -4604,14 +5081,17 @@ function FeedScreen({ currentUser, showToast, videosEnabled, onNavigateVideos, d
     return true;
   });
 
-  // Count drinks the current user personally owes (late or still pending/awaiting to be drunk),
-  // and drinks the current user still needs to assign (you_drink they own, not yet assigned,
-  // excluding ones that already expired unassigned — those are "vacated", not actionable).
+  // Count (and collect) drinks the current user personally owes (late or still
+  // pending/awaiting to be drunk), and drinks the current user still needs to
+  // assign (you_drink they own, not yet assigned, excluding ones that already
+  // expired unassigned — those are "vacated", not actionable).
   // Among the owed drinks, also track how many are already late and how overdue the
   // worst one is, so the summary can distinguish "just triggered" from "overdue for days".
   let myOwedCount     = 0;
   let myLateOwedCount = 0;
   let myMaxOverdueMs  = 0;
+  const myOwedItems     = [];
+  const myToAssignItems = [];
 
   events.forEach(e => {
     const dl     = drinkLogs[e.id];
@@ -4627,6 +5107,7 @@ function FeedScreen({ currentUser, showToast, videosEnabled, onNavigateVideos, d
     if (!relevantStatuses.includes(status)) return;
 
     myOwedCount++;
+    myOwedItems.push({ event: e, drinkLog: dl, status });
     if (status === 'late') {
       myLateOwedCount++;
       const clockStart = getClockStart(dl);
@@ -4636,21 +5117,34 @@ function FeedScreen({ currentUser, showToast, videosEnabled, onNavigateVideos, d
       }
     }
   });
+  // Most urgent first: late drinks before pending/awaiting, oldest first within each.
+  myOwedItems.sort((a, b) => {
+    if ((a.status === 'late') !== (b.status === 'late')) return a.status === 'late' ? -1 : 1;
+    return new Date(a.event.created_at) - new Date(b.event.created_at);
+  });
 
-  const myToAssignCount = events.reduce((count, e) => {
-    if (e.drink_type !== 'you_drink') return count;
-    if (e.drinker.toLowerCase() !== currentUser.toLowerCase()) return count;
+  events.forEach(e => {
+    if (e.drink_type !== 'you_drink') return;
+    if (e.drinker.toLowerCase() !== currentUser.toLowerCase()) return;
     const dl = drinkLogs[e.id];
-    if (dl?.given_to) return count;
+    if (dl?.given_to) return;
     const status = computeStatus(dl);
-    return status === 'pending' ? count + 1 : count;
-  }, 0);
+    if (status === 'pending') myToAssignItems.push({ event: e, drinkLog: dl, status });
+  });
+  myToAssignItems.sort((a, b) => new Date(a.event.created_at) - new Date(b.event.created_at));
+
+  const myToAssignCount = myToAssignItems.length;
 
   if (loading) return React.createElement('div', { className: 'loading' }, React.createElement('div', { className: 'spinner' }));
 
   return React.createElement(React.Fragment, null,
+    React.createElement(WeeklyRecapBanner, { onNavigateRecap }),
     React.createElement('div', { className: 'my-drinks-bar' },
-      React.createElement('div', { className: 'my-drinks-stat owe' },
+      React.createElement('button', {
+        className: `my-drinks-stat owe${myOwedCount > 0 ? ' clickable' : ''}`,
+        disabled: myOwedCount === 0,
+        onClick: () => setDrinkListSheet('owe')
+      },
         React.createElement('span', { className: 'my-drinks-icon' }, '🍺'),
         React.createElement('div', { className: 'my-drinks-text' },
           React.createElement('span', { className: 'my-drinks-count' }, myOwedCount),
@@ -4660,7 +5154,11 @@ function FeedScreen({ currentUser, showToast, videosEnabled, onNavigateVideos, d
           )
         )
       ),
-      React.createElement('div', { className: 'my-drinks-stat assign' },
+      React.createElement('button', {
+        className: `my-drinks-stat assign${myToAssignCount > 0 ? ' clickable' : ''}`,
+        disabled: myToAssignCount === 0,
+        onClick: () => setDrinkListSheet('assign')
+      },
         React.createElement('span', { className: 'my-drinks-icon' }, '🎯'),
         React.createElement('div', { className: 'my-drinks-text' },
           React.createElement('span', { className: 'my-drinks-count' }, myToAssignCount),
@@ -4668,6 +5166,12 @@ function FeedScreen({ currentUser, showToast, videosEnabled, onNavigateVideos, d
         )
       )
     ),
+    drinkListSheet && React.createElement(MyDrinksSheet, {
+      type: drinkListSheet,
+      items: drinkListSheet === 'owe' ? myOwedItems : myToAssignItems,
+      onClose: () => setDrinkListSheet(null),
+      onNavigate: (eventId) => { window.__navigateToEvent && window.__navigateToEvent(eventId); },
+    }),
     React.createElement(SearchFilterBar, { search, onSearch: setSearch, filters, onFilter: setFilters, dateOptions: [], allEventDates }),
     React.createElement('div', {
       className: `ptr-indicator ${ptrState !== 'idle' ? 'visible' : ''}`
@@ -4694,16 +5198,18 @@ function FeedScreen({ currentUser, showToast, videosEnabled, onNavigateVideos, d
 
 // ── Leaderboard Screen ────────────────────────────────────────────────────
 
-function LeaderboardScreen() {
+function LeaderboardScreen({ initialTab }) {
   const [hrTotals, setHrTotals]       = useState([]);
   const [drinkTotals, setDrinkTotals] = useState([]);
   const [drinkLB, setDrinkLB]         = useState([]);
   const [iDrinkHRs, setIDrinkHRs]     = useState({});
   const [loading, setLoading]         = useState(true);
-  const [activeTab, setActiveTab]     = useState('drinks');
+  const [activeTab, setActiveTab]     = useState(initialTab || 'drinks');
+  const recap                         = useWeeklyRecap();
 
   const TABS = [
     { key: 'drinks',   label: 'Drink Leaderboard' },
+    { key: 'recap',    label: 'Weekly Recap' },
     { key: 'slugger',  label: '20 HR Slugger' },
     { key: 'hitter',   label: 'Big Hitter' },
     { key: 'mlb',      label: 'MLB Home Runs' },
@@ -4890,7 +5396,40 @@ function LeaderboardScreen() {
         ))
   );
 
-  const contentMap = { drinks: renderDrinks, slugger: renderSlugger, hitter: renderHitter, mlb: renderMLB, combined: renderCombined };
+  // Small ranked list shared by both Weekly Recap stat blocks — same visual
+  // language as the other lb-card lists, just no podium.
+  const renderRecapList = (ranked, unitLabel) => React.createElement('div', { className: 'lb-card recap-lb-card' },
+    ranked.every(r => r.count === 0)
+      ? React.createElement('div', { style: { padding: '1.5rem', textAlign: 'center', color: 'var(--muted)', fontSize: '0.85rem' } }, 'Nobody yet this week')
+      : ranked.filter(r => r.count > 0).map((r, i) => React.createElement('div', { key: r.username, className: 'lb-row' },
+          React.createElement('div', { className: `lb-rank ${rankClass(i)}` }, i + 1),
+          React.createElement(Avatar, { name: r.username, size: 32 }),
+          React.createElement('div', { style: { flex: 1 } },
+            React.createElement('div', { className: 'lb-name', style: { color: USER_COLORS[r.username] } }, cap(r.username))
+          ),
+          React.createElement('div', { className: 'lb-stat-group' },
+            React.createElement('div', { className: 'lb-stat', style: { color: USER_COLORS[r.username] } }, r.count),
+            React.createElement('div', { className: 'lb-label' }, unitLabel)
+          )
+        ))
+  );
+
+  const renderRecap = () => {
+    if (recap.loading) return React.createElement('div', { className: 'loading' }, React.createElement('div', { className: 'spinner' }));
+    return React.createElement(React.Fragment, null,
+      React.createElement('div', { className: 'recap-week-label' }, recap.weekLabel),
+      !recap.any
+        ? React.createElement('div', { className: 'lb-card', style: { padding: '2rem', textAlign: 'center', color: 'var(--muted)' } }, 'No drinks logged this week yet')
+        : React.createElement(React.Fragment, null,
+            React.createElement('div', { className: 'section-title' }, 'Most Beers Drank'),
+            renderRecapList(recap.topDrunk, 'Beers'),
+            React.createElement('div', { className: 'section-title' }, 'Most Assigned'),
+            renderRecapList(recap.topAssigned, 'Assigned')
+          )
+    );
+  };
+
+  const contentMap = { drinks: renderDrinks, recap: renderRecap, slugger: renderSlugger, hitter: renderHitter, mlb: renderMLB, combined: renderCombined };
 
   return React.createElement('div', { className: 'leaderboard-screen' },
     // Pill tabs
@@ -5270,7 +5809,192 @@ function NotificationCenter({ currentUser }) {
 
 // ── Settings Screen ───────────────────────────────────────────────────────
 
-function SettingsScreen({ currentUser, onSignOut }) {
+// ── Admin Drink Log Editor (Steve only) ────────────────────────────────────
+
+function AdminDrinkLogEditor({ showToast }) {
+  const [rows, setRows]           = useState([]);
+  const [loading, setLoading]     = useState(true);
+  const [search, setSearch]       = useState('');
+  const [expandedId, setExpandedId] = useState(null);
+  const [drafts, setDrafts]       = useState({});
+  const [savingId, setSavingId]   = useState(null);
+
+  const STATUS_OPTIONS = ['pending', 'awaiting_approval', 'completed', 'late', 'completed_late'];
+
+  const load = async () => {
+    setLoading(true);
+    const { data, error } = await sb.from('drink_log')
+      .select('*')
+      .order('hr_triggered_at', { ascending: false })
+      .limit(100);
+    if (error) console.error('[ADMIN]', error);
+    if (data) setRows(data);
+    setLoading(false);
+  };
+
+  useEffect(() => { load(); }, []);
+
+  // datetime-local inputs need "YYYY-MM-DDTHH:MM" in local time, not an ISO string.
+  const toLocalInput = (iso) => {
+    if (!iso) return '';
+    const d = new Date(iso);
+    const pad = (n) => String(n).padStart(2, '0');
+    return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+  };
+
+  const startEdit = (row) => {
+    const opening = expandedId !== row.id;
+    setExpandedId(opening ? row.id : null);
+    if (opening) {
+      setDrafts(prev => ({
+        ...prev,
+        [row.id]: {
+          status:          row.status || 'pending',
+          given_to:        row.given_to || '',
+          assigned_at:     toLocalInput(row.assigned_at),
+          hr_triggered_at: toLocalInput(row.hr_triggered_at),
+          approved_by:     row.approved_by || '',
+        }
+      }));
+    }
+  };
+
+  const updateDraft = (id, field, value) => {
+    setDrafts(prev => ({ ...prev, [id]: { ...prev[id], [field]: value } }));
+  };
+
+  const save = async (row) => {
+    const draft = drafts[row.id];
+    if (!draft) return;
+    setSavingId(row.id);
+    try {
+      const { data: { session } } = await sb.auth.getSession();
+      const payload = {
+        status:          draft.status,
+        given_to:        draft.given_to || null,
+        assigned_at:     draft.assigned_at ? new Date(draft.assigned_at).toISOString() : null,
+        hr_triggered_at: draft.hr_triggered_at ? new Date(draft.hr_triggered_at).toISOString() : null,
+        approved_by:     draft.approved_by || null,
+      };
+      const res = await fetch(`${BACKEND}/admin/drink-log/${row.id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${session.access_token}` },
+        body: JSON.stringify(payload)
+      });
+      const result = await res.json();
+      if (res.ok) {
+        setRows(prev => prev.map(r => r.id === row.id ? result.drink_log : r));
+        setExpandedId(null);
+        showToast && showToast('Drink log entry updated');
+      } else {
+        showToast && showToast(result.error || 'Failed to save');
+      }
+    } catch (e) {
+      showToast && showToast('Network error');
+    }
+    setSavingId(null);
+  };
+
+  const filtered = rows.filter(r => {
+    if (!search) return true;
+    const q = search.toLowerCase();
+    return (r.mlb_player || '').toLowerCase().includes(q)
+      || (r.username || '').toLowerCase().includes(q)
+      || (r.given_to || '').toLowerCase().includes(q);
+  });
+
+  return React.createElement('div', null,
+    React.createElement('div', { className: 'settings-section-title' }, 'Drink Log Correction'),
+    React.createElement('div', { style: { fontSize: '0.75rem', color: 'var(--muted)', marginBottom: '0.5rem', padding: '0 0.25rem' } },
+      "Manually fix a drink's status, timestamps, or assignee — for drinks that happened correctly but got logged or approved late."
+    ),
+    React.createElement('input', {
+      className: 'search-input admin-search-input',
+      placeholder: 'Search by player or user...',
+      value: search,
+      onChange: e => setSearch(e.target.value)
+    }),
+    loading
+      ? React.createElement('div', { className: 'loading' }, React.createElement('div', { className: 'spinner' }))
+      : React.createElement('div', { className: 'admin-log-list' },
+          filtered.length === 0
+            ? React.createElement('div', { style: { padding: '1.5rem', textAlign: 'center', color: 'var(--muted)', fontSize: '0.85rem' } }, 'No matching entries')
+            : filtered.map(row => {
+                const draft = drafts[row.id];
+                const isExpanded = expandedId === row.id;
+                return React.createElement('div', { key: row.id, className: 'admin-log-row' },
+                  React.createElement('div', { className: 'admin-log-row-summary', onClick: () => startEdit(row) },
+                    React.createElement('div', { className: 'admin-log-date' },
+                      row.event_date ? new Date(row.event_date + 'T12:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) : '—'
+                    ),
+                    React.createElement('div', { className: 'admin-log-names' },
+                      React.createElement('span', { style: { color: USER_COLORS[row.username] || '#888' } }, cap(row.username)),
+                      row.given_to && React.createElement('span', null, ' → ', React.createElement('span', { style: { color: USER_COLORS[row.given_to] || '#888' } }, cap(row.given_to))),
+                      React.createElement('div', { style: { fontSize: '0.72rem', color: 'var(--muted)' } }, row.mlb_player)
+                    ),
+                    React.createElement(DrinkStatusBadge, { status: computeStatus(row), drinkType: row.drink_type }),
+                    React.createElement('span', { className: 'admin-log-chevron' }, isExpanded ? '▲' : '▼')
+                  ),
+                  isExpanded && draft && React.createElement('div', { className: 'admin-log-edit' },
+                    React.createElement('div', { className: 'admin-field' },
+                      React.createElement('label', null, 'Status'),
+                      React.createElement('select', {
+                        value: draft.status,
+                        onChange: e => updateDraft(row.id, 'status', e.target.value)
+                      }, STATUS_OPTIONS.map(s => React.createElement('option', { key: s, value: s }, s)))
+                    ),
+                    row.drink_type === 'you_drink' && React.createElement('div', { className: 'admin-field' },
+                      React.createElement('label', null, 'Given To'),
+                      React.createElement('select', {
+                        value: draft.given_to,
+                        onChange: e => updateDraft(row.id, 'given_to', e.target.value)
+                      },
+                        React.createElement('option', { value: '' }, '— unassigned —'),
+                        ALL_USERS.map(u => React.createElement('option', { key: u, value: u }, cap(u)))
+                      )
+                    ),
+                    React.createElement('div', { className: 'admin-field' },
+                      React.createElement('label', null, 'HR Triggered At'),
+                      React.createElement('input', {
+                        type: 'datetime-local',
+                        value: draft.hr_triggered_at,
+                        onChange: e => updateDraft(row.id, 'hr_triggered_at', e.target.value)
+                      })
+                    ),
+                    React.createElement('div', { className: 'admin-field' },
+                      React.createElement('label', null, 'Assigned At'),
+                      React.createElement('input', {
+                        type: 'datetime-local',
+                        value: draft.assigned_at,
+                        onChange: e => updateDraft(row.id, 'assigned_at', e.target.value)
+                      })
+                    ),
+                    React.createElement('div', { className: 'admin-field' },
+                      React.createElement('label', null, 'Approved By'),
+                      React.createElement('select', {
+                        value: draft.approved_by,
+                        onChange: e => updateDraft(row.id, 'approved_by', e.target.value)
+                      },
+                        React.createElement('option', { value: '' }, '— none —'),
+                        ALL_USERS.map(u => React.createElement('option', { key: u, value: u }, cap(u)))
+                      )
+                    ),
+                    React.createElement('div', { className: 'admin-edit-actions' },
+                      React.createElement('button', { className: 'btn-cancel', onClick: () => setExpandedId(null) }, 'Cancel'),
+                      React.createElement('button', {
+                        className: 'btn-confirm',
+                        onClick: () => save(row),
+                        disabled: savingId === row.id
+                      }, savingId === row.id ? 'Saving...' : 'Save')
+                    )
+                  )
+                );
+              })
+        )
+  );
+}
+
+function SettingsScreen({ currentUser, onSignOut, showToast }) {
   const ALL_TYPES = ['hr', 'assignment', 'approval', 'late', 'comment', 'like', 'video'];
   const LABELS = {
     hr: 'Home Run alerts', assignment: 'Drink assignments', approval: 'Drink approvals',
@@ -5377,7 +6101,10 @@ function SettingsScreen({ currentUser, onSignOut }) {
         onClick: savePushPrefs,
         disabled: saving
       }, saved ? '✅ Saved!' : saving ? 'Saving...' : 'Save Preferences')
-    )
+    ),
+
+    // Admin-only: manual drink log correction
+    currentUser === 'steve' && React.createElement(AdminDrinkLogEditor, { showToast })
   );
 }
 
@@ -5393,7 +6120,13 @@ function App() {
   const [videosEnabled, setVideosEnabled] = useState(false);
   const [deepLink, setDeepLink]           = useState(() => getDeepLink());
   const [hasUnread, setHasUnread]         = useState(false);
+  const [leaderboardTab, setLeaderboardTab] = useState('drinks');
   const latestEventId                     = useRef(null);
+
+  const navigateToRecap = () => {
+    setLeaderboardTab('recap');
+    navigateTab('board');
+  };
 
   useEffect(() => {
     window.__navigateToEvent = (eventId) => {
@@ -5563,10 +6296,10 @@ function App() {
       )
     ),
     React.createElement('div', { key: tab, className: `tab-screen${tabAnimating ? ' animating' : ''}` },
-      tab === 'feed'   && React.createElement(FeedScreen, { currentUser: username, showToast, videosEnabled, onNavigateVideos: videosEnabled ? (videoId) => { if (videoId) setDeepLink({ videoId }); navigateTab('videos'); } : null, deepLinkEventId: deepLink.eventId, onDeepLinkHandled: () => { setDeepLink({}); clearDeepLink(); }, hasUnread, onClearUnread: () => setHasUnread(false) }),
-      tab === 'board'  && React.createElement(LeaderboardScreen),
+      tab === 'feed'   && React.createElement(FeedScreen, { currentUser: username, showToast, videosEnabled, onNavigateVideos: videosEnabled ? (videoId) => { if (videoId) setDeepLink({ videoId }); navigateTab('videos'); } : null, onNavigateRecap: navigateToRecap, deepLinkEventId: deepLink.eventId, onDeepLinkHandled: () => { setDeepLink({}); clearDeepLink(); }, hasUnread, onClearUnread: () => setHasUnread(false) }),
+      tab === 'board'  && React.createElement(LeaderboardScreen, { initialTab: leaderboardTab }),
       tab === 'log'    && React.createElement(LogScreen, { currentUser: username, videosEnabled, onNavigateVideos: videosEnabled ? (videoId) => { if (videoId) setDeepLink({ videoId }); navigateTab('videos'); } : null }),
-      tab === 'videos' && videosEnabled && React.createElement(VideosScreen, { currentUser: username, deepLinkVideoId: deepLink.videoId, onDeepLinkHandled: () => { setDeepLink({}); clearDeepLink(); }, onNavigateToEvent: (eventId) => { setDeepLink({ eventId }); navigateTab('feed'); } })
+      tab === 'videos' && videosEnabled && React.createElement(VideosScreen, { currentUser: username, deepLinkVideoId: deepLink.videoId, onDeepLinkHandled: () => { setDeepLink({}); clearDeepLink(); }, onNavigateToEvent: (eventId) => { setDeepLink({ eventId }); navigateTab('feed'); }, showToast })
     ),
     React.createElement('nav', { className: 'nav' },
       React.createElement(NavIcon, { id: 'feed',   label: 'Feed',    path: 'M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z M9 22V12h6v10' }),
@@ -5589,7 +6322,7 @@ function App() {
         React.createElement('div', { className: 'header-title-main' }, 'Settings')
       ),
       React.createElement('div', { style: { flex: 1, overflowY: 'auto' } },
-        React.createElement(SettingsScreen, { currentUser: username, onSignOut: () => { setShowSettings(false); onSignOut(); } })
+        React.createElement(SettingsScreen, { currentUser: username, onSignOut: () => { setShowSettings(false); onSignOut(); }, showToast })
       )
     )
   );
