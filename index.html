@@ -3278,6 +3278,24 @@ function UploadModal({ event, drinkLog, currentUser, onClose, onUploaded, showTo
     return () => stopCamera();
   }, [warned, mode]);
 
+  // previewUrl (the recorded/selected video blob shown in the Preview screen,
+  // often several MB for a full 25s clip) was never being revoked — not on
+  // re-record, not on cancel, not on close. Every recording session left
+  // that blob pinned in memory for the rest of the page's life. On mobile
+  // Safari / iOS WKWebView in particular, memory pressure like this is a
+  // well-known trigger for the OS to silently kill and reload the page,
+  // which looks to the user exactly like "the app crashed" — especially
+  // after recording/re-recording a few times in one sitting. This standard
+  // cleanup pattern revokes the previous blob URL the moment previewUrl
+  // changes to a new one, and revokes the last one on unmount, covering
+  // every exit path (re-record, cancel, swipe-dismiss, tap-outside,
+  // successful upload) without needing to touch each handler individually.
+  useEffect(() => {
+    return () => {
+      if (previewUrl) URL.revokeObjectURL(previewUrl);
+    };
+  }, [previewUrl]);
+
   const startRecording = () => {
     if (!stream || !recordingMimeType) return;
     chunksRef.current = [];
@@ -3345,6 +3363,7 @@ function UploadModal({ event, drinkLog, currentUser, onClose, onUploaded, showTo
 
     vid.onerror = () => {
       clearTimeout(timeout);
+      URL.revokeObjectURL(objectUrl);
       setFile(f);
       setPreviewUrl(URL.createObjectURL(f));
     };
